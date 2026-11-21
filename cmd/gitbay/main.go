@@ -594,6 +594,7 @@ func repoCmd() *cobra.Command {
 			pass("add", passOpts{server: []string{"repo", "mirror", "add"}, needsRepo: true, stdinOK: true}),
 			pass("list", passOpts{server: []string{"repo", "mirror", "list"}, needsRepo: true}),
 			pass("remove", passOpts{server: []string{"repo", "mirror", "remove"}, needsRepo: true}),
+			pass("set-url", passOpts{server: []string{"repo", "mirror", "set-url"}, needsRepo: true}),
 			pass("sync", passOpts{server: []string{"repo", "mirror", "sync"}, needsRepo: true}),
 		),
 		pass("secret-scan", passOpts{server: []string{"repo", "secret-scan"}, needsRepo: true}),

@@ -125,6 +125,7 @@ func TestNeedsRecentSignInSet(t *testing.T) {
 		"repo delete",
 		"repo deploy-key add",
 		"repo mirror add",
+		"repo mirror set-url",
 		"repo rename",
 		"repo runner add",
 		"repo secret set",

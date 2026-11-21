@@ -26,13 +26,19 @@ func init() {
 			{"--username", "<u>", "the remote's username", ""},
 			{"--token-stdin", "", "read a credential token from stdin", ""},
 		},
-		Examples:   []string{"repo mirror add krz/gitbay https://github.com/krazywarez/gitbay.git --direction push"},
+		Examples:   []string{"repo mirror add krz/gitbay https://github.com/krz-labs/gitbay.git --direction push"},
 		ReadsStdin: true, Run: runMirrorAdd})
 	register(Command{Path: []string{"repo", "mirror", "list"},
 		Summary:  "list mirrors with sync status",
 		Usage:    "repo mirror list <owner/name>",
 		Examples: []string{"repo mirror list krz/gitbay"},
 		ReadOnly: true, Run: runMirrorList})
+	register(Command{Path: []string{"repo", "mirror", "set-url"},
+		NeedsRecentSignIn: true,
+		Summary:           "point a mirror at a new URL on the same host",
+		Usage:             "repo mirror set-url <owner/name> <id> <https-url>",
+		Examples:          []string{"repo mirror set-url krz/gitbay 3 https://github.com/krz-labs/gitbay.git"},
+		Run:               runMirrorSetURL})
 	register(Command{Path: []string{"repo", "mirror", "remove"},
 		Summary:  "remove a mirror",
 		Usage:    "repo mirror remove <owner/name> <id>",
@@ -163,6 +169,58 @@ func orDash(s string) string {
 		return "-"
 	}
 	return s
+}
+
+// runMirrorSetURL keeps the stored token, so it refuses a new host: the
+// token goes only where its owner sent it.
+func runMirrorSetURL(c *Ctx, args []string) int {
+	if len(args) != 3 {
+		return c.usage()
+	}
+	urlArg := args[2]
+	nu, err := url.Parse(urlArg)
+	if err != nil {
+		return c.fail(protocol.ExitUsage, "bad url %q", urlArg)
+	}
+	if err := gitpin.CheckHost(nu.Hostname()); err != nil {
+		return c.failInput(err)
+	}
+	if err := webhook.ValidateURL(urlArg, c.Cfg.Webhooks.AllowLocal); err != nil {
+		return c.failInput(err)
+	}
+	repo, code := resolveRepo(c, args[0], policy.CanAdmin)
+	if code >= 0 {
+		return code
+	}
+	id, err := strconv.ParseInt(args[1], 10, 64)
+	if err != nil {
+		return c.fail(protocol.ExitUsage, "bad mirror id %q", args[1])
+	}
+	ms, err := c.Store.ListMirrors(repo.ID)
+	if err != nil {
+		return c.fail(protocol.ExitFailure, "%v", err)
+	}
+	var cur *store.Mirror
+	for i := range ms {
+		if ms[i].ID == id {
+			cur = &ms[i]
+		}
+	}
+	if cur == nil {
+		return c.fail(protocol.ExitNotFound, "no mirror %d on %s", id, repo.Path())
+	}
+	if ou, err := url.Parse(cur.URL); err != nil || !strings.EqualFold(ou.Scheme, nu.Scheme) || !strings.EqualFold(ou.Host, nu.Host) {
+		return c.fail(protocol.ExitUsage, "set-url keeps the stored token, so the host cannot change; remove the mirror and add it again")
+	}
+	if err := c.Store.SetMirrorURL(repo.ID, id, urlArg); err != nil {
+		if errors.Is(err, store.ErrExists) {
+			return c.fail(protocol.ExitUsage, "that mirror already exists")
+		}
+		return c.fail(protocol.ExitFailure, "%v", err)
+	}
+	return c.emit(map[string]any{"id": id, "url": urlArg}, func(w io.Writer) {
+		fmt.Fprintf(w, "mirror %d now %s; sync scheduled\n", id, urlArg)
+	})
 }
 
 func runMirrorRemove(c *Ctx, args []string) int {

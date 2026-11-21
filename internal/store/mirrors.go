@@ -102,6 +102,22 @@ func (s *Store) RemoveMirror(repoID, id int64) error {
 	return nil
 }
 
+// SetMirrorURL points a mirror at a new URL and schedules a sync. The id,
+// and so the sealed token, is unchanged.
+func (s *Store) SetMirrorURL(repoID, id int64, url string) error {
+	res, err := s.DB.Exec("UPDATE mirrors SET url = ?, dirty = 1 WHERE repo_id = ? AND id = ?", url, repoID, id)
+	if err != nil {
+		if isUniqueErr(err) {
+			return ErrExists
+		}
+		return err
+	}
+	if n, _ := res.RowsAffected(); n == 0 {
+		return ErrNotFound
+	}
+	return nil
+}
+
 // MarkMirrorsDirty schedules a sync. An empty direction marks both.
 func (s *Store) MarkMirrorsDirty(repoID int64, direction string) error {
 	q := "UPDATE mirrors SET dirty = 1 WHERE repo_id = ?"

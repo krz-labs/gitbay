@@ -28,7 +28,7 @@ func init() {
 	register(Command{Path: []string{"org", "rename"},
 		Summary:  "rename an organization",
 		Usage:    "org rename <old> <new> (clone URLs change)",
-		Examples: []string{"org rename krz krazywarez"}, Run: runOrgRename})
+		Examples: []string{"org rename krz krz-labs"}, Run: runOrgRename})
 	register(Command{Path: []string{"org", "delete"},
 		Summary: "delete an empty organization",
 		Usage:   "org delete <name> --yes",

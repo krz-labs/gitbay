@@ -373,6 +373,8 @@ gitbay repo mirror add you/copy https://github.com/them/theirs.git \
     --direction pull                  # follow upstream; local pushes refused
 gitbay repo mirror list               # sync status and last error, per mirror
 gitbay repo mirror sync / remove <id>
+gitbay repo mirror set-url you/project <id> https://github.com/neworg/project.git
+                                      # same host; keeps the stored token
 #+end_src
 
 Markdown and org files render on the web when opened, the way a README

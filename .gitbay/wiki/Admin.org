@@ -450,7 +450,7 @@ push=.
   and again before every sync; git then connects only to the addresses
   that were checked (=http.curloptResolve=) and does not follow
   redirects, so a mirror of a renamed repository fails until its URL
-  is updated. Needs git 2.37 or later on the server; with an older git
+  is updated with =repo mirror set-url=. Needs git 2.37 or later on the server; with an older git
   the worker logs an error at start and syncs no mirror, recording the
   reason on each. Sync ignores the system and global gitconfig.
 

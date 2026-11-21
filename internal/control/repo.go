@@ -54,7 +54,7 @@ func init() {
 		NeedsRecentSignIn: true,
 		Summary:           "move a repository to another owner",
 		Usage:             "repo transfer <owner/name> <new-owner> (clone URLs change)",
-		Examples:          []string{"repo transfer krz/gitbay krazywarez"},
+		Examples:          []string{"repo transfer krz/gitbay krz-labs"},
 		Run:               runRepoTransfer})
 	register(Command{Path: []string{"repo", "rename"},
 		NeedsRecentSignIn: true,

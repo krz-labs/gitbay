@@ -185,6 +185,7 @@ var summaries = map[string]string{
 	"repo mirror add":                     "mirror to or from a remote",
 	"repo mirror list":                    "list mirrors with sync status",
 	"repo mirror remove":                  "remove a mirror",
+	"repo mirror set-url":                 "point a mirror at a new URL on the same host",
 	"repo mirror sync":                    "schedule an immediate sync",
 	"repo mute":                           "mute a repository, including work you are part of",
 	"repo pin":                            "pin a repository to your dashboard",
