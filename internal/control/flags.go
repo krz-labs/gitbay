@@ -35,9 +35,25 @@ func (f flags) Has(name string) bool { return f.seen[name] }
 // List is every value given for a repeatable flag, in order.
 func (f flags) List(name string) []string { return f.multi[name] }
 
+// shortFlags maps common single-letter aliases to their canonical long
+// names. An alias only fires when the command's spec declares that long
+// flag, so commands without it never misread a positional like "-n".
+var shortFlags = map[string]string{
+	"-t": "--title",
+	"-m": "--message",
+	"-b": "--body",
+	"-s": "--state",
+	"-l": "--label",
+	"-a": "--assignee",
+	"-d": "--draft",
+	"-f": "--file",
+	"-n": "--limit",
+}
+
 // parseFlags reads args against spec. A flag must be one the spec names;
-// a value flag consumes the next argument verbatim, "-" included; "--"
-// ends flag parsing. The error, when there is one, is the usage message.
+// a value flag consumes the next argument verbatim, "-" included (or the
+// part after "=" in --flag=value); "--" ends flag parsing. The error,
+// when there is one, is the usage message.
 func parseFlags(args []string, spec flagSpec) (flags, error) {
 	f := flags{vals: map[string]string{}, multi: map[string][]string{}, seen: map[string]bool{}}
 	kind := map[string]byte{}
@@ -64,26 +80,41 @@ func parseFlags(args []string, spec flagSpec) (flags, error) {
 			onlyPos = true
 			continue
 		}
+		if !onlyPos && len(a) == 2 && a[0] == '-' && a[1] != '-' {
+			if long, ok := shortFlags[a]; ok && kind[long] != 0 {
+				a = long
+			}
+		}
 		if !onlyPos && strings.HasPrefix(a, "--") {
-			switch kind[a] {
+			name, eqVal, hasEq := strings.Cut(a, "=")
+			switch kind[name] {
 			case 'b':
-				f.seen[a] = true
+				if hasEq {
+					return f, usage("%s does not take a value", name)
+				}
+				f.seen[name] = true
 			case 'v', 'm':
-				if i+1 >= len(args) {
-					return f, usage("%s requires a value", a)
-				}
-				f.seen[a] = true
-				if kind[a] == 'v' {
-					f.vals[a] = args[i+1]
+				var val string
+				if hasEq {
+					val = eqVal
 				} else {
-					f.multi[a] = append(f.multi[a], args[i+1])
+					if i+1 >= len(args) {
+						return f, usage("%s requires a value", name)
+					}
+					val = args[i+1]
+					i++
 				}
-				i++
+				f.seen[name] = true
+				if kind[name] == 'v' {
+					f.vals[name] = val
+				} else {
+					f.multi[name] = append(f.multi[name], val)
+				}
 			default:
-				if near := nearestFlag(a, kind); near != "" {
-					return f, usage("unknown flag %q; did you mean %s?", a, near)
+				if near := nearestFlag(name, kind); near != "" {
+					return f, usage("unknown flag %q; did you mean %s?", name, near)
 				}
-				return f, usage("unknown flag %q", a)
+				return f, usage("unknown flag %q", name)
 			}
 			continue
 		}

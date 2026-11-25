@@ -64,10 +64,10 @@ func init() {
 		Run:      runRequireSigned})
 	register(Command{Path: []string{"mr", "create"},
 		Summary: "open a merge request",
-		Usage:   "mr create <target owner/name> --source [owner/name:]<branch> --target <branch> --title <t> [--body <b> | --file -] [--format md|org] [--draft]",
+		Usage:   "mr create <target owner/name> --source [owner/name:]<branch> [--target <branch>] --title <t> [--body <b> | --file -] [--format md|org] [--draft]",
 		Flags: []Flag{
 			{"--source", "[owner/name:]<branch>", "the branch to merge, from a fork with owner/name:", ""},
-			{"--target", "<branch>", "the branch to merge into", ""},
+			{"--target", "<branch>", "the branch to merge into", "default branch"},
 			{"--title", "<t>", "the merge request's title", ""},
 			{"--body", "<b>", "the merge request's body", ""},
 			{"--file", "-", "read the body from stdin", ""},

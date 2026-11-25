@@ -21,7 +21,9 @@ import (
 // hasBodyFlag reports whether args already carry body/message input.
 func hasBodyFlag(args []string) bool {
 	for _, a := range args {
-		if a == "--body" || a == "--message" || a == "--file" {
+		if a == "--body" || a == "-b" || strings.HasPrefix(a, "--body=") ||
+			a == "--message" || a == "-m" || strings.HasPrefix(a, "--message=") ||
+			a == "--file" || a == "-f" || strings.HasPrefix(a, "--file=") {
 			return true
 		}
 	}
@@ -333,11 +335,10 @@ func hasFlag(args []string, flag string) bool {
 // signs with; the server is never asked to vouch for a commit it did not
 // receive already signed (#175).
 func cmdMRRebase(args []string) int {
-	if len(args) != 1 {
-		fmt.Fprintln(os.Stderr, "usage: gitbay mr rebase <n>")
+	if len(args) > 1 {
+		fmt.Fprintln(os.Stderr, "usage: gitbay mr rebase [<n>]")
 		return protocol.ExitUsage
 	}
-	n := args[0]
 	// Cheapest check first: a dirty tree stops the rebase anyway, and
 	// saying so costs no round trip.
 	if dirty, err := worktreeDirty(); err != nil {
@@ -355,6 +356,17 @@ func cmdMRRebase(args []string) int {
 	if t.repo == "" {
 		fmt.Fprintln(os.Stderr, "gitbay: run this in a clone of the repository the merge request targets")
 		return protocol.ExitUsage
+	}
+	var n string
+	if len(args) == 1 {
+		n = strings.TrimPrefix(args[0], "!")
+	} else {
+		var err error
+		n, err = inferBranchMR(t)
+		if err != nil {
+			fmt.Fprintln(os.Stderr, "gitbay:", err)
+			return protocol.ExitNotFound
+		}
 	}
 	out, code := captureSSH(t, []string{"mr", "show", t.repo, n, "--json"})
 	if code != 0 {

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"log/slog"
+	"net/url"
 	"path"
 	"strings"
 	"time"
@@ -270,4 +271,45 @@ func cutHeads(ref string) (string, bool) {
 		return ref[len(p):], true
 	}
 	return "", false
+}
+
+// PushHints formats post-receive hints for non-default branches in updates:
+// a link to any open merge request for that branch, or the CLI command and
+// web URL to open one.
+func PushHints(st *store.Store, cfg config.Config, repoID int64, updates []policy.RefUpdate) string {
+	repo, err := st.RepoByID(repoID)
+	if err != nil {
+		return ""
+	}
+	site := strings.TrimRight(cfg.Server.SiteURL, "/")
+	var lines []string
+	for _, u := range updates {
+		branch, ok := cutHeads(u.Ref)
+		if !ok || u.IsDelete || branch == repo.DefaultBranch {
+			continue
+		}
+		mrs, err := st.OpenMRsBySource(repoID, branch)
+		if err == nil && len(mrs) > 0 {
+			for _, mr := range mrs {
+				target := repo
+				if mr.RepoID != repo.ID {
+					if r, err := st.RepoByID(mr.RepoID); err == nil {
+						target = r
+					}
+				}
+				if site != "" {
+					lines = append(lines, fmt.Sprintf("open merge request !%d: %s/%s/mrs/%d", mr.Number, site, target.Path(), mr.Number))
+				} else {
+					lines = append(lines, fmt.Sprintf("open merge request !%d (%s)", mr.Number, target.Path()))
+				}
+			}
+			continue
+		}
+		lines = append(lines, fmt.Sprintf("create a merge request for %s:", branch))
+		lines = append(lines, fmt.Sprintf("  gitbay mr create --source %s", shellWord(branch)))
+		if site != "" {
+			lines = append(lines, fmt.Sprintf("  %s/%s/mrs/new?source=%s", site, repo.Path(), url.QueryEscape(branch)))
+		}
+	}
+	return strings.Join(lines, "\n")
 }

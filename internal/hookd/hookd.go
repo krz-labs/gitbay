@@ -152,8 +152,8 @@ func (s *Server) handle(conn net.Conn) {
 		preReceiveStarted(req.Token)
 		s.preReceive(req, dec, enc)
 	case "post-receive":
-		s.postReceive(req)
-		enc.Encode(Response{Allow: true})
+		msg := s.postReceive(req)
+		enc.Encode(Response{Allow: true, Message: msg})
 	default:
 		enc.Encode(Response{Allow: false, Message: fmt.Sprintf("unknown hook %q", req.Hook)})
 	}
@@ -346,8 +346,9 @@ func (s *Server) releaseAnchors(repo store.Repo, updates []policy.RefUpdate) str
 
 // postReceive runs the ref-update work for a push; see
 // control.RefsUpdated, which server-side writes to a branch share.
-func (s *Server) postReceive(req Request) {
+func (s *Server) postReceive(req Request) string {
 	control.RefsUpdated(s.st, s.cfg, req.RepoID, req.UserID, req.Scope, req.Updates)
+	return control.PushHints(s.st, s.cfg, req.RepoID, req.Updates)
 }
 
 // Ask sends one request from the hook process to the daemon. stream is

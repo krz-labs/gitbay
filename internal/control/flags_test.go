@@ -30,6 +30,32 @@ func TestParseFlags(t *testing.T) {
 	if err != nil || strings.Join(f.Pos, " ") != "--title x" || f.Has("--title") {
 		t.Fatalf("-- handling: %v %+v", err, f)
 	}
+
+	// Short flags and --flag=value forms.
+	shortSpec := flagSpec{
+		Values: []string{"--title", "--state", "--file", "--limit"},
+		Multi:  []string{"--label"},
+		Bools:  []string{"--draft"},
+		MaxPos: 1,
+	}
+	f, err = parseFlags([]string{"a/b", "-t", "hello", "-s", "all", "-l", "bug", "-l", "ux", "-d", "-f", "-", "-n", "10"}, shortSpec)
+	if err != nil {
+		t.Fatalf("short flags: %v", err)
+	}
+	if f.Value("--title") != "hello" || f.Value("--state") != "all" || f.Value("--file") != "-" ||
+		f.Value("--limit") != "10" || !f.Has("--draft") || strings.Join(f.List("--label"), ",") != "bug,ux" {
+		t.Fatalf("short flags parsed wrong: %+v", f)
+	}
+	f, err = parseFlags([]string{"a/b", "--title=hello=world", "--label=bug", "--label=ux"}, shortSpec)
+	if err != nil {
+		t.Fatalf("--flag=value: %v", err)
+	}
+	if f.Value("--title") != "hello=world" || strings.Join(f.List("--label"), ",") != "bug,ux" {
+		t.Fatalf("--flag=value parsed wrong: %+v", f)
+	}
+	if _, err := parseFlags([]string{"a/b", "--draft=true"}, shortSpec); err == nil {
+		t.Errorf("expected error for --bool=value")
+	}
 }
 
 func TestNearestFlag(t *testing.T) {

@@ -48,14 +48,14 @@ func newRoot() *cobra.Command {
 			pass("set", passOpts{server: []string{"status", "set"}, needsRepo: true}),
 			pass("list", passOpts{server: []string{"status", "list"}, needsRepo: true}),
 		),
-		group("build", "CI builds",
+		withDefault(group("build", "CI builds",
 			pass("list", passOpts{server: []string{"build", "list"}, needsRepo: true}),
-			pass("show", passOpts{server: []string{"build", "show"}, needsRepo: true}),
-			pass("log", passOpts{server: []string{"build", "log"}, needsRepo: true}),
+			pass("show", passOpts{server: []string{"build", "show"}, needsRepo: true, inferBuild: true}),
+			pass("log", passOpts{server: []string{"build", "log"}, needsRepo: true, inferBuild: true}),
 			pass("jobs", passOpts{server: []string{"build", "jobs"}, needsRepo: true}),
 			pass("trigger", passOpts{server: []string{"build", "trigger"}, needsRepo: true}),
 			pass("cancel", passOpts{server: []string{"build", "cancel"}, needsRepo: true}),
-		),
+		), passOpts{server: []string{"build", "list"}, needsRepo: true}, passOpts{server: []string{"build", "show"}, needsRepo: true, inferBuild: true}, ""),
 		withShort(pass("dashboard", passOpts{server: []string{"dashboard"}}), "pinned repos, open MRs, assigned issues, recent builds"),
 		pass("feed", passOpts{server: []string{"feed"}}),
 		withShort(pass("explore", passOpts{server: []string{"explore"}}), "public repositories on this instance"),
@@ -105,6 +105,7 @@ func newRoot() *cobra.Command {
 		issueCmd(),
 		milestoneCmd(),
 		mrCmd(),
+		openCmd(),
 		releaseCmd(),
 		migrateCmd(),
 		webCmd(),
@@ -181,7 +182,7 @@ type rootSection struct {
 }
 
 var rootSections = []rootSection{
-	{"WORK", []string{"issue", "mr", "build", "release", "milestone", "label", "search", "query"}},
+	{"WORK", []string{"issue", "mr", "build", "release", "milestone", "label", "search", "query", "open"}},
 	{"REPOSITORIES", []string{"repo", "wiki", "status", "webhook", "init"}},
 	{"YOU", []string{"dashboard", "feed", "notifications", "auth", "profile", "snippet", "web"}},
 	{"INSTANCE", []string{"org", "explore", "register", "migrate", "remote", "admin", "audit", "man"}},
@@ -245,6 +246,9 @@ type passOpts struct {
 	stdinSecret bool
 	editor      string // open $EDITOR for a body when none given
 	inferSource bool   // --source defaults to the checked-out branch inside a clone
+	inferMR     bool   // <n> defaults to the current branch's open MR inside a clone
+	inferBuild  bool   // <n> defaults to the latest build for the current branch inside a clone
+	numPrefix   string // optional leading "#" or "!" stripped from args[1]
 }
 
 // pass builds a passthrough command. Flags are parsed by the server, which
@@ -323,6 +327,23 @@ func runPass(o passOpts, cliPath string, args []string) int {
 			fmt.Fprintln(os.Stderr, "gitbay:", err)
 			return protocol.ExitUsage
 		}
+		args = stripLeadingNumberPrefix(args, o.numPrefix)
+	}
+	if o.inferMR && !explicitRepo && !hasPositionalAfterRepo(args) {
+		num, err := inferBranchMR(t)
+		if err != nil {
+			fmt.Fprintln(os.Stderr, "gitbay:", err)
+			return protocol.ExitNotFound
+		}
+		args = slices.Insert(args, 1, num)
+	}
+	if o.inferBuild && !explicitRepo && !hasPositionalAfterRepo(args) {
+		num, err := inferLatestBuild(t)
+		if err != nil {
+			fmt.Fprintln(os.Stderr, "gitbay:", err)
+			return protocol.ExitNotFound
+		}
+		args = slices.Insert(args, 1, num)
 	}
 	// Inside a clone, the branch you are on is the one you mean (#101).
 	// Only when the repository was inferred from the clone too: naming
@@ -335,23 +356,46 @@ func runPass(o passOpts, cliPath string, args []string) int {
 
 	var stdin io.Reader = strings.NewReader("")
 	if o.editor != "" {
-		// Issue bodies prefill from the repo's .gitbay/issue-template*.md.
-		var prefill func() string
-		if o.editor == "issue" && len(args) > 0 && strings.Contains(args[0], "/") {
-			repoPath := args[0]
-			prefill = func() string { return fetchIssueTemplate(t, repoPath) }
-		}
-		extended, body, ok, err := maybeEditor(args, o.editor, prefill)
-		if err != nil {
-			fmt.Fprintln(os.Stderr, "gitbay:", err)
-			return protocol.ExitFailure
-		}
-		if !ok {
-			return protocol.ExitFailure
-		}
-		args = extended
-		if body != nil {
-			stdin = body
+		// Issue/MR create can take both title and body from $EDITOR when
+		// --title/-t is omitted; MR create prefills from HEAD commit.
+		if (o.editor == "issue" || o.editor == "merge request") && !hasFlag(args, "--title") && !hasFlag(args, "-t") {
+			var preTitle, preBody string
+			if o.editor == "merge request" && !explicitRepo {
+				preTitle, preBody = headCommitTitleBody()
+			} else if o.editor == "issue" && len(args) > 0 && strings.Contains(args[0], "/") {
+				preBody = fetchIssueTemplate(t, args[0])
+			}
+			extended, body, ok, err := maybeTitleAndBodyEditor(args, o.editor, preTitle, preBody)
+			if err != nil {
+				fmt.Fprintln(os.Stderr, "gitbay:", err)
+				return protocol.ExitFailure
+			}
+			if !ok {
+				return protocol.ExitFailure
+			}
+			args = extended
+			if body != nil {
+				stdin = body
+			}
+		} else {
+			// Issue bodies prefill from the repo's .gitbay/issue-template*.md.
+			var prefill func() string
+			if o.editor == "issue" && len(args) > 0 && strings.Contains(args[0], "/") {
+				repoPath := args[0]
+				prefill = func() string { return fetchIssueTemplate(t, repoPath) }
+			}
+			extended, body, ok, err := maybeEditor(args, o.editor, prefill)
+			if err != nil {
+				fmt.Fprintln(os.Stderr, "gitbay:", err)
+				return protocol.ExitFailure
+			}
+			if !ok {
+				return protocol.ExitFailure
+			}
+			args = extended
+			if body != nil {
+				stdin = body
+			}
 		}
 	}
 	if stdin == nil || isEmptyReader(stdin) {
@@ -380,10 +424,10 @@ func isEmptyReader(r io.Reader) bool {
 // usesStdin reports whether the arguments request stdin content.
 func usesStdin(args []string) bool {
 	for i, a := range args {
-		if slices.Contains([]string{"--file", "--key", "--secret"}, a) && i+1 < len(args) && args[i+1] == "-" {
+		if slices.Contains([]string{"--file", "-f", "--key", "--secret"}, a) && i+1 < len(args) && args[i+1] == "-" {
 			return true
 		}
-		if a == "--token-stdin" {
+		if a == "--file=-" || a == "--key=-" || a == "--secret=-" || a == "--token-stdin" {
 			return true
 		}
 	}
@@ -545,7 +589,7 @@ func authCmd() *cobra.Command {
 }
 
 func repoCmd() *cobra.Command {
-	return group("repo", "create and manage repositories",
+	return withRepoDefault(group("repo", "create and manage repositories",
 		pass("create", passOpts{server: []string{"repo", "create"}}),
 		pass("list", passOpts{server: []string{"repo", "list"}}),
 		pass("show", passOpts{server: []string{"repo", "show"}, needsRepo: true}),
@@ -658,24 +702,26 @@ func repoCmd() *cobra.Command {
 			pass("website", passOpts{server: []string{"repo", "settings", "website"}, needsRepo: true}),
 			pass("git-daemon", passOpts{server: []string{"repo", "settings", "git-daemon"}, needsRepo: true}),
 		),
-	)
+	))
 }
 
 func issueCmd() *cobra.Command {
-	return group("issue", "issues",
+	listOpts := passOpts{server: []string{"issue", "list"}, needsRepo: true, crossRepo: []string{"--query", "--q"}}
+	showOpts := passOpts{server: []string{"issue", "show"}, needsRepo: true, numPrefix: "#"}
+	return withDefault(group("issue", "issues",
 		pass("create", passOpts{server: []string{"issue", "create"}, needsRepo: true, stdinOK: true, editor: "issue"}),
-		pass("list", passOpts{server: []string{"issue", "list"}, needsRepo: true, crossRepo: []string{"--query", "--q"}}),
-		pass("show", passOpts{server: []string{"issue", "show"}, needsRepo: true}),
-		pass("comment", passOpts{server: []string{"issue", "comment"}, needsRepo: true, stdinOK: true, editor: "comment"}),
-		pass("close", passOpts{server: []string{"issue", "close"}, needsRepo: true}),
-		pass("reopen", passOpts{server: []string{"issue", "reopen"}, needsRepo: true}),
-		pass("label", passOpts{server: []string{"issue", "label"}, needsRepo: true}),
-		pass("assign", passOpts{server: []string{"issue", "assign"}, needsRepo: true}),
-		pass("react", passOpts{server: []string{"issue", "react"}, needsRepo: true}),
-		pass("edit", passOpts{server: []string{"issue", "edit"}, needsRepo: true, stdinOK: true}),
-		pass("milestone", passOpts{server: []string{"issue", "milestone"}, needsRepo: true}),
+		pass("list", listOpts),
+		pass("show", showOpts),
+		pass("comment", passOpts{server: []string{"issue", "comment"}, needsRepo: true, stdinOK: true, editor: "comment", numPrefix: "#"}),
+		pass("close", passOpts{server: []string{"issue", "close"}, needsRepo: true, numPrefix: "#"}),
+		pass("reopen", passOpts{server: []string{"issue", "reopen"}, needsRepo: true, numPrefix: "#"}),
+		pass("label", passOpts{server: []string{"issue", "label"}, needsRepo: true, numPrefix: "#"}),
+		pass("assign", passOpts{server: []string{"issue", "assign"}, needsRepo: true, numPrefix: "#"}),
+		pass("react", passOpts{server: []string{"issue", "react"}, needsRepo: true, numPrefix: "#"}),
+		pass("edit", passOpts{server: []string{"issue", "edit"}, needsRepo: true, stdinOK: true, numPrefix: "#"}),
+		pass("milestone", passOpts{server: []string{"issue", "milestone"}, needsRepo: true, numPrefix: "#"}),
 		pass("templates", passOpts{server: []string{"issue", "templates"}, needsRepo: true}),
-	)
+	), listOpts, showOpts, "#")
 }
 
 func releaseCmd() *cobra.Command {
@@ -704,34 +750,36 @@ func milestoneCmd() *cobra.Command {
 }
 
 func mrCmd() *cobra.Command {
-	review := pass("review", passOpts{server: []string{"mr", "review"}, needsRepo: true})
-	review.AddCommand(pass("request", passOpts{server: []string{"mr", "review", "request"}, needsRepo: true}))
-	return group("mr", "merge requests",
+	listOpts := passOpts{server: []string{"mr", "list"}, needsRepo: true, crossRepo: []string{"--query", "--q"}}
+	showOpts := passOpts{server: []string{"mr", "show"}, needsRepo: true, inferMR: true, numPrefix: "!"}
+	review := pass("review", passOpts{server: []string{"mr", "review"}, needsRepo: true, inferMR: true, numPrefix: "!"})
+	review.AddCommand(pass("request", passOpts{server: []string{"mr", "review", "request"}, needsRepo: true, inferMR: true, numPrefix: "!"}))
+	return withDefault(group("mr", "merge requests",
 		pass("create", passOpts{server: []string{"mr", "create"}, needsRepo: true, stdinOK: true, editor: "merge request", inferSource: true}),
-		pass("list", passOpts{server: []string{"mr", "list"}, needsRepo: true, crossRepo: []string{"--query", "--q"}}),
-		pass("show", passOpts{server: []string{"mr", "show"}, needsRepo: true}),
-		pass("diff", passOpts{server: []string{"mr", "diff"}, needsRepo: true}),
+		pass("list", listOpts),
+		pass("show", showOpts),
+		pass("diff", passOpts{server: []string{"mr", "diff"}, needsRepo: true, inferMR: true, numPrefix: "!"}),
 		local("checkout", "fetch and check out the MR head locally: gitbay mr checkout <n>", cmdMRCheckout),
-		local("rebase", "replay the MR's branch onto its target and re-push: gitbay mr rebase <n>", cmdMRRebase),
-		pass("comment", passOpts{server: []string{"mr", "comment"}, needsRepo: true, stdinOK: true, editor: "comment"}),
-		pass("react", passOpts{server: []string{"mr", "react"}, needsRepo: true}),
-		pass("diff-comment", passOpts{server: []string{"mr", "diff-comment"}, needsRepo: true, stdinOK: true, editor: "comment"}),
-		pass("threads", passOpts{server: []string{"mr", "threads"}, needsRepo: true}),
-		pass("resolve", passOpts{server: []string{"mr", "resolve"}, needsRepo: true}),
+		local("rebase", "replay the MR's branch onto its target and re-push: gitbay mr rebase [<n>]", cmdMRRebase),
+		pass("comment", passOpts{server: []string{"mr", "comment"}, needsRepo: true, stdinOK: true, editor: "comment", inferMR: true, numPrefix: "!"}),
+		pass("react", passOpts{server: []string{"mr", "react"}, needsRepo: true, inferMR: true, numPrefix: "!"}),
+		pass("diff-comment", passOpts{server: []string{"mr", "diff-comment"}, needsRepo: true, stdinOK: true, editor: "comment", inferMR: true, numPrefix: "!"}),
+		pass("threads", passOpts{server: []string{"mr", "threads"}, needsRepo: true, inferMR: true, numPrefix: "!"}),
+		pass("resolve", passOpts{server: []string{"mr", "resolve"}, needsRepo: true, numPrefix: "!"}),
 		mrApplySuggestionCmd(),
-		pass("unresolve", passOpts{server: []string{"mr", "unresolve"}, needsRepo: true}),
+		pass("unresolve", passOpts{server: []string{"mr", "unresolve"}, needsRepo: true, numPrefix: "!"}),
 		review,
-		pass("merge", passOpts{server: []string{"mr", "merge"}, needsRepo: true}),
-		pass("close", passOpts{server: []string{"mr", "close"}, needsRepo: true}),
-		pass("revisions", passOpts{server: []string{"mr", "revisions"}, needsRepo: true}),
-		pass("range-diff", passOpts{server: []string{"mr", "range-diff"}, needsRepo: true}),
-		pass("draft", passOpts{server: []string{"mr", "draft"}, needsRepo: true}),
-		pass("ready", passOpts{server: []string{"mr", "ready"}, needsRepo: true}),
-		pass("edit", passOpts{server: []string{"mr", "edit"}, needsRepo: true, stdinOK: true}),
-		pass("label", passOpts{server: []string{"mr", "label"}, needsRepo: true}),
-		pass("milestone", passOpts{server: []string{"mr", "milestone"}, needsRepo: true}),
-		pass("retarget", passOpts{server: []string{"mr", "retarget"}, needsRepo: true}),
-	)
+		pass("merge", passOpts{server: []string{"mr", "merge"}, needsRepo: true, inferMR: true, numPrefix: "!"}),
+		pass("close", passOpts{server: []string{"mr", "close"}, needsRepo: true, inferMR: true, numPrefix: "!"}),
+		pass("revisions", passOpts{server: []string{"mr", "revisions"}, needsRepo: true, inferMR: true, numPrefix: "!"}),
+		pass("range-diff", passOpts{server: []string{"mr", "range-diff"}, needsRepo: true, inferMR: true, numPrefix: "!"}),
+		pass("draft", passOpts{server: []string{"mr", "draft"}, needsRepo: true, inferMR: true, numPrefix: "!"}),
+		pass("ready", passOpts{server: []string{"mr", "ready"}, needsRepo: true, inferMR: true, numPrefix: "!"}),
+		pass("edit", passOpts{server: []string{"mr", "edit"}, needsRepo: true, stdinOK: true, inferMR: true, numPrefix: "!"}),
+		pass("label", passOpts{server: []string{"mr", "label"}, needsRepo: true, inferMR: true, numPrefix: "!"}),
+		pass("milestone", passOpts{server: []string{"mr", "milestone"}, needsRepo: true, inferMR: true, numPrefix: "!"}),
+		pass("retarget", passOpts{server: []string{"mr", "retarget"}, needsRepo: true, numPrefix: "!"}),
+	), listOpts, showOpts, "!")
 }
 
 // importCmd passes repo import through with stdin wired for --token-stdin.
