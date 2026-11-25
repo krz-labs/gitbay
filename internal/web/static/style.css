@@ -982,7 +982,7 @@ tr.tipbar td {
 .tipbar .spacer { flex: 1; }
 .tipbar .age { color: var(--muted); white-space: nowrap; }
 
-.readme { margin-top: var(--sp-5); }
+.readme { margin: var(--sp-5) 0; }
 .readme .cardbody { max-width: 78ch; }
 /* the overview README caps as a card, so prose and code share an edge */
 .overview .readme { max-width: 88ch; }
@@ -1035,21 +1035,59 @@ ul.repolist .reponame .sep { color: var(--muted); margin: 0 2px; }
 ul.repolist .desc { margin-top: 2px; }
 ul.repolist .topics, ul.repolist .meta { margin-top: var(--sp-1); }
 
-/* one column per field across every row: name, labels, description,
-   topics, branch, license, updated. Rows are subgrids of the list;
-   the name and meta paragraphs are display: contents so their parts
-   are cells. Cells pad instead of a gap, so an empty column is 0 wide. */
-ul.repolist.rows { display: grid; grid-template-columns: auto auto minmax(0, 1fr) auto auto auto auto; }
-ul.repolist.rows li { grid-column: 1 / -1; display: grid; grid-template-columns: subgrid; align-items: baseline; padding: var(--sp-2) var(--sp-4); }
-ul.repolist.rows li > *, ul.repolist.rows .reponame > *, ul.repolist.rows .meta > * { grid-row: 1; padding-left: var(--sp-3); white-space: nowrap; }
-ul.repolist.rows .reponame, ul.repolist.rows .meta { display: contents; }
-ul.repolist.rows .reponame .name { grid-column: 1; padding-left: 0; font-size: var(--fs-2); }
-ul.repolist.rows .labels { grid-column: 2; }
-ul.repolist.rows .desc { grid-column: 3; overflow: hidden; text-overflow: ellipsis; color: var(--muted); font-size: var(--fs-2); margin: 0; }
-ul.repolist.rows .topics { grid-column: 4; margin: 0; }
-ul.repolist.rows .branch { grid-column: 5; }
-ul.repolist.rows .license { grid-column: 6; }
-ul.repolist.rows .updated { grid-column: 7; }
+/* two-row repo list layout: name + chips left and branch/license/updated
+   right on row 1; full readable description and wrapping topic pills on
+   row 2 so descriptions are never crushed by long tag lists. */
+ul.repolist.rows li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--sp-1) var(--sp-4);
+  align-items: baseline;
+  padding: var(--sp-3) var(--sp-4);
+}
+ul.repolist.rows .reponame {
+  grid-column: 1;
+  grid-row: 1;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  flex-wrap: wrap;
+  font-size: var(--fs-3);
+}
+ul.repolist.rows .reponame .name { font-size: var(--fs-3); }
+ul.repolist.rows .labels { display: inline-flex; gap: var(--sp-1); }
+ul.repolist.rows .meta {
+  grid-column: 2;
+  grid-row: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-3);
+  white-space: nowrap;
+  font-size: var(--fs-1);
+  color: var(--muted);
+  margin: 0;
+}
+ul.repolist.rows .desc {
+  grid-column: 1 / -1;
+  color: var(--muted);
+  font-size: var(--fs-2);
+  margin: 2px 0 0;
+  line-height: 1.45;
+}
+ul.repolist.rows .topics {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-1);
+  margin: var(--sp-1) 0 0;
+}
+ul.repolist.rows .branch { display: inline-flex; align-items: center; gap: 4px; }
+ul.repolist.rows .license { font-family: var(--mono); font-size: var(--fs-0); }
+ul.repolist.rows .updated { font-variant-numeric: tabular-nums; }
+@media (max-width: 44rem) {
+  ul.repolist.rows li { grid-template-columns: 1fr; }
+  ul.repolist.rows .meta { grid-column: 1; grid-row: auto; flex-wrap: wrap; margin-top: var(--sp-1); }
+}
 ul.repolist.rows li.empty { display: block; }
 
 /* pinned repos: a compact wrap of names, no description or meta */
@@ -2111,31 +2149,48 @@ button.react.mine { border-color: var(--accent); background: var(--surface); col
 }
 .popform input[type="text"], .popform select { flex: 1; min-width: 0; }
 
-/* ---- Cmd+K trigger & command palette ---- */
-.cmdk-trigger {
-  display: inline-flex;
+/* ---- nav search bar & Cmd+K command palette ---- */
+.railsearch-mob { display: none; }
+.railsearch {
+  display: flex;
   align-items: center;
-  gap: var(--sp-3);
-  height: 30px;
-  margin-left: var(--sp-2);
-  padding: 0 var(--sp-3);
+  flex: 1 1 18rem;
+  max-width: 28rem;
+  margin: 0 var(--sp-3);
+  height: 32px;
+  padding: 0 var(--sp-1) 0 var(--sp-3);
   border: 1px solid var(--shell-line);
   border-radius: var(--r-ctl);
   background: var(--shell-hover);
-  color: var(--shell-muted);
+}
+.railsearch:focus-within { border-color: var(--shell-mark); }
+.railsearch input[type="search"] {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--shell-fg);
   font-size: var(--fs-1);
+}
+.railsearch input[type="search"]::placeholder { color: var(--shell-muted); }
+.railsearch input[type="search"]:focus { outline: none; }
+.cmdk-trigger {
+  display: inline-flex;
+  align-items: center;
+  height: 24px;
+  padding: 0 var(--sp-2);
+  border: 1px solid var(--shell-line);
+  border-radius: var(--r-ctl);
+  background: var(--shell-bg);
+  color: var(--shell-muted);
+  font-size: var(--fs-0);
   font-weight: 400;
   cursor: pointer;
 }
 .cmdk-trigger:hover { color: var(--shell-fg); border-color: var(--shell-muted); filter: none; }
-.cmdk-trigger kbd {
-  font-family: var(--mono);
-  font-size: var(--fs-0);
-  padding: 1px 5px;
-  border: 1px solid var(--shell-line);
-  border-radius: var(--r-ctl);
-  color: var(--shell-muted);
-}
+.cmdk-trigger kbd { font-family: var(--mono); font-size: var(--fs-0); color: inherit; }
 dialog.cmdk {
   padding: 0;
   border: 1px solid var(--faint);
@@ -2143,7 +2198,7 @@ dialog.cmdk {
   background: var(--canvas);
   color: var(--fg);
   box-shadow: var(--shadow);
-  width: min(34rem, 92vw);
+  width: min(42rem, 92vw);
   margin: 12vh auto auto;
 }
 dialog.cmdk::backdrop { background: rgb(0 0 0 / 0.45); }
@@ -2202,8 +2257,9 @@ dialog.cmdk::backdrop { background: rgb(0 0 0 / 0.45); }
 }
 .copybtn:hover { background: var(--hover); filter: none; }
 
-@media (max-width: 34rem) {
-  .cmdk-trigger { display: none; }
+@media (max-width: 44rem) {
+  .railsearch { display: none; }
+  .railsearch-mob { display: list-item; }
 }
 
 /* ---- account & admin redesign ---- */

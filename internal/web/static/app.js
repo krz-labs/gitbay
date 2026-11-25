@@ -306,7 +306,7 @@
     if (isTyping(e.target) || e.metaKey || e.ctrlKey || e.altKey) return;
 
     if (e.key === '/') {
-      const search = document.querySelector('main input[type="search"]');
+      const search = document.querySelector('main input[type="search"], .railsearch input[type="search"]');
       if (search) { e.preventDefault(); search.focus(); return; }
       e.preventDefault();
       openPalette();

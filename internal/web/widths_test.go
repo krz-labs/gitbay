@@ -37,12 +37,16 @@ func TestListPagesAreWide(t *testing.T) {
 		}
 	}
 	// Settings pages carry a section column: every section id has a link
-	// in the column, and the page is wide with the narrow grid.
+	// in the column. admin.html spans full width so queue tables fill the container.
 	for _, name := range []string{"settings.html", "account.html", "admin.html"} {
 		src, _ := templateFS.ReadFile("templates/" + name)
 		s := string(src)
-		if !strings.HasPrefix(s, `{{define "width"}}wide{{end}}`) || !strings.Contains(s, `<div class="withcol narrow">`) {
-			t.Errorf("%s lacks the narrow column layout", name)
+		wantCol := `<div class="withcol narrow">`
+		if name == "admin.html" {
+			wantCol = `<div class="withcol">`
+		}
+		if !strings.HasPrefix(s, `{{define "width"}}wide{{end}}`) || !strings.Contains(s, wantCol) {
+			t.Errorf("%s lacks the expected column layout (%s)", name, wantCol)
 		}
 		for _, m := range regexp.MustCompile(`<section id="([a-z]+)"`).FindAllStringSubmatch(s, -1) {
 			if !strings.Contains(s, `href="#`+m[1]+`"`) {
