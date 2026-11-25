@@ -1,20 +1,26 @@
 {{define "title"}}{{.Owner}} · {{.Site}}{{end}}
 {{define "content"}}
-<section class="profilehead">
-<h1>{{.Owner}} <span class="chip chip-neutral">{{.Kind}}</span></h1>
-{{if .Profile.Description}}<p class="desc lede">{{.Profile.Description}}</p>{{end}}
-{{if .Profile.Website}}<p class="meta"><a href="{{.Profile.Website}}" rel="nofollow me">{{.Profile.Website}}</a></p>{{end}}
-{{if .Profile.Links}}<p class="meta">{{range $i, $l := .Profile.Links}}{{if $i}} · {{end}}<a href="{{$l.URL}}" rel="nofollow me">{{if $l.Label}}{{$l.Label}}{{else}}{{$l.URL}}{{end}}</a>{{end}}</p>{{end}}
-{{if .Orgs}}<p class="meta">member of {{range .Orgs}}<a class="memberchip" href="/{{.Name}}">{{.Name}}</a> {{end}}</p>{{end}}
-{{if .Members}}<p class="meta">members {{range .Members}}<a class="memberchip" href="/{{.Name}}">{{.Name}} <span class="role">{{.Role}}</span></a> {{end}}</p>{{end}}
-{{if and (eq .Kind "org") .Repos}}<p class="meta"><a href="/{{.Owner}}/-/labels">labels</a> · <a href="/{{.Owner}}/-/milestones">milestones</a></p>{{end}}
+<section class="profilehead profilecard">
+  <div class="profiletop">
+    <span class="avatar avatar-lg" aria-hidden="true">{{initial .Owner}}</span>
+    <div class="profileid">
+      <h1>{{.Owner}} <span class="chip chip-neutral">{{.Kind}}</span></h1>
+      {{if .Profile.Description}}<p class="desc lede">{{.Profile.Description}}</p>{{end}}
+      <div class="profilemeta">
+        {{if .Profile.Website}}<a href="{{.Profile.Website}}" rel="nofollow me">{{.Profile.Website}}</a>{{end}}
+        {{range .Profile.Links}}<a href="{{.URL}}" rel="nofollow me">{{if .Label}}{{.Label}}{{else}}{{.URL}}{{end}}</a>{{end}}
+        {{if and (eq .Kind "org") .Repos}}<a href="/{{.Owner}}/-/labels">Labels</a><a href="/{{.Owner}}/-/milestones">Milestones</a>{{end}}
+      </div>
+    </div>
+    {{if .Self}}<span class="grow"></span><a class="button btn" href="/settings#profile">Edit profile</a>{{end}}
+  </div>
+  {{if .Orgs}}<p class="meta">Member of {{range .Orgs}}<a class="memberchip" href="/{{.Name}}">{{.Name}}</a> {{end}}</p>{{end}}
+  {{if .Members}}<p class="meta">Members {{range .Members}}<a class="memberchip" href="/{{.Name}}">{{.Name}} <span class="role">{{.Role}}</span></a> {{end}}</p>{{end}}
 </section>
 {{if and .Notice (ne .Tab "snippets") (ne .Tab "people")}}<p class="notice" role="status">{{.Notice}}</p>{{end}}
-{{/* The profile is sections rather than one stack: a long About used to
-     push the repositories off the bottom of the page (#242). About is
-     the bare /{owner}; the rest hang off /-/. A tab nobody may open is
-     not offered and its URL is a 404. */}}
-<nav class="tabs profiletabs" aria-label="Profile">
+
+<div id="owner-panel">
+<nav class="tabs profiletabs" aria-label="Profile" data-tab-swap="owner-panel">
   <a {{if eq .Tab "about"}}aria-current="page" {{end}}href="/{{.Owner}}">About</a>
   <a {{if eq .Tab "repos"}}aria-current="page" {{end}}href="/{{.Owner}}/-/repositories">Repositories{{if .Repos}} <i>{{len .Repos}}</i>{{end}}</a>
   {{if .Self}}<a {{if eq .Tab "bookmarks"}}aria-current="page" {{end}}href="/{{.Owner}}/-/bookmarks">Bookmarks</a>{{end}}
@@ -25,17 +31,14 @@
 {{if eq .Tab "about"}}
 {{if .AboutHTML}}<section class="readme"><div class="rendered">{{.AboutHTML}}</div></section>{{end}}
 <section class="activity">
-<h2>activity <span class="count">{{.ActivityTotal}} in the last year</span></h2>
+<h2>Activity <span class="count">{{.ActivityTotal}} in the last year</span></h2>
 <div class="actgraph-scroll">
 <div class="actgraph">
 {{range .Activity}}<div class="actweek">{{if .Month}}<span class="actmonth">{{.Month}}</span>{{end}}{{range .Days}}<span class="actday{{if .Pad}} pad{{else}} l{{.Level}}{{end}}"{{if not .Pad}} title="{{.Count}} on {{.Date}}"{{end}}></span>{{end}}</div>{{end}}
 </div>
 </div>
 <p class="actlegend"><span>Less</span><span class="actday l0"></span><span class="actday l1"></span><span class="actday l2"></span><span class="actday l3"></span><span class="actday l4"></span><span>More</span></p>
-{{/* The graph is the year at a glance; the log is what happened lately.
-     It is the newest events, not all of them — the atom feed is the one
-     that goes back. */}}
-{{if .Log}}<h3 class="logsub">recent</h3>
+{{if .Log}}<h3 class="logsub">Recent</h3>
 <div class="ownerlog">
 {{range .Log}}<p class="feedline"><a href="/{{.Actor}}">{{.Actor}}</a> {{.Verb}} <a href="{{.URL}}"{{if .Jobs}} title="{{join .Jobs ", "}}"{{end}}>{{.Ref}}</a>{{if .Extra}} {{.Extra}}{{end}}<br><span class="none">{{.Repo}} · <span title="{{whenT .WhenT}}">{{ago .WhenT}}</span></span></p>
 {{end}}
@@ -46,10 +49,15 @@
 {{end}}
 
 {{if eq .Tab "repos"}}
-<ul class="repolist rows">
+{{if .Repos}}<div class="listhead">
+  <input type="search" class="tablefilter" aria-label="Filter repositories" placeholder="Filter repositories…" data-filter-list="owner-repos">
+  <span class="spacer"></span>
+  {{if .Self}}<a class="button" href="/new">New repository</a>{{end}}
+</div>{{end}}
+<div id="owner-repos"><ul class="repolist rows">
 {{range .Repos}}{{template "reporow" .}}
 {{else}}<li class="empty">no visible repositories</li>{{end}}
-</ul>
+</ul></div>
 {{end}}
 
 {{if eq .Tab "bookmarks"}}
@@ -69,7 +77,12 @@
 
 {{if eq .Tab "snippets"}}
 {{if .Notice}}<p class="error" role="alert">{{.Notice}}</p>{{end}}
-{{if .Self}}<p class="meta"><a href="/{{.Owner}}/-/snippets/new">new snippet</a> · or <code>gitbay snippet create &lt;file&gt; &lt; file</code></p>{{end}}
+{{if .Self}}<div class="listhead">
+  <p class="meta"><code>gitbay snippet create &lt;file&gt; &lt; file</code></p>
+  <span class="spacer"></span>
+  <a class="button" href="/{{.Owner}}/-/snippets/new">new snippet</a>
+</div>{{end}}
+<section class="setcard">
 {{if .SnippetRows}}<div class="tablewrap"><table class="keys">
 <tr class="cols"><th scope="col">snippet</th><th scope="col">files</th>{{if .SnippetsAll}}<th scope="col">visibility</th>{{end}}<th scope="col">updated</th></tr>
 {{range .SnippetRows}}<tr>
@@ -80,17 +93,21 @@
 </tr>
 {{end}}</table></div>
 {{else}}<p class="none">No snippets yet.</p>{{end}}
+</section>
 {{end}}
 
 {{if eq .Tab "people"}}{{$org := .Owner}}
-<h2>people <span class="count">{{len .Members}}</span></h2>
 {{if .Notice}}<p class="error" role="alert">{{.Notice}}{{if .Reauth}} <a href="/login">Sign in again</a>{{end}}</p>{{end}}
+<section class="setcard">
+<h2>People <span class="count">{{len .Members}}</span></h2>
 <div class="tablewrap"><table class="keys">
 <tr class="cols"><th scope="col">member</th><th scope="col">role</th><th scope="col"><span class="vh">actions</span></th></tr>
 {{range .Members}}<tr>
   <td><a href="/{{.Name}}">{{.Name}}</a></td>
-  <td>{{.Role}}</td>
-  <td class="act"><form method="post" action="/{{$org}}"><input type="hidden" name="field" value="member-remove"><input type="hidden" name="user" value="{{.Name}}">{{template "confirmfield" .Name}} <button type="submit" class="linklike">Remove</button></form></td>
+  <td><span class="chip chip-neutral">{{.Role}}</span></td>
+  <td class="act"><details class="popover"><summary class="popbtn popbtn-danger">Remove</summary><div class="popmenu">
+    <form method="post" action="/{{$org}}" class="popform"><input type="hidden" name="field" value="member-remove"><input type="hidden" name="user" value="{{.Name}}">{{template "confirmfield" .Name}}<button type="submit" class="danger">Remove</button></form>
+  </div></details></td>
 </tr>
 {{end}}</table></div>
 <details class="editbox">
@@ -104,11 +121,13 @@
       <option value="member">member</option>
       <option value="admin">admin</option>
     </select>
-    <button type="submit" class="btn">Apply</button>
+    <span class="btngroup"><button type="submit">Apply</button></span>
   </form>
 </details>
+</section>
 
-<h2>teams <span class="count">{{len .Teams}}</span></h2>
+<section class="setcard">
+<h2>Teams <span class="count">{{len .Teams}}</span></h2>
 <p class="meta">Teams scope repository access inside the organization: members
 of a team get its role on every repository it is granted.</p>
 {{range .Teams}}<details class="difffold" open>
@@ -154,12 +173,9 @@ of a team get its role on every repository it is granted.</p>
       {{template "confirmfield" .Name}}
       <button type="submit" class="btn">Revoke</button>
     </form>{{end}}
-    <form method="post" action="/{{$org}}" class="setform">
-      <input type="hidden" name="field" value="team-delete">
-      <input type="hidden" name="team" value="{{.Name}}">
-      {{template "confirmfield" .Name}}
-      <button type="submit" class="danger">Delete this team</button>
-    </form>
+    <details class="popover"><summary class="popbtn popbtn-danger">Delete team…</summary><div class="popmenu">
+      <form method="post" action="/{{$org}}" class="popform"><input type="hidden" name="field" value="team-delete"><input type="hidden" name="team" value="{{.Name}}">{{template "confirmfield" .Name}}<button type="submit" class="danger">Delete</button></form>
+    </div></details>
   </div>
 </details>
 {{else}}<p class="none">No teams yet.</p>{{end}}
@@ -172,8 +188,10 @@ of a team get its role on every repository it is granted.</p>
     <button type="submit" class="btn">Create</button>
   </form>
 </details>
+</section>
 
-<h2>organization</h2>
+<section class="setcard">
+<h2>Organization</h2>
 <details class="editbox">
   <summary>Rename</summary>
   <form method="post" action="/{{$org}}" class="setform">
@@ -184,8 +202,9 @@ of a team get its role on every repository it is granted.</p>
   </form>
   <p class="meta">Every clone URL under this organization changes with the name.</p>
 </details>
-<p class="meta">Deleting an organization is a CLI operation, like deleting a
-repository: it wants a typed confirmation rather than a button.</p>
-<pre class="message" tabindex="0">gitbay org delete {{$org}} --yes</pre>
+<p class="meta">Deleting an organization is a CLI operation:</p>
+<pre class="message copyable" tabindex="0"><code>gitbay org delete {{$org}} --yes</code></pre>
+</section>
 {{end}}
+</div>
 {{end}}

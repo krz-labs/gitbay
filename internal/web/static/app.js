@@ -366,31 +366,43 @@
     }
   });
 
-  // ---- 8. Live client-side table filter (/admin/users) ----
+  // ---- 8. Live client-side table & list filters ----
   document.addEventListener('input', (e) => {
-    const inp = e.target.closest('input[data-filter-table]');
+    const inp = e.target.closest('input[data-filter-table], input[data-filter-list]');
     if (!inp) return;
-    const table = document.getElementById(inp.dataset.filterTable);
-    if (!table) return;
     const q = inp.value.trim().toLowerCase();
-    for (const row of table.querySelectorAll('tbody tr')) {
-      row.hidden = q !== '' && !row.textContent.toLowerCase().includes(q);
+    if (inp.dataset.filterTable) {
+      const table = document.getElementById(inp.dataset.filterTable);
+      if (!table) return;
+      for (const row of table.querySelectorAll('tbody tr')) {
+        row.hidden = q !== '' && !row.textContent.toLowerCase().includes(q);
+      }
+      return;
+    }
+    const list = document.getElementById(inp.dataset.filterList);
+    if (!list) return;
+    const ul = list.tagName === 'UL' ? list : list.querySelector('ul');
+    if (!ul) return;
+    for (const item of ul.querySelectorAll(':scope > li')) {
+      if (item.classList.contains('empty')) continue;
+      item.hidden = q !== '' && !item.textContent.toLowerCase().includes(q);
     }
   });
 
-  // ---- 9. In-place Refresh (/admin) ----
+  // ---- 9. In-place Refresh (/admin, /) ----
   document.addEventListener('click', async (e) => {
     const btn = e.target.closest('button[data-refresh]');
     if (!btn) return;
     const url = btn.dataset.refresh;
+    const targetId = btn.dataset.refreshTarget || 'admin-queues';
     btn.disabled = true;
     try {
       const res = await fetch(url, { credentials: 'same-origin' });
       if (!res.ok) { showToast('Refresh failed', true); return; }
       const html = await res.text();
       const doc = new DOMParser().parseFromString(html, 'text/html');
-      const next = doc.getElementById('admin-queues');
-      const cur = document.getElementById('admin-queues');
+      const next = doc.getElementById(targetId);
+      const cur = document.getElementById(targetId);
       if (next && cur) {
         cur.replaceWith(next);
         initScrollSpy();
@@ -401,6 +413,33 @@
     } finally {
       btn.disabled = false;
     }
+  });
+
+  // ---- 9b. Smooth in-place tab switching (profile tabs) ----
+  document.addEventListener('click', async (e) => {
+    if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+    const a = e.target.closest('nav[data-tab-swap] a');
+    if (!a) return;
+    const targetId = a.closest('nav[data-tab-swap]').dataset.tabSwap;
+    const cur = document.getElementById(targetId);
+    if (!cur) return;
+    e.preventDefault();
+    try {
+      const res = await fetch(a.href, { credentials: 'same-origin' });
+      if (!res.ok) { location.href = a.href; return; }
+      const html = await res.text();
+      const doc = new DOMParser().parseFromString(html, 'text/html');
+      const next = doc.getElementById(targetId);
+      if (!next) { location.href = a.href; return; }
+      cur.replaceWith(next);
+      history.pushState({ tabSwap: targetId }, '', a.href);
+      initCopyButtons(next);
+    } catch {
+      location.href = a.href;
+    }
+  });
+  window.addEventListener('popstate', (e) => {
+    if (e.state && e.state.tabSwap) location.reload();
   });
 
   // ---- 10. Scroll-spy on sticky section navs ----

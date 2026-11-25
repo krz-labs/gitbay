@@ -12,25 +12,38 @@
 </ul>
 {{end}}
 {{define "queue"}}
+<section class="dashsec">
 <h2 id="{{$.ID}}">{{$.Title}} <span class="count">{{len $.Items}}</span></h2>
 {{if $.Hint}}<p class="hint">{{$.Hint}}</p>{{end}}
 {{template "itemlist" dict "Items" $.Items "Kind" $.Kind "Empty" $.Empty}}
+</section>
 {{end}}
 {{define "tile"}}{{if $.N}}<a class="tile wants" href="#{{$.ID}}"><b>{{$.N}}</b><span>{{$.Label}}</span></a>{{else}}<div class="tile"><b>0</b><span>{{$.Label}}</span></div>{{end}}{{end}}
 {{define "content"}}
+<div class="pagehead">
+  <h1>Dashboard</h1>
+  <span class="grow"></span>
+  <button type="button" class="btn" data-refresh="/" data-refresh-target="dash-root">Refresh</button>
+  <a class="button" href="/new">New repository</a>
+</div>
+
+<div id="dash-root">
 <div class="dashgrid">
 
 <aside class="dashpins" aria-label="Pinned repositories">
-  <h2 class="colhead">Pinned</h2>
-  {{if .Pins}}<p class="meta">issues · merge requests · last build</p>
-  <ul class="pins">
+  <div class="dashcard-head">
+    <h2 class="colhead">Pinned</h2>
+    <a class="meta" href="/{{.Viewer}}/-/repositories">All →</a>
+  </div>
+  {{if .Pins}}<input type="search" class="dashfilter" aria-label="Filter pinned repositories" placeholder="Filter pinned…" data-filter-list="dash-pins-list">
+  <p class="meta">issues · MRs · last build</p>
+  <ul id="dash-pins-list" class="pins">
   {{range .Pins}}<li><a href="/{{.Owner}}/{{.Name}}"><span class="owner">{{.Owner}}/</span>{{.Name}}</a><span class="n" title="{{.Issues}} open issue{{if ne .Issues 1}}s{{end}}, {{.MRs}} open merge request{{if ne .MRs 1}}s{{end}}{{with .Build}}, last build {{.}}{{end}}"><b{{if .Issues}} class="wants"{{end}}>{{.Issues}} <span class="vh">open issues</span></b> <b{{if .MRs}} class="wants"{{end}}>{{.MRs}} <span class="vh">open merge requests</span></b> <span class="dot{{if eq .Build "success"}} ok{{else if or (eq .Build "failure") (eq .Build "error")}} bad{{else if or (eq .Build "pending") (eq .Build "running")}} pend{{end}}"><span class="vh">{{with .Build}}last build {{.}}{{else}}no builds{{end}}</span></span></span></li>
   {{end}}</ul>
-  {{else}}<p class="none">nothing pinned — press Pin on a repository you visit</p>{{end}}
+  {{else}}<p class="none">Nothing pinned — press Pin on a repository you visit.</p>{{end}}
 </aside>
 
 <section class="dashmain">
-<h1>Dashboard</h1>
 <div class="tiles">
   {{template "tile" dict "N" (len .Reviews) "ID" "reviews" "Label" "waiting on your review"}}
   {{template "tile" dict "N" (len .Assigned) "ID" "assigned" "Label" "assigned to you"}}
@@ -41,8 +54,9 @@
 {{if .Assigned}}{{template "queue" dict "ID" "assigned" "Title" "Assigned to you" "Items" .Assigned "Kind" "issues" "Empty" "Nothing assigned to you"}}{{end}}
 {{if .MRs}}{{template "queue" dict "ID" "mrs" "Title" "Open merge requests" "Items" .MRs "Kind" "mrs" "Empty" "No open merge requests" "Hint" "Your MRs across all repos."}}{{end}}
 {{if .Issues}}{{template "queue" dict "ID" "issues" "Title" "Open issues" "Items" .Issues "Kind" "issues" "Empty" "No open issues" "Hint" "Your issues across all repos."}}{{end}}
-{{if not (or .Reviews .Assigned .MRs .Issues)}}<p class="none">Nothing open.</p>{{end}}
+{{if not (or .Reviews .Assigned .MRs .Issues)}}<div class="setcard"><p class="none">All clear — nothing open or waiting on you.</p></div>{{end}}
 {{range .Queries}}
+<section class="dashsec">
 <h2 id="query-{{.Name}}"><a href="/{{$.Viewer}}/-/queries/{{.Name}}">{{.Name}}</a> <span class="count">{{.Count}}</span></h2>
 <p class="hint"><code>{{.Query}}</code></p>
 {{if .Error}}<p class="none">{{.Error}}</p>{{else}}
@@ -57,14 +71,18 @@
 </ul>
 {{if gt .Count (len .Items)}}<p class="pager"><a href="/{{$.Viewer}}/-/queries/{{.Name}}">all {{.Count}} →</a></p>{{end}}
 {{end}}
+</section>
 {{end}}
 </section>
 
 <aside class="feedcol" aria-label="Recent activity">
-  <h2 class="colhead">Recent activity</h2>
+  <div class="dashcard-head">
+    <h2 class="colhead">Recent activity</h2>
+  </div>
   {{range .Feed}}<p class="feedline"><a href="/{{.Actor}}">{{.Actor}}</a> {{.Verb}} <a href="{{.URL}}"{{if .Jobs}} title="{{join .Jobs ", "}}"{{end}}>{{.Ref}}</a>{{if .Extra}} {{.Extra}}{{end}}<br><span class="none">{{.Repo}} · <span title="{{whenT .WhenT}}">{{ago .WhenT}}</span></span></p>
   {{else}}<p class="none">No activity yet</p>{{end}}
 </aside>
 
+</div>
 </div>
 {{end}}
