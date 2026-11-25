@@ -209,9 +209,11 @@
 </tr>
 {{end}}</table></div>
 {{else if .Security.LastResults}}<p class="none">The last scan found nothing open.</p>{{end}}
-{{if .Security.Dismissed}}<h3>Dismissed</h3><div class="tablewrap"><table class="keys">
-<tr class="cols"><th scope="col">location</th><th scope="col">rule</th><th scope="col">reason</th><th scope="col"><span class="vh">reopen</span></th></tr>
-{{range .Security.Dismissed}}<tr>
+{{if .Security.Dismissed}}<details class="editbox"><summary>Dismissed ({{len .Security.Dismissed}})</summary>
+<p><input type="search" class="tablefilter" placeholder="Filter dismissed findings…" aria-label="Filter dismissed findings" data-filter-table="sec-dismissed"></p>
+<div class="tablewrap"><table class="keys" id="sec-dismissed">
+<thead><tr class="cols"><th scope="col">location</th><th scope="col">rule</th><th scope="col">reason</th><th scope="col"><span class="vh">reopen</span></th></tr></thead>
+<tbody>{{range .Security.Dismissed}}<tr>
   <td class="mono">{{.Path}}:{{.Line}}</td>
   <td class="mono">{{.Rule}}</td>
   <td>{{.Reason}}{{if .DismissedBy}} <span class="meta">by {{.DismissedBy}}</span>{{end}}</td>
@@ -221,7 +223,7 @@
     <button type="submit">Reopen</button>
   </form></td>
 </tr>
-{{end}}</table></div>{{end}}
+{{end}}</tbody></table></div></details>{{end}}
 {{end}}
 <form method="post" action="{{$base}}" class="setform">
   <input type="hidden" name="field" value="security-ignore">
@@ -335,9 +337,11 @@
 {{end}}</table></div>
 {{else if .Deps.LastCheck}}<p class="none">No open advisories.</p>{{end}}
 {{if .Deps.NotImported}}<p class="meta">Not imported by any Go file here, so not reported:{{range .Deps.NotImported}} <a href="https://osv.dev/vulnerability/{{.ID}}">{{.ID}}</a> ({{.Name}}){{end}}. Imports through another module are not seen.</p>{{end}}
-{{if .Deps.Dismissed}}<h3>Dismissed advisories</h3><div class="tablewrap"><table class="keys">
-<tr class="cols"><th scope="col">dependency</th><th scope="col">advisory</th><th scope="col">reason</th><th scope="col"><span class="vh">reopen</span></th></tr>
-{{range .Deps.Dismissed}}<tr>
+{{if .Deps.Dismissed}}<details class="editbox"><summary>Dismissed advisories ({{len .Deps.Dismissed}})</summary>
+<p><input type="search" class="tablefilter" placeholder="Filter dismissed advisories…" aria-label="Filter dismissed advisories" data-filter-table="deps-dismissed"></p>
+<div class="tablewrap"><table class="keys" id="deps-dismissed">
+<thead><tr class="cols"><th scope="col">dependency</th><th scope="col">advisory</th><th scope="col">reason</th><th scope="col"><span class="vh">reopen</span></th></tr></thead>
+<tbody>{{range .Deps.Dismissed}}<tr>
   <td class="mono">{{.Ecosystem}} {{.Name}}</td>
   <td class="mono"><a href="https://osv.dev/vulnerability/{{.ID}}">{{.ID}}</a></td>
   <td>{{.Reason}}{{if .By}} <span class="meta">by {{.By}}</span>{{end}}</td>
@@ -347,7 +351,7 @@
     <button type="submit">Reopen</button>
   </form></td>
 </tr>
-{{end}}</table></div>{{end}}
+{{end}}</tbody></table></div></details>{{end}}
 {{end}}
 </section>
 
