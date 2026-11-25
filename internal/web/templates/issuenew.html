@@ -1,20 +1,28 @@
 {{define "width"}}bounded{{end}}
 {{define "title"}}new issue · {{.Repo.OwnerName}}/{{.Repo.Name}}{{end}}
 {{define "content"}}
-<h1>New issue</h1>
+<div class="pagehead">
+  <h1>New issue</h1>
+  <span class="grow"></span>
+  <a class="button btn" href="/{{.Repo.OwnerName}}/{{.Repo.Name}}/issues">Back to issues</a>
+</div>
 {{if .Notice}}<p class="error" role="alert">{{.Notice}}</p>{{end}}
-{{if gt (len .Templates) 1}}<p class="meta">template:
+{{if gt (len .Templates) 1}}<p class="meta">Template:
 {{range .Templates}}{{if eq .Name $.Template}}<strong>{{.Name}}</strong>{{else}}<a href="?template={{.Name}}">{{.Name}}</a>{{end}} {{end}}</p>{{end}}
+<section class="setcard">
 {{if .Draft.Is "body"}}{{template "previewblock" .Draft.HTML}}{{end}}
 <form method="post" action="/{{.Repo.OwnerName}}/{{.Repo.Name}}/issues/new" class="commentform">
-<p><input type="text" name="title" aria-label="Title" placeholder="title" value="{{.Title}}" required></p>
-<p><textarea name="body" aria-label="Description" rows="12">{{.Body}}</textarea></p>
-{{template "formatpicker" .Format}}
-{{if .CanWrite}}
-<p><input type="text" name="labels" aria-label="Labels" placeholder="labels, space-separated (optional)" value="{{.Labels}}"></p>
-<p><input type="text" name="milestone" aria-label="Milestone" placeholder="milestone (optional)" value="{{.Milestone}}"></p>
-<p><input type="text" name="assignee" aria-label="Assignee" placeholder="assignees, space-separated (optional)" value="{{.Assignee}}"></p>
-{{end}}
-<p><button type="submit">Open issue</button> {{template "previewbtn"}}</p>
+  <p><input type="text" name="title" aria-label="Title" placeholder="Title" value="{{.Title}}" required></p>
+  <p><textarea name="body" aria-label="Description" rows="12" placeholder="Describe the issue…">{{.Body}}</textarea></p>
+  {{template "formatpicker" .Format}}
+  {{if .CanWrite}}
+  <div class="meta-fields">
+    <input type="text" name="labels" aria-label="Labels" placeholder="labels, space-separated (optional)" value="{{.Labels}}">
+    <input type="text" name="milestone" aria-label="Milestone" placeholder="milestone (optional)" value="{{.Milestone}}">
+    <input type="text" name="assignee" aria-label="Assignee" placeholder="assignees, space-separated (optional)" value="{{.Assignee}}">
+  </div>
+  {{end}}
+  <p class="btngroup"><button type="submit">Open issue</button> {{template "previewbtn"}} <span class="meta">⌘↵ to submit</span></p>
 </form>
+</section>
 {{end}}

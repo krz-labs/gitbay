@@ -1,26 +1,32 @@
 {{define "width"}}bounded{{end}}
 {{define "title"}}new merge request · {{.Repo.OwnerName}}/{{.Repo.Name}}{{end}}
 {{define "content"}}
-<h1>New merge request</h1>
+<div class="pagehead">
+  <h1>New merge request</h1>
+  <span class="grow"></span>
+  <a class="button btn" href="/{{.Repo.OwnerName}}/{{.Repo.Name}}/mrs">Back to merge requests</a>
+</div>
 {{if .Notice}}<p class="error" role="alert">{{.Notice}}</p>{{end}}
+<section class="setcard">
 {{if .Draft.Is "body"}}{{template "previewblock" .Draft.HTML}}{{end}}
 <form method="post" action="/{{.Repo.OwnerName}}/{{.Repo.Name}}/mrs/new" class="commentform">
-<p class="branchpick">
-  <label for="source">Merge</label>
-  <select id="source" name="source" required>
-    <option value="">Choose a branch…</option>
-    {{range .Sources}}<option value="{{.}}"{{if eq . $.Source}} selected{{end}}>{{.}}</option>{{end}}
-  </select>
-  <label for="target">into</label>
-  <select id="target" name="target">
-    {{range .Branches}}<option value="{{.Name}}"{{if eq .Name $.Target}} selected{{end}}>{{.Name}}</option>{{end}}
-  </select>
-</p>
-<p><input type="text" name="title" aria-label="Title" placeholder="title" value="{{.Title}}" required></p>
-<p><textarea name="body" aria-label="Description" rows="10" placeholder="what changes, and why">{{.Body}}</textarea></p>
-{{template "formatpicker" .Format}}
-<p><button type="submit">Open merge request</button> {{template "previewbtn"}}</p>
+  <p class="branchpick">
+    <label for="source">Merge</label>
+    <select id="source" name="source" required>
+      <option value="">Choose a branch…</option>
+      {{range .Sources}}<option value="{{.}}"{{if eq . $.Source}} selected{{end}}>{{.}}</option>{{end}}
+    </select>
+    <label for="target">into</label>
+    <select id="target" name="target">
+      {{range .Branches}}<option value="{{.Name}}"{{if eq .Name $.Target}} selected{{end}}>{{.Name}}</option>{{end}}
+    </select>
+  </p>
+  <p><input type="text" name="title" aria-label="Title" placeholder="Title" value="{{.Title}}" required></p>
+  <p><textarea name="body" aria-label="Description" rows="10" placeholder="what changes, and why">{{.Body}}</textarea></p>
+  {{template "formatpicker" .Format}}
+  <p class="btngroup"><button type="submit">Open merge request</button> {{template "previewbtn"}} <span class="meta">⌘↵ to submit</span></p>
 </form>
+</section>
 <p class="meta">Branches of a fork you can push to are offered as
 <code>owner/name:branch</code>. Fork this repository to propose a change
 without write access here: <code>gitbay repo fork {{.Repo.OwnerName}}/{{.Repo.Name}}</code></p>

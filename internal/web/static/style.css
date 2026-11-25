@@ -2447,3 +2447,23 @@ article.release.setcard {
   border-top: 1px solid var(--faint);
   padding: var(--sp-5);
 }
+
+/* ---- authoring forms polish ---- */
+.meta-fields {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--sp-3);
+  margin: var(--sp-3) 0;
+}
+@media (max-width: 44rem) {
+  .meta-fields { grid-template-columns: 1fr; }
+}
+.commitbar {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  flex-wrap: wrap;
+  margin: var(--sp-3) 0 var(--sp-2);
+}
+.commitbar input { flex: 1 1 16rem; min-width: 0; }
+.rendered .copywrap .copybtn { top: var(--sp-2); transform: none; }

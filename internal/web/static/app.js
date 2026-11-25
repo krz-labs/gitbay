@@ -47,9 +47,9 @@
     }
   });
 
-  // ---- 2. Copy buttons on clone & copyable blocks ----
+  // ---- 2. Copy buttons on clone, copyable & rendered code blocks ----
   function initCopyButtons(root = document) {
-    for (const pre of root.querySelectorAll('.clone pre, pre.copyable')) {
+    for (const pre of root.querySelectorAll('.clone pre, pre.copyable, .rendered pre')) {
       if (pre.dataset.copyWired) continue;
       pre.dataset.copyWired = '1';
       const code = pre.querySelector('code') || pre;
@@ -61,7 +61,7 @@
       btn.type = 'button';
       btn.className = 'copybtn';
       btn.textContent = 'Copy';
-      btn.setAttribute('aria-label', 'Copy command');
+      btn.setAttribute('aria-label', 'Copy code');
       btn.addEventListener('click', async () => {
         try {
           await navigator.clipboard.writeText(code.textContent.trim());
@@ -76,10 +76,41 @@
     }
   }
 
-  // ---- 3. In-place fragment swaps (reactions, header toggles, sidebar pickers) ----
+  // ---- 3. In-place fragment swaps (previews, reactions, header toggles, sidebar pickers) ----
   document.addEventListener('submit', async (e) => {
     const form = e.target;
     if (!(form instanceof HTMLFormElement) || form.method.toLowerCase() !== 'post') return;
+
+    // No-reload markup preview on any form with a Preview button
+    if (e.submitter && e.submitter.name === 'preview') {
+      e.preventDefault();
+      const btn = e.submitter;
+      const data = new FormData(form);
+      data.append('preview', btn.value || '1');
+      btn.disabled = true;
+      try {
+        const res = await fetch(form.action, {
+          method: 'POST',
+          body: new URLSearchParams(data),
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          credentials: 'same-origin',
+        });
+        if (!res.ok) { form.submit(); return; }
+        const doc = new DOMParser().parseFromString(await res.text(), 'text/html');
+        const nextPrev = doc.querySelector('.preview');
+        if (!nextPrev) { showToast('Nothing to preview'); return; }
+        const prev = form.previousElementSibling;
+        if (prev && prev.classList.contains('preview')) prev.replaceWith(nextPrev);
+        else form.insertAdjacentElement('beforebegin', nextPrev);
+        initCopyButtons(nextPrev);
+      } catch {
+        form.submit();
+      } finally {
+        btn.disabled = false;
+      }
+      return;
+    }
+
     let swapSel = null;
     if (form.classList.contains('reactions')) {
       swapSel = 'main#content';
@@ -304,6 +335,13 @@
       for (const d of popovers()) if (d.open) d.open = false;
       const inline = document.getElementById('inline-compose-row');
       if (inline) inline.remove();
+      return;
+    }
+    if ((e.metaKey || e.ctrlKey) && e.key === 'Enter' && e.target instanceof HTMLTextAreaElement && e.target.form) {
+      e.preventDefault();
+      const btn = e.target.form.querySelector('button[type="submit"]:not([name="preview"]), button:not([type]):not([name="preview"])');
+      if (btn) e.target.form.requestSubmit(btn);
+      else e.target.form.requestSubmit();
       return;
     }
     if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
