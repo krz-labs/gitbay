@@ -4,6 +4,7 @@
 <div class="landing">
 <h1>Welcome, {{.Username}}</h1>
 <pre class="quickstart" tabindex="0">{{.Message}}</pre>
+<section class="setcard">
 <h2>On the web</h2>
 <ol>
 <li>Copy the verification code from the mail you were just sent.</li>
@@ -12,9 +13,12 @@
 </ol>
 <p>Then + creates your first repository. Using the iOS app? Create a
 token in <a href="/settings#tokens">Settings → API tokens</a>.</p>
+</section>
+<section class="setcard">
 <h2>From the terminal</h2>
-<pre class="quickstart" tabindex="0">ssh git@{{.Host}} whoami
+<pre class="quickstart copyable" tabindex="0">ssh git@{{.Host}} whoami
 ssh git@{{.Host}} repo create {{.Username}}/hello
 gitbay web login        # mints a browser session from your terminal</pre>
+</section>
 </div>
 {{end}}

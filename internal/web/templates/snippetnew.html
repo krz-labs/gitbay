@@ -1,17 +1,23 @@
 {{define "width"}}bounded{{end}}
 {{define "title"}}new snippet · {{.Owner}}{{end}}
 {{define "content"}}
-<h1>New snippet</h1>
+<div class="pagehead">
+  <h1>New snippet</h1>
+  <span class="grow"></span>
+  <a class="button btn" href="/{{.Owner}}/-/snippets">Back to snippets</a>
+</div>
 {{if .Error}}<p class="error" role="alert">{{.Error}}</p>{{end}}
+<section class="setcard">
 <form method="post" action="/{{.Owner}}/-/snippets/new" class="commentform">
-<p><input type="text" name="name" aria-label="File name" placeholder="filename" value="{{.Name}}" required autocomplete="off" spellcheck="false"></p>
-<p><input type="text" name="description" aria-label="Description" placeholder="description" value="{{.Description}}"></p>
-<p><select name="visibility" aria-label="Visibility">
-<option value="unlisted"{{if or (eq .Visibility "unlisted") (eq .Visibility "")}} selected{{end}}>unlisted</option>
-<option value="public"{{if eq .Visibility "public"}} selected{{end}}>public</option>
-<option value="private"{{if eq .Visibility "private"}} selected{{end}}>private</option>
-</select></p>
-<p><textarea name="content" aria-label="Content" rows="16" required>{{.Content}}</textarea></p>
-<p><button type="submit">Create snippet</button></p>
+  <p><input type="text" name="name" aria-label="File name" placeholder="filename" value="{{.Name}}" required autocomplete="off" spellcheck="false"></p>
+  <p><input type="text" name="description" aria-label="Description" placeholder="description" value="{{.Description}}"></p>
+  <p><select name="visibility" aria-label="Visibility">
+    <option value="unlisted"{{if or (eq .Visibility "unlisted") (eq .Visibility "")}} selected{{end}}>unlisted</option>
+    <option value="public"{{if eq .Visibility "public"}} selected{{end}}>public</option>
+    <option value="private"{{if eq .Visibility "private"}} selected{{end}}>private</option>
+  </select></p>
+  <p><textarea name="content" aria-label="Content" rows="16" required>{{.Content}}</textarea></p>
+  <p class="btngroup"><button type="submit">Create snippet</button> <span class="meta">⌘↵ to create</span></p>
 </form>
+</section>
 {{end}}

@@ -1,6 +1,7 @@
 {{define "width"}}bounded{{end}}
 {{define "title"}}delete account · {{.Site}}{{end}}
 {{define "content"}}
+<section class="setcard setcard-danger">
 {{if .Scheduled}}
 <h1>Deletion scheduled</h1>
 <p>{{.User}} is disabled and will be deleted at {{when .Scheduled}}.</p>
@@ -13,11 +14,12 @@ its repositories, snippets, keys and addresses go, and what it wrote on
 other people's repositories stays under the name <code>ghost</code>.
 Signing in during those seven days cancels.</p>
 <form method="post">
-<p class="btngroup"><button type="submit" class="danger">Delete {{.User}}</button> <a href="/">Cancel</a></p>
+<p class="btngroup"><button type="submit" class="danger">Delete {{.User}}</button> <a class="button btn" href="/">Cancel</a></p>
 </form>
 {{else}}
 <h1>Link not valid</h1>
 <p class="meta">This deletion link has expired or was already used. Nothing
 has changed. Request a new one from <a href="/settings#delete">settings</a>.</p>
 {{end}}
+</section>
 {{end}}

@@ -1,9 +1,11 @@
 {{define "width"}}bounded{{end}}
 {{define "title"}}log out · {{.Site}}{{end}}
 {{define "content"}}
+<section class="setcard">
 <h1>Log out</h1>
 <p class="meta">Ends this browser's session as <a href="/{{.Viewer}}">{{.Viewer}}</a>. Keys and tokens are untouched.</p>
 <form method="post" action="/logout">
-<p class="btngroup"><button type="submit" class="danger">Log out</button> <a href="/">Cancel</a></p>
+<p class="btngroup"><button type="submit" class="danger">Log out</button> <a class="button btn" href="/">Cancel</a></p>
 </form>
+</section>
 {{end}}

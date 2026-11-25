@@ -1,7 +1,11 @@
 {{define "width"}}wide{{end}}
 {{define "title"}}search · {{.Repo.OwnerName}}/{{.Repo.Name}}{{end}}
 {{define "content"}}
-<h1>Search</h1>
+<div class="pagehead">
+  <h1>Search code</h1>
+  <span class="grow"></span>
+  <a class="button btn" href="/{{.Repo.OwnerName}}/{{.Repo.Name}}/symbols">Symbols</a>
+</div>
 <form method="get" action="/{{.Repo.OwnerName}}/{{.Repo.Name}}/search" class="searchform">
   <input type="search" name="q" aria-label="Search file contents" value="{{.Query}}" placeholder="search file contents on {{.Ref}}">
   <button type="submit" class="btn">Search</button>

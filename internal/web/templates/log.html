@@ -1,13 +1,16 @@
 {{define "width"}}wide{{end}}
 {{define "title"}}log · {{.Repo.OwnerName}}/{{.Repo.Name}}{{end}}
 {{define "content"}}
-<h1 class="vh">Commits</h1>
-<form method="get" class="logfilter" action="/{{.Repo.OwnerName}}/{{.Repo.Name}}/log/{{.Ref}}">
-  <label for="path">Path</label>
-  <input type="text" id="path" name="path" value="{{.FilePath}}" placeholder="filter to a file or directory">
-  <button type="submit" class="btn">Filter</button>
-  {{if .FilePath}}<a class="act" href="/{{.Repo.OwnerName}}/{{.Repo.Name}}/log/{{.Ref}}">Clear</a>{{end}}
-</form>
+<div class="pagehead">
+  <h1>Commits <span class="refchip">{{.Ref}}</span></h1>
+  <span class="grow"></span>
+  <form method="get" class="logfilter" action="/{{.Repo.OwnerName}}/{{.Repo.Name}}/log/{{.Ref}}">
+    <label for="path" class="vh">Path</label>
+    <input type="text" id="path" name="path" value="{{.FilePath}}" placeholder="filter to a file or directory">
+    <button type="submit" class="btn">Filter</button>
+    {{if .FilePath}}<a class="button btn" href="/{{.Repo.OwnerName}}/{{.Repo.Name}}/log/{{.Ref}}">Clear</a>{{end}}
+  </form>
+</div>
 {{if .FilePath}}<p class="meta">history of <a href="/{{.Repo.OwnerName}}/{{.Repo.Name}}/blob/{{.Ref}}/{{.FilePath}}"><code>{{.FilePath}}</code></a></p>{{end}}
 <ul class="loglist">
 {{range .Commits}}{{$c := .}}<li>

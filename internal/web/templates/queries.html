@@ -2,10 +2,14 @@
 {{define "title"}}{{if .Query.Name}}{{.Query.Name}} · {{end}}queries · {{.Site}}{{end}}
 {{define "content"}}
 {{if .Query.Name}}
-<div class="listhead">
+<div id="query-root">
+<div class="pagehead">
   <h1>{{.Query.Name}} <span class="count">{{.Count}}</span></h1>
-  <span class="spacer"></span>
-  <p class="meta"><a href="/{{.Viewer}}/-/queries">saved queries</a></p>
+  <span class="grow"></span>
+  <div class="btngroup">
+    <button type="button" class="btn" data-refresh="self" data-refresh-target="query-root">Refresh</button>
+    <a class="button btn" href="/{{.Viewer}}/-/queries">Saved queries</a>
+  </div>
 </div>
 <p class="meta"><code>{{.Query.Query}}</code> · the same read as <code>gitbay query run {{.Query.Name}}</code></p>
 <ul class="issuelist rows">
@@ -19,10 +23,15 @@
 {{else}}<li class="empty">nothing matches</li>{{end}}
 </ul>
 {{if .Next}}<p class="pager"><a href="{{.Next}}">older →</a></p>{{end}}
+</div>
 {{else}}
-<h1>Saved queries</h1>
+<div class="pagehead">
+  <h1>Saved queries</h1>
+  <span class="grow"></span>
+  {{if .Saved}}<input type="search" class="tablefilter" placeholder="Filter queries…" aria-label="Filter queries" data-filter-list="saved-queries">{{end}}
+</div>
 <p class="meta">Saved with <code>gitbay query save &lt;name&gt; &lt;query&gt;</code>; <code>gitbay query pin &lt;name&gt;</code> puts one on the dashboard.</p>
-<ul class="issuelist rows">
+<ul class="issuelist rows" id="saved-queries">
 {{range .Saved}}<li>
   <div class="issuemain">
     <p class="title"><a href="/{{$.Viewer}}/-/queries/{{.Name}}">{{.Name}}</a>{{if .Pinned}} <span class="chip">pinned</span>{{end}}</p>

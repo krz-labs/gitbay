@@ -1,47 +1,58 @@
 {{define "title"}}{{if .Snippet.Description}}{{.Snippet.Description}}{{else}}{{.Snippet.PublicID}}{{end}} · {{.Owner}}{{end}}
 {{define "content"}}
-<h1><a href="/{{.Owner}}">{{.Owner}}</a> / <a href="/{{.Owner}}/-/snippets">snippets</a> / {{.Snippet.PublicID}}</h1>
+<div class="pagehead">
+  <h1><a href="/{{.Owner}}">{{.Owner}}</a> / <a href="/{{.Owner}}/-/snippets">snippets</a> / {{.Snippet.PublicID}}</h1>
+  <span class="grow"></span>
+  <button type="button" class="btn" data-copy="gitbay snippet show {{.Snippet.PublicID}}">Copy CLI</button>
+</div>
 {{if .Snippet.Description}}<p class="desc lede">{{.Snippet.Description}}</p>{{end}}
 <p class="meta"><span class="chip chip-neutral">{{.Snippet.Visibility}}</span> · updated {{when .Snippet.UpdatedAt}} · <code>gitbay snippet show {{.Snippet.PublicID}}</code></p>
 {{if .Notice}}<p class="error" role="alert">{{.Notice}}</p>{{end}}
 {{range .Files}}
-<section class="snippetfile" id="file-{{.Name}}">
+<section class="snippetfile setcard" id="file-{{.Name}}">
 <div class="pathbar">
   <span class="crumbs"><strong>{{.Name}}</strong></span>
   <span class="spacer"></span>
-  <span class="actions"><a href="/{{$.Owner}}/-/snippets/{{$.Snippet.PublicID}}/raw/{{.Name}}">raw</a></span>
+  <div class="btngroup">
+    <a class="button btn" href="/{{$.Owner}}/-/snippets/{{$.Snippet.PublicID}}/raw/{{.Name}}">raw</a>
+    {{if $.CanWrite}}<details class="popover"><summary class="popbtn popbtn-danger">Remove</summary><div class="popmenu">
+      <form method="post" action="/{{$.Owner}}/-/snippets/{{$.Snippet.PublicID}}/file/remove" class="popform popform-stack">
+        <input type="hidden" name="name" value="{{.Name}}">
+        {{template "confirmfield" .Name}}
+        <button type="submit" class="danger">Remove {{.Name}}</button>
+      </form>
+    </div></details>{{end}}
+  </div>
 </div>
 <p class="filefacts">{{.Lines}} lines · {{.Size}} bytes</p>
 {{if .TooLarge}}<p class="empty-note">too large to render here — <a href="/{{$.Owner}}/-/snippets/{{$.Snippet.PublicID}}/raw/{{.Name}}">raw</a></p>{{else}}<div class="code">{{.HTML}}</div>{{end}}
-{{if $.CanWrite}}<details class="editbox"><summary>edit {{.Name}}</summary>
+{{if $.CanWrite}}<details class="editbox"><summary>Edit {{.Name}}</summary>
 <form method="post" action="/{{$.Owner}}/-/snippets/{{$.Snippet.PublicID}}/file" class="commentform">
 <input type="hidden" name="name" value="{{.Name}}">
 <p><textarea name="content" aria-label="Content of {{.Name}}" rows="12">{{.Content}}</textarea></p>
-<p><button type="submit" class="btn">Save</button></p>
-</form>
-<form method="post" action="/{{$.Owner}}/-/snippets/{{$.Snippet.PublicID}}/file/remove">
-<input type="hidden" name="name" value="{{.Name}}">
-<p>{{template "confirmfield" .Name}} <button type="submit" class="danger">Remove {{.Name}}</button></p>
+<p class="btngroup"><button type="submit">Save</button> <span class="meta">⌘↵ to save</span></p>
 </form>
 </details>{{end}}
 </section>
 {{end}}
 {{if .CanWrite}}
-<details class="editbox"><summary>add a file</summary>
+<details class="editbox"><summary>Add a file</summary>
 <form method="post" action="/{{.Owner}}/-/snippets/{{.Snippet.PublicID}}/file" class="commentform">
 <p><input type="text" name="name" aria-label="File name" placeholder="filename" required autocomplete="off" spellcheck="false"></p>
 <p><textarea name="content" aria-label="Content" rows="12" required></textarea></p>
-<p><button type="submit" class="btn">Add file</button></p>
+<p><button type="submit">Add file</button></p>
 </form></details>
-<details class="editbox"><summary>settings</summary>
-<form method="post" action="/{{.Owner}}/-/snippets/{{.Snippet.PublicID}}/edit">
-<p><input type="text" name="description" aria-label="Description" value="{{.Snippet.Description}}" placeholder="description"></p>
-<p><select name="visibility" aria-label="Visibility">
+<details class="editbox"><summary>Settings</summary>
+<form method="post" action="/{{.Owner}}/-/snippets/{{.Snippet.PublicID}}/edit" class="setform stack">
+<label for="snip-desc">Description</label>
+<input type="text" id="snip-desc" name="description" aria-label="Description" value="{{.Snippet.Description}}" placeholder="description">
+<label for="snip-vis">Visibility</label>
+<select id="snip-vis" name="visibility" aria-label="Visibility">
 <option value="public"{{if eq .Snippet.Visibility "public"}} selected{{end}}>public</option>
 <option value="unlisted"{{if eq .Snippet.Visibility "unlisted"}} selected{{end}}>unlisted</option>
 <option value="private"{{if eq .Snippet.Visibility "private"}} selected{{end}}>private</option>
-</select></p>
-<p><button type="submit" class="btn">Save</button></p>
+</select>
+<span class="btngroup"><button type="submit">Save</button></span>
 </form>
 <form method="post" action="/{{.Owner}}/-/snippets/{{.Snippet.PublicID}}/delete">
 <p>{{template "confirmfield" .Snippet.PublicID}} <button type="submit" class="danger">Delete snippet</button></p>

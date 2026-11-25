@@ -11,8 +11,8 @@ push <code>.gitbay/wiki/Home.md</code> (or .org).</p>
 <div class="rendered">{{.PageHTML}}</div>
 </section>
 </div>
-<nav class="wikinav">
-<p class="meta">pages</p>
+<nav class="wikinav setcard">
+<h2 class="colhead">Pages</h2>
 {{range .Nav}}{{if .Dir}}<p class="meta wikidir">{{.Dir}}</p>{{end}}
 <ul>{{range .Pages}}<li><a {{if eq .Name $.Page}}class="active" {{end}}href="/{{$.Repo.OwnerName}}/{{$.Repo.Name}}/wiki/{{.Name}}">{{.Label}}</a></li>{{end}}</ul>{{end}}
 <p class="meta">edit under <code>.gitbay/wiki/</code> by push.</p>

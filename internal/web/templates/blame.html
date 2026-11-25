@@ -9,7 +9,10 @@
   <span class="refchip">{{template "branchicon"}} {{.Ref}}</span>
   <span class="crumbs"><a href="/{{.Repo.OwnerName}}/{{.Repo.Name}}">{{.Repo.Name}}</a>/{{range .Crumbs}}<a href="{{.URL}}">{{.Name}}</a>/{{end}}<strong>{{.Base}}</strong></span>
   <span class="spacer"></span>
-  <span class="actions"><a href="/{{.Repo.OwnerName}}/{{.Repo.Name}}/blob/{{.Ref}}/{{.Path}}">view</a> · <a href="/{{.Repo.OwnerName}}/{{.Repo.Name}}/raw/{{.Ref}}/{{.Path}}">raw</a></span>
+  <div class="btngroup">
+    <a class="button btn" href="/{{.Repo.OwnerName}}/{{.Repo.Name}}/blob/{{.Ref}}/{{.Path}}">view</a>
+    <a class="button btn" href="/{{.Repo.OwnerName}}/{{.Repo.Name}}/raw/{{.Ref}}/{{.Path}}">raw</a>
+  </div>
 </div>
 {{if .Binary}}<p class="empty-note">binary file — blame unavailable</p>
 {{else}}
