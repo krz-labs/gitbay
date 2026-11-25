@@ -76,7 +76,19 @@
     }
   }
 
-  // ---- 3. In-place fragment swaps (previews, reactions, header toggles, sidebar pickers) ----
+  document.addEventListener('click', async (e) => {
+    const btn = e.target.closest('button[data-copy]');
+    if (!btn) return;
+    const orig = btn.textContent;
+    try {
+      await navigator.clipboard.writeText(btn.dataset.copy);
+      btn.textContent = 'Copied';
+      showToast('Copied to clipboard');
+      setTimeout(() => { btn.textContent = orig; }, 1400);
+    } catch {
+      showToast('Copy failed', true);
+    }
+  });
   document.addEventListener('submit', async (e) => {
     const form = e.target;
     if (!(form instanceof HTMLFormElement) || form.method.toLowerCase() !== 'post') return;
@@ -269,8 +281,12 @@
     let active = 0;
 
     const render = () => {
-      const q = input.value.trim().toLowerCase();
-      const filtered = q ? all.filter((it) => (it.label + ' ' + it.group).toLowerCase().includes(q)) : all;
+      const raw = input.value.trim();
+      const q = raw.toLowerCase();
+      const filtered = q ? all.filter((it) => (it.label + ' ' + it.group).toLowerCase().includes(q)) : all.slice();
+      if (raw) {
+        filtered.push({ group: 'Search', label: `Search “${raw}”…`, href: '/search?q=' + encodeURIComponent(raw) });
+      }
       active = Math.min(active, Math.max(0, filtered.length - 1));
       list.textContent = '';
       if (filtered.length === 0) {

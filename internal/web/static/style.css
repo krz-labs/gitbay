@@ -2467,3 +2467,10 @@ article.release.setcard {
 }
 .commitbar input { flex: 1 1 16rem; min-width: 0; }
 .rendered .copywrap .copybtn { top: var(--sp-2); transform: none; }
+.btngroup a.btn[aria-current="page"] {
+  border-color: var(--mark);
+  background: var(--surface);
+  color: var(--fg);
+  font-weight: 600;
+}
+.commithead.setcard pre.message { margin: var(--sp-3) 0 0; }

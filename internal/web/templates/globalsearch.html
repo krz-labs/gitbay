@@ -1,8 +1,8 @@
 {{define "width"}}wide{{end}}
 {{define "title"}}search · {{.Site}}{{end}}
 {{define "content"}}
-<div class="withcol">
-<nav class="sidecol" aria-label="Filters">
+<div class="withcol" id="search-root">
+<nav class="sidecol" aria-label="Filters" data-tab-swap="search-root">
 <details class="sidedrop">
 <summary><span class="sideword">Filters</span>{{if .Kind}} <span class="sideon">{{.Kind}}</span>{{end}}</summary>
   <div class="grp"><h2 class="colhead">Kind</h2>

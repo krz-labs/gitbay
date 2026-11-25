@@ -1,13 +1,14 @@
 {{define "title"}}milestones · {{.Org}}{{end}}
 {{define "content"}}
-<div class="listhead">
+<div id="milestones-root">
+<div class="pagehead">
   <h1><a href="/{{.Org}}">{{.Org}}</a> milestones</h1>
-  <nav class="filters">
-    <a {{if eq .State "open"}}class="active" aria-current="page" {{end}}href="?state=open">open</a>
-    <a {{if eq .State "closed"}}class="active" aria-current="page" {{end}}href="?state=closed">closed</a>
-    <a {{if eq .State "all"}}class="active" aria-current="page" {{end}}href="?state=all">all</a>
-  </nav>
 </div>
+<nav class="statebar" aria-label="State" data-tab-swap="milestones-root">
+  <a {{if eq .State "open"}}aria-current="page" {{end}}href="?state=open">open</a>
+  <a {{if eq .State "closed"}}aria-current="page" {{end}}href="?state=closed">closed</a>
+  <a {{if eq .State "all"}}aria-current="page" {{end}}href="?state=all">all</a>
+</nav>
 {{if .Notice}}<p class="error" role="alert">{{.Notice}}</p>{{end}}
 {{if .CanAdmin}}
 <details class="editbox">
@@ -19,11 +20,12 @@
     <input type="text" id="msdesc" name="description">
     <label for="msdue">Due</label>
     <input type="text" id="msdue" name="due" placeholder="YYYY-MM-DD">
-    <button type="submit" class="btn">Create milestone</button>
+    <span class="btngroup"><button type="submit">Create milestone</button></span>
   </form>
 </details>
 {{end}}
 <p class="meta">Progress spans the repositories under {{.Org}} you can read.</p>
+<section class="setcard">
 <ul class="milestonelist">
 {{range .Milestones}}<li>
   <div class="msmain">
@@ -39,4 +41,6 @@
 </li>
 {{else}}<li class="empty">no {{if ne .State "all"}}{{.State}} {{end}}org milestones</li>{{end}}
 </ul>
+</section>
+</div>
 {{end}}

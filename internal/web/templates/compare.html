@@ -1,8 +1,12 @@
 {{define "width"}}wide{{end}}
 {{define "title"}}compare {{.Base}}...{{.Head}} · {{.Repo.OwnerName}}/{{.Repo.Name}}{{end}}
 {{define "content"}}
-<h1>Compare <code>{{.Base}}</code> … <code>{{.Head}}</code></h1>
-<p class="meta">{{len .Commits}}{{if gt .CommitsTotal (len .Commits)}} of {{.CommitsTotal}}{{end}} commit{{if ne .CommitsTotal 1}}s{{end}} on <code>{{.Head}}</code> since the merge base <a href="/{{.Repo.OwnerName}}/{{.Repo.Name}}/commit/{{.MergeBase}}"><code>{{short .MergeBase}}</code></a>{{if .CanOpenMR}} · <a href="/{{.Repo.OwnerName}}/{{.Repo.Name}}/mrs/new?source={{.Head}}&amp;target={{.Base}}">open a merge request</a>{{end}}</p>
+<div class="pagehead">
+  <h1>Compare <code>{{.Base}}</code> … <code>{{.Head}}</code></h1>
+  <span class="grow"></span>
+  {{if .CanOpenMR}}<a class="button" href="/{{.Repo.OwnerName}}/{{.Repo.Name}}/mrs/new?source={{.Head}}&amp;target={{.Base}}">Open merge request</a>{{end}}
+</div>
+<p class="meta">{{len .Commits}}{{if gt .CommitsTotal (len .Commits)}} of {{.CommitsTotal}}{{end}} commit{{if ne .CommitsTotal 1}}s{{end}} on <code>{{.Head}}</code> since the merge base <a href="/{{.Repo.OwnerName}}/{{.Repo.Name}}/commit/{{.MergeBase}}"><code>{{short .MergeBase}}</code></a></p>
 {{if .Commits}}<ul class="loglist">
 {{range .Commits}}<li>
   <div class="commitmain">

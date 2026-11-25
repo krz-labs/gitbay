@@ -1,15 +1,19 @@
 {{define "width"}}wide{{end}}
 {{define "title"}}{{.ShortSHA}} · {{.Repo.OwnerName}}/{{.Repo.Name}}{{end}}
 {{define "content"}}
-<div class="commithead">
-  <h1>Commit <code>{{.ShortSHA}}</code></h1>
+<div class="commithead setcard">
+  <div class="pagehead">
+    <h1>Commit <code>{{.ShortSHA}}</code></h1>
+    <span class="grow"></span>
+    <button type="button" class="btn" data-copy="{{.SHA}}">Copy SHA</button>
+  </div>
   <p class="meta"><code class="fullsha">{{.SHA}}</code></p>
   {{if .Parents}}<p class="meta">parent{{if gt (len .Parents) 1}}s{{end}}:{{range .Parents}} <code><a href="/{{$.Repo.OwnerName}}/{{$.Repo.Name}}/commit/{{.}}">{{short .}}</a></code>{{end}}</p>{{end}}
   <p>{{template "sigbadge" .Sig}}{{range .Checks}} <span class="badge check-{{.State}}">{{.Context}}: {{.State}}</span>{{end}}</p>
   <p class="meta">{{template "authorname" dict "Name" .AuthorName "User" .AuthorUser "Email" .AuthorEmail}} &lt;{{.AuthorEmail}}&gt; · {{when .Date}}
   {{if .CommitterEmail}}<br>committer: &lt;{{.CommitterEmail}}&gt;{{end}}</p>
+  <pre class="message" tabindex="0">{{.Message}}</pre>
 </div>
-<pre class="message" tabindex="0">{{.Message}}</pre>
 {{if .DiffTruncated}}<p class="error" role="alert">This patch is larger than 4 MiB and is cut off below. Clone the repository to see all of it.</p>{{end}}
 {{template "difffiles" dict "Files" .DiffFiles "Base" "" "Viewer" "" "L" .Layout}}
 {{end}}

@@ -1,10 +1,15 @@
 {{define "title"}}labels · {{.Repo.OwnerName}}/{{.Repo.Name}}{{end}}
 {{define "content"}}
-<h1>Labels</h1>
+<div class="pagehead">
+  <h1>Labels <span class="chip">{{len .Labels}}</span></h1>
+  <span class="grow"></span>
+  {{if .Labels}}<input type="search" class="tablefilter" placeholder="Filter labels…" aria-label="Filter labels" data-filter-table="labels-table">{{end}}
+</div>
 {{if .Notice}}<p class="error" role="alert">{{.Notice}}</p>{{end}}
-{{if .Labels}}<div class="tablewrap"><table class="keys">
-<tr class="cols"><th scope="col">label</th>{{if or $.CanWrite $.AnyColor}}<th scope="col">colour</th>{{end}}<th scope="col">issues</th><th scope="col">merge requests</th><th scope="col"><span class="vh">actions</span></th></tr>
-{{range .Labels}}<tr>
+<section class="setcard">
+{{if .Labels}}<div class="tablewrap"><table class="keys" id="labels-table">
+<thead><tr class="cols"><th scope="col">label</th>{{if or $.CanWrite $.AnyColor}}<th scope="col">colour</th>{{end}}<th scope="col">issues</th><th scope="col">merge requests</th><th scope="col"><span class="vh">actions</span></th></tr></thead>
+<tbody>{{range .Labels}}<tr>
   <td><a class="chip label" style="{{index $.LabelColors .Name}}" href="/{{$.Repo.OwnerName}}/{{$.Repo.Name}}/issues?label={{.Name}}">{{.Name}}</a>{{if .Org}} <span class="chip chip-neutral">org</span>{{end}}</td>
   {{if or $.CanWrite $.AnyColor}}<td>{{if and $.CanWrite (not .Org)}}<form method="post" action="/{{$.Repo.OwnerName}}/{{$.Repo.Name}}/labels" class="inline">
     <input type="hidden" name="name" value="{{.Name}}">
@@ -13,14 +18,16 @@
   </form>{{else}}<span class="mono">{{if .Color}}{{.Color}}{{else}}—{{end}}</span>{{end}}</td>{{end}}
   <td>{{.Issues}}</td>
   <td>{{.MRs}}</td>
-  <td class="act">{{if and $.CanWrite (not .Org)}}<form method="post" action="/{{$.Repo.OwnerName}}/{{$.Repo.Name}}/labels" class="inline">
-    <input type="hidden" name="action" value="remove">
-    <input type="hidden" name="name" value="{{.Name}}">
-    {{template "confirmfield" .Name}}
-    <button type="submit" class="danger">Remove</button>
-  </form>{{else if .Org}}<a href="/{{$.Repo.OwnerName}}/-/labels">org</a>{{end}}</td>
+  <td class="act">{{if and $.CanWrite (not .Org)}}<details class="popover"><summary class="popbtn popbtn-danger">Remove</summary><div class="popmenu">
+    <form method="post" action="/{{$.Repo.OwnerName}}/{{$.Repo.Name}}/labels" class="popform popform-stack">
+      <input type="hidden" name="action" value="remove">
+      <input type="hidden" name="name" value="{{.Name}}">
+      {{template "confirmfield" .Name}}
+      <button type="submit" class="danger">Remove</button>
+    </form>
+  </div></details>{{else if .Org}}<a href="/{{$.Repo.OwnerName}}/-/labels">org</a>{{end}}</td>
 </tr>
-{{end}}</table></div>
+{{end}}</tbody></table></div>
 {{else}}<p class="none">No labels yet.</p>{{end}}
 {{if .CanWrite}}
 <details class="editbox">
@@ -30,9 +37,10 @@
     <input type="text" id="labelname" name="name" maxlength="50" required>
     <label for="labelcolor">Colour</label>
     <input type="text" id="labelcolor" name="color" placeholder="rrggbb, or blank for one picked from the name">
-    <button type="submit" class="btn">Create label</button>
+    <span class="btngroup"><button type="submit">Create label</button></span>
   </form>
 </details>
 <p class="meta">Removing a label takes it off every issue and merge request that carries it.</p>
 {{end}}
+</section>
 {{end}}

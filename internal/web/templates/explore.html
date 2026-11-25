@@ -1,7 +1,7 @@
 {{define "width"}}wide{{end}}
 {{define "title"}}explore · {{.Site}}{{end}}
 {{define "content"}}
-<div class="withcol">
+<div class="withcol" id="explore-root">
 {{template "sidecol" .Facets}}
 <div class="colmain">
 <div class="headrow">
@@ -11,6 +11,7 @@
   <button type="submit" class="btn">Search</button>
 </form>
 <span class="spacer"></span>
+{{if .Viewer}}<a class="button" href="/new">New repository</a>{{end}}
 </div>
 <p class="meta">{{.Total}} repositor{{if eq .Total 1}}y{{else}}ies{{end}}{{if .Query}} matching <strong>{{.Query}}</strong>, <a href="/explore">clear filter</a>{{end}}</p>
 <ul class="repolist rows">
