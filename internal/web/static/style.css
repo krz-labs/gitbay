@@ -2001,6 +2001,32 @@ button.react:hover { background: var(--surface); }
 button.react.mine { border-color: var(--accent); background: var(--surface); color: var(--fg); }
 
 /* ---- rail pinned switcher ---- */
+.railusermenu { position: relative; }
+.railusermenu > summary { list-style: none; cursor: pointer; }
+.railusermenu > summary::-webkit-details-marker { display: none; }
+.railavatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--rail-hit);
+  height: var(--rail-strip-h);
+}
+.railavatar:hover, .railusermenu[open] > .railavatar { background: var(--shell-hover); }
+.railavatar .avatar { width: var(--rail-mark); height: var(--rail-mark); }
+.raildrop a.railuser {
+  width: 100%;
+  height: auto;
+  justify-content: flex-start;
+}
+.raildrop a[aria-current="page"] {
+  box-shadow: inset 2px 0 0 var(--shell-mark);
+  font-weight: 600;
+}
+.railsep {
+  border: 0;
+  border-top: 1px solid var(--shell-line);
+  margin: var(--sp-1) 0;
+}
 .railpins { position: relative; }
 .railpins > summary { list-style: none; }
 .railpins > summary::-webkit-details-marker { display: none; }

@@ -29,11 +29,11 @@
   };
 
   // ---- 1. Popover hygiene (close others, click outside, Escape) ----
-  const popovers = () => document.querySelectorAll('details.popover, details.railpins, details.refmenu');
+  const popovers = () => document.querySelectorAll('details.popover, details.railpins, details.railusermenu, details.railmore, details.refmenu');
   document.addEventListener('toggle', (e) => {
     const d = e.target;
     if (!(d instanceof HTMLDetailsElement) || !d.open) return;
-    if (!d.matches('details.popover, details.railpins, details.refmenu')) return;
+    if (!d.matches('details.popover, details.railpins, details.railusermenu, details.railmore, details.refmenu')) return;
     for (const other of popovers()) {
       if (other !== d && other.open) other.open = false;
     }

@@ -34,10 +34,6 @@
     <button type="button" class="cmdk-trigger" aria-label="Open command palette" title="Jump to… (⌘K)"><kbd>⌘K</kbd></button>
   </form>
   <span class="railgap"></span>
-  <ul class="raillist">
-    {{if .Viewer}}<li class="railopt">{{template "raillink" (index $items 1)}}</li>
-    {{if (index $items 2).Show}}<li class="railopt">{{template "raillink" (index $items 2)}}</li>{{end}}{{end}}
-  </ul>
   <div class="railfoot">
     {{if .Viewer}}<details class="railmore">
       <summary class="railicon" aria-label="More" title="More">{{template "icon" "ellipsis"}}<span class="vh">More</span></summary>
@@ -45,8 +41,17 @@
         {{range $items}}{{if .Show}}<a href="{{.Href}}">{{template "icon" .Icon}} {{.Name}}</a>{{end}}{{end}}
       </div>
     </details>
-    <a class="railuser" href="/{{.Viewer}}" aria-label="Your profile" title="{{.Viewer}}"><span class="avatar">{{initial .Viewer}}</span></a>
-    {{$logout := index $items 3}}<a class="railopt railicon" href="{{$logout.Href}}" aria-label="{{$logout.Name}}" title="{{$logout.Name}}">{{template "icon" $logout.Icon}}<span class="vh">{{$logout.Name}}</span></a>
+    <details class="railusermenu">
+      <summary class="railavatar" aria-label="Account menu" title="{{.Viewer}}"><span class="avatar">{{initial .Viewer}}</span></summary>
+      <div class="raildrop">
+        <a class="railuser" href="/{{.Viewer}}">{{template "icon" "person"}} <span><strong>{{.Viewer}}</strong></span></a>
+        <hr class="railsep">
+        {{$settings := index $items 1}}<a{{if $settings.Current}} aria-current="page"{{end}} href="{{$settings.Href}}">{{template "icon" $settings.Icon}} {{$settings.Name}}</a>
+        {{$admin := index $items 2}}{{if $admin.Show}}<a{{if $admin.Current}} aria-current="page"{{end}} href="{{$admin.Href}}">{{template "icon" $admin.Icon}} {{$admin.Name}}</a>{{end}}
+        <hr class="railsep">
+        {{$logout := index $items 3}}<a href="{{$logout.Href}}">{{template "icon" $logout.Icon}} {{$logout.Name}}</a>
+      </div>
+    </details>
     {{else}}<a class="railicon" href="/login" aria-label="Sign in" title="Sign in">{{template "icon" "person"}}<span class="vh">Sign in</span></a>{{end}}
   </div>
 </nav>
