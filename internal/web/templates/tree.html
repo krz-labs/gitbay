@@ -16,8 +16,8 @@
     <a class="button btn" href="/{{.Repo.OwnerName}}/{{.Repo.Name}}/archive/{{.Ref}}.tar.gz">Download</a>
   </div>
 </div>
-<div class="tablewrap">
-<table class="tree" id="repo-tree">
+<div class="tablewrap" id="repo-tree">
+<table class="tree">
 <thead>
 {{with .Tip}}{{if .SHA}}<tr class="tipbar"><td colspan="3"><div class="tip"><span class="who">{{template "authorname" dict "Name" .Author "User" .User "Email" .Email}}</span> <a class="subject" href="/{{$.Repo.OwnerName}}/{{$.Repo.Name}}/commit/{{.SHA}}">{{.Subject}}</a><span class="spacer"></span><a class="sha" href="/{{$.Repo.OwnerName}}/{{$.Repo.Name}}/commit/{{.SHA}}"><code>{{short .SHA}}</code></a> <span class="age"{{if not .When.IsZero}} title="{{whenT .When}}"{{end}}>{{ago .When}}</span></div></td></tr>{{end}}{{end}}
 <tr class="cols"><th scope="col">name</th><th scope="col" class="lastcommit">last commit</th><th scope="col" class="age">updated</th></tr>
