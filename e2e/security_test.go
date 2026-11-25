@@ -20,7 +20,7 @@ func TestSecurityHeaders(t *testing.T) {
 	resp.Body.Close()
 	h := resp.Header
 	csp := h.Get("Content-Security-Policy")
-	for _, want := range []string{"script-src 'none'", "frame-ancestors 'none'", "object-src 'none'"} {
+	for _, want := range []string{"script-src 'self'", "frame-ancestors 'none'", "object-src 'none'"} {
 		if !strings.Contains(csp, want) {
 			t.Errorf("CSP missing %q: %s", want, csp)
 		}

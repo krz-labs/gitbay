@@ -123,12 +123,16 @@
   {{end}}
   {{if and .CanEdit (or (eq .MR.State "open") (eq .MR.State "source_gone"))}}
   <div class="grp">
-    <h2>State</h2>
-    <form method="post" action="{{$base}}/close" class="actions">
-      <label class="vh" for="by">Closed in favour of</label>
-      <input type="text" id="by" name="by" size="4" autocomplete="off" placeholder="!N">
-      <button type="submit" class="danger">Close without merging</button>
-    </form>
+    <div class="grp-head">
+      <h2>State</h2>
+      <details class="popover"><summary class="popbtn">Close…</summary><div class="popmenu">
+        <form method="post" action="{{$base}}/close" class="popform">
+          <label class="vh" for="by">Closed in favour of</label>
+          <input type="text" id="by" name="by" size="6" autocomplete="off" placeholder="Superseded by !N">
+          <button type="submit" class="danger">Close without merging</button>
+        </form>
+      </div></details>
+    </div>
     <form method="post" action="{{$base}}/draft" class="actions">
       {{if .MR.Draft}}<button type="submit" class="btn">Ready for review</button>
       {{else}}<input type="hidden" name="draft" value="on"><button type="submit" class="btn">Convert to draft</button>{{end}}
@@ -161,55 +165,55 @@
     {{end}}
   </div>{{end}}
   <div class="grp">
-    <h2>Reviewers</h2>
+    <div class="grp-head">
+      <h2>Reviewers</h2>
+      {{if and .CanWrite (or (eq .MR.State "open") (eq .MR.State "source_gone"))}}<details class="popover"><summary class="popbtn">Edit</summary><div class="popmenu">
+        {{with field . "People"}}<div class="picker-list">{{range .}}<form method="post" action="{{$base}}/review-request" class="inline">{{if hasStr $.MR.ReviewRequests .}}<input type="hidden" name="remove" value="{{.}}"><button type="submit" class="picker-btn" aria-pressed="true">{{.}} ×</button>{{else}}<input type="hidden" name="add" value="{{.}}"><button type="submit" class="picker-btn" aria-pressed="false">{{.}}</button>{{end}}</form>{{end}}</div>
+        <datalist id="repo-people">{{range .}}<option value="{{.}}"></option>{{end}}</datalist>{{end}}
+        <form method="post" action="{{$base}}/review-request" class="popform">
+          <input type="text" name="add" aria-label="Add reviewers" list="repo-people" autocomplete="off" spellcheck="false" placeholder="Add username…">
+          <button type="submit" class="btn">Add</button>
+        </form>
+      </div></details>{{end}}
+    </div>
     {{if .MR.ReviewRequests}}<p class="row">{{range .MR.ReviewRequests}}<a href="/{{.}}">{{.}}</a> {{end}}</p>
     {{else}}<p class="none">no reviewers</p>{{end}}
-    {{if and .CanWrite (or (eq .MR.State "open") (eq .MR.State "source_gone"))}}
-    {{with field . "People"}}<details class="picker"><summary>Pick reviewers</summary>
-      <div class="picker-list">{{range .}}<form method="post" action="{{$base}}/review-request" class="inline">{{if hasStr $.MR.ReviewRequests .}}<input type="hidden" name="remove" value="{{.}}"><button type="submit" class="picker-btn" aria-pressed="true">{{.}} ×</button>{{else}}<input type="hidden" name="add" value="{{.}}"><button type="submit" class="picker-btn" aria-pressed="false">{{.}}</button>{{end}}</form>{{end}}</div>
-    </details>
-    <datalist id="repo-people">{{range .}}<option value="{{.}}"></option>{{end}}</datalist>{{end}}
-    <form method="post" action="{{$base}}/review-request" class="actions">
-      <input type="text" name="add" aria-label="Add reviewers" list="repo-people" autocomplete="off" spellcheck="false" placeholder="add, space-separated">
-      <input type="text" name="remove" aria-label="Remove reviewers" list="repo-people" autocomplete="off" spellcheck="false" placeholder="remove">
-      <button type="submit" class="btn">Apply</button>
-    </form>
-    {{end}}
   </div>
   <div class="grp">
-    <h2>Source and target</h2>
-    <p class="row"><code>{{if .MR.SourcePath}}{{.MR.SourcePath}}:{{end}}{{.MR.SourceRef}}</code> into <code>{{.MR.TargetRef}}</code></p>
+    <div class="grp-head">
+      <h2>Branches</h2>
+      {{if and .CanEdit (or (eq .MR.State "open") (eq .MR.State "source_gone"))}}<details class="popover"><summary class="popbtn">Retarget</summary><div class="popmenu">
+        <form method="post" action="{{$base}}/retarget" class="popform">
+          <label class="vh" for="target">Branch</label>
+          <select id="target" name="target">
+            {{range .Branches}}<option value="{{.Name}}"{{if eq .Name $.MR.TargetRef}} selected{{end}}>{{.Name}}</option>{{end}}
+          </select>
+          <button type="submit" class="btn">Save</button>
+        </form>
+        <p class="hint">Retargeting stales existing reviews.</p>
+      </div></details>{{end}}
+    </div>
+    <p class="row"><code>{{if .MR.SourcePath}}{{.MR.SourcePath}}:{{end}}{{.MR.SourceRef}}</code> → <code>{{.MR.TargetRef}}</code></p>
     <p class="row none">{{if eq .MR.State "merged"}}merged at{{else}}head{{end}} <code>{{short .MR.HeadSHA}}</code>{{if .Base}} · base <code>{{short .Base}}</code>{{end}}{{if .SourceGone}} · <span class="chip chip-neutral">branch deleted</span>{{end}}</p>
-    {{if and .CanEdit (or (eq .MR.State "open") (eq .MR.State "source_gone"))}}
-    <form method="post" action="{{$base}}/retarget" class="actions">
-      <label class="none" for="target">Branch</label>
-      <select id="target" name="target">
-        {{range .Branches}}<option value="{{.Name}}"{{if eq .Name $.MR.TargetRef}} selected{{end}}>{{.Name}}</option>{{end}}
-      </select>
-      <button type="submit" class="btn">Retarget</button>
-    </form>
-    <p class="row none">Retargeting stales existing reviews.</p>
-    {{end}}
   </div>
   {{if .MR.Milestone}}<div class="grp">
     <h2>Milestone</h2>
     <p class="row"><a href="/{{.Repo.OwnerName}}/{{.Repo.Name}}/milestones">{{.MR.Milestone}}</a></p>
   </div>{{end}}
   <div class="grp">
-    <h2>Labels</h2>
+    <div class="grp-head">
+      <h2>Labels</h2>
+      {{if .CanWrite}}<details class="popover"><summary class="popbtn">Edit</summary><div class="popmenu">
+        {{with field . "AllLabels"}}<div class="picker-list">{{range .}}<form method="post" action="{{$base}}/label" class="inline">{{if hasStr $.MR.Labels .Name}}<input type="hidden" name="remove" value="{{.Name}}"><button type="submit" class="picker-btn" aria-pressed="true">{{.Name}} ×</button>{{else}}<input type="hidden" name="add" value="{{.Name}}"><button type="submit" class="picker-btn" aria-pressed="false">{{.Name}}</button>{{end}}</form>{{end}}</div>
+        <datalist id="repo-labels">{{range .}}<option value="{{.Name}}"></option>{{end}}</datalist>{{end}}
+        <form method="post" action="{{$base}}/label" class="popform">
+          <input type="text" name="add" aria-label="Add labels" list="repo-labels" autocomplete="off" spellcheck="false" placeholder="Add label…">
+          <button type="submit" class="btn">Add</button>
+        </form>
+      </div></details>{{end}}
+    </div>
     {{if .MR.Labels}}<p class="row">{{range .MR.Labels}}<a class="chip label" style="{{index $.LabelColors .}}" href="/{{$.Repo.OwnerName}}/{{$.Repo.Name}}/mrs?label={{.}}">{{.}}</a> {{end}}</p>
     {{else}}<p class="none">{{if or (eq .MR.State "merged") (eq .MR.State "closed")}}no labels{{else}}none yet{{end}}</p>{{end}}
-    {{if .CanWrite}}
-    {{with field . "AllLabels"}}<details class="picker"><summary>Pick labels</summary>
-      <div class="picker-list">{{range .}}<form method="post" action="{{$base}}/label" class="inline">{{if hasStr $.MR.Labels .Name}}<input type="hidden" name="remove" value="{{.Name}}"><button type="submit" class="picker-btn" aria-pressed="true">{{.Name}} ×</button>{{else}}<input type="hidden" name="add" value="{{.Name}}"><button type="submit" class="picker-btn" aria-pressed="false">{{.Name}}</button>{{end}}</form>{{end}}</div>
-    </details>
-    <datalist id="repo-labels">{{range .}}<option value="{{.Name}}"></option>{{end}}</datalist>{{end}}
-    <form method="post" action="{{$base}}/label" class="actions">
-      <input type="text" name="add" aria-label="Add labels" list="repo-labels" autocomplete="off" spellcheck="false" placeholder="add, space-separated">
-      <input type="text" name="remove" aria-label="Remove labels" list="repo-labels" autocomplete="off" spellcheck="false" placeholder="remove">
-      <button type="submit" class="btn">Apply</button>
-    </form>
-    {{end}}
   </div>
 </aside>
 </div>

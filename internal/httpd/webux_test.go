@@ -65,7 +65,7 @@ func TestWebUXPickersStatebarAndRailPins(t *testing.T) {
 		}
 	}
 
-	// Issue detail carries clickable label & assignee pickers and datalists.
+	// Issue detail carries popover label & assignee pickers, datalists, and Cmd+K palette.
 	req = httptest.NewRequest("GET", "/alice/app/issues/1", nil)
 	req.AddCookie(cookie)
 	rec = httptest.NewRecorder()
@@ -74,10 +74,18 @@ func TestWebUXPickersStatebarAndRailPins(t *testing.T) {
 		t.Fatalf("GET /alice/app/issues/1: %d", rec.Code)
 	}
 	body = rec.Body.String()
-	for _, want := range []string{`id="repo-labels"`, `id="repo-people"`, `Pick labels`, `Pick assignees`, `class="picker-btn"`} {
+	for _, want := range []string{`id="repo-labels"`, `id="repo-people"`, `class="popover"`, `class="picker-btn"`, `id="cmdk"`, `/static/app.js`} {
 		if !strings.Contains(body, want) {
 			t.Errorf("issue page missing %s", want)
 		}
+	}
+
+	// /static/app.js is served with JavaScript content-type.
+	req = httptest.NewRequest("GET", "/static/app.js", nil)
+	rec = httptest.NewRecorder()
+	h.ServeHTTP(rec, req)
+	if rec.Code != http.StatusOK || !strings.Contains(rec.Header().Get("Content-Type"), "javascript") {
+		t.Fatalf("GET /static/app.js: %d %q", rec.Code, rec.Header().Get("Content-Type"))
 	}
 
 	// Clicking a picker button applies the label.

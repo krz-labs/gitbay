@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{{template "title" .}}</title>
 <link rel="stylesheet" href="/static/style.css?v={{styleVersion}}">
+<script src="/static/app.js?v={{scriptVersion}}" defer></script>
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <meta name="theme-color" content="#000000">
 {{with field . "Feed"}}<link rel="alternate" type="application/atom+xml" href="{{.}}">
@@ -28,6 +29,7 @@
     <li class="railopt"><details class="railpins"><summary class="railicon" aria-label="Pinned repositories" title="Pinned repositories">{{template "icon" "bookmark"}}<span class="vh">Pinned repositories</span></summary><div class="raildrop">{{range .Rail.Pins}}<a href="/{{.Owner}}/{{.Name}}">{{.Owner}}/{{.Name}}</a>{{else}}<span class="none">No pinned repos</span>{{end}}<a href="/{{.Viewer}}/-/repositories">All repositories →</a></div></details></li>
     <li class="railopt">{{template "raillink" (index $items 0)}}</li>{{end}}
   </ul>
+  <button type="button" class="cmdk-trigger" aria-label="Jump to"><span>Jump to…</span><kbd>⌘K</kbd></button>
   <span class="railgap"></span>
   <ul class="raillist">
     {{if .Viewer}}<li class="railopt">{{template "raillink" (index $items 1)}}</li>
@@ -93,6 +95,12 @@
 </footer>
 </div>
 </div>
+<dialog id="cmdk" class="cmdk" aria-label="Jump to">
+  <div class="cmdk-box">
+    <input type="search" aria-label="Filter destinations" placeholder="Jump to repository, tab, or page…">
+    <ul class="cmdk-list"></ul>
+  </div>
+</dialog>
 </body>
 </html>{{end}}
 

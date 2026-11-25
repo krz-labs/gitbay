@@ -79,7 +79,32 @@ var stylesheetHash = func() string {
 
 var stylesheetETag = `"` + stylesheetHash + `"`
 
-func init() { web.StyleVersion = stylesheetHash }
+var scriptHash = func() string {
+	sum := sha256.Sum256(web.AppJS)
+	return hex.EncodeToString(sum[:])[:16]
+}()
+
+var scriptETag = `"` + scriptHash + `"`
+
+func init() {
+	web.StyleVersion = stylesheetHash
+	web.ScriptVersion = scriptHash
+}
+
+func (s *Server) appScript(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("ETag", scriptETag)
+	if r.URL.Query().Get("v") == scriptHash {
+		w.Header().Set("Cache-Control", "public, max-age=31536000, immutable")
+	} else {
+		w.Header().Set("Cache-Control", "public, max-age=86400, must-revalidate")
+	}
+	if r.Header.Get("If-None-Match") == scriptETag {
+		w.WriteHeader(http.StatusNotModified)
+		return
+	}
+	w.Header().Set("Content-Type", "text/javascript; charset=utf-8")
+	w.Write(web.AppJS)
+}
 
 func (s *Server) stylesheet(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("ETag", stylesheetETag)

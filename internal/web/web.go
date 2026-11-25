@@ -22,6 +22,9 @@ var templateFS embed.FS
 //go:embed static/style.css
 var StyleCSS []byte
 
+//go:embed static/app.js
+var AppJS []byte
+
 //go:embed static/favicon.svg
 var FaviconSVG []byte
 
@@ -31,10 +34,11 @@ var FontFS embed.FS
 //go:embed static/img/*.gif static/img/*.webm static/img/*.mp4
 var ImageFS embed.FS
 
-// StyleVersion identifies the bytes /static/style.css serves. The httpd
-// package sets it; the layout stamps it on the stylesheet URL so a deploy
-// changes that URL and a browser holding a cached copy cannot miss it.
+// StyleVersion and ScriptVersion identify the bytes /static/style.css and
+// /static/app.js serve. The httpd package sets them so a deploy busts
+// browser caches automatically.
 var StyleVersion string
+var ScriptVersion string
 
 // railItem is one destination the rail's icon strip and the phone
 // "More" menu both render — from this one list, so a destination added
@@ -96,9 +100,10 @@ func railOptItems(v any) []railItem {
 }
 
 var funcs = template.FuncMap{
-	"styleVersion": func() string { return StyleVersion },
-	"join":         strings.Join,
-	"hasStr":       slices.Contains[[]string, string],
+	"styleVersion":  func() string { return StyleVersion },
+	"scriptVersion": func() string { return ScriptVersion },
+	"join":          strings.Join,
+	"hasStr":        slices.Contains[[]string, string],
 	// paragraphs splits plain text on blank lines for safe rich display.
 	"paragraphs": func(s string) []string {
 		var out []string

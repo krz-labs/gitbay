@@ -43,62 +43,61 @@
 
 {{$base := printf "/%s/%s/issues/%d" .Repo.OwnerName .Repo.Name .Issue.Number}}
 <aside class="aside">
+  <div class="grp">
+    <div class="grp-head">
+      <h2>Labels</h2>
+      {{if .CanWrite}}<details class="popover"><summary class="popbtn">Edit</summary><div class="popmenu">
+        {{with field . "AllLabels"}}<div class="picker-list">{{range .}}<form method="post" action="{{$base}}/label" class="inline">{{if hasStr $.Issue.Labels .Name}}<input type="hidden" name="remove" value="{{.Name}}"><button type="submit" class="picker-btn" aria-pressed="true">{{.Name}} ×</button>{{else}}<input type="hidden" name="add" value="{{.Name}}"><button type="submit" class="picker-btn" aria-pressed="false">{{.Name}}</button>{{end}}</form>{{end}}</div>
+        <datalist id="repo-labels">{{range .}}<option value="{{.Name}}"></option>{{end}}</datalist>{{end}}
+        <form method="post" action="{{$base}}/label" class="popform">
+          <input type="text" name="add" aria-label="Add labels" list="repo-labels" autocomplete="off" spellcheck="false" placeholder="Add label…">
+          <button type="submit" class="btn">Add</button>
+        </form>
+      </div></details>{{end}}
+    </div>
+    {{if .Issue.Labels}}<p class="row">{{range .Issue.Labels}}<a class="chip label" style="{{index $.LabelColors .}}" href="/{{$.Repo.OwnerName}}/{{$.Repo.Name}}/issues?label={{.}}">{{.}}</a> {{end}}</p>
+    {{else}}<p class="none">None</p>{{end}}
+  </div>
+  <div class="grp">
+    <div class="grp-head">
+      <h2>Assignees</h2>
+      {{if .CanWrite}}<details class="popover"><summary class="popbtn">Edit</summary><div class="popmenu">
+        {{with field . "People"}}<div class="picker-list">{{range .}}<form method="post" action="{{$base}}/assign" class="inline">{{if hasStr $.Issue.Assignees .}}<input type="hidden" name="remove" value="{{.}}"><button type="submit" class="picker-btn" aria-pressed="true">{{.}} ×</button>{{else}}<input type="hidden" name="add" value="{{.}}"><button type="submit" class="picker-btn" aria-pressed="false">{{.}}</button>{{end}}</form>{{end}}</div>
+        <datalist id="repo-people">{{range .}}<option value="{{.}}"></option>{{end}}</datalist>{{end}}
+        <form method="post" action="{{$base}}/assign" class="popform">
+          <input type="text" name="add" aria-label="Add assignees" list="repo-people" autocomplete="off" spellcheck="false" placeholder="Add username…">
+          <button type="submit" class="btn">Add</button>
+        </form>
+      </div></details>{{end}}
+    </div>
+    {{if .Issue.Assignees}}<p class="row">{{range .Issue.Assignees}}<a href="/{{.}}">{{.}}</a> {{end}}</p>
+    {{else}}<p class="none">Unassigned</p>{{end}}
+  </div>
+  <div class="grp">
+    <div class="grp-head">
+      <h2>Milestone</h2>
+      {{if .CanWrite}}<details class="popover"><summary class="popbtn">Edit</summary><div class="popmenu">
+        <form method="post" action="{{$base}}/milestone" class="popform">
+          <label class="vh" for="milestone">Set milestone</label>
+          <select id="milestone" name="milestone">
+            <option value="none">No milestone</option>
+            {{range .Milestones}}<option value="{{.Title}}"{{if eq .Title $.Issue.Milestone}} selected{{end}}>{{.Title}}</option>{{end}}
+          </select>
+          <button type="submit" class="btn">Save</button>
+        </form>
+      </div></details>{{end}}
+    </div>
+    {{if .Issue.Milestone}}<p class="row"><a href="/{{.Repo.OwnerName}}/{{.Repo.Name}}/milestones">{{.Issue.Milestone}}</a></p>
+    {{else}}<p class="none">None</p>{{end}}
+  </div>
   {{if .CanEdit}}
   <div class="grp">
-    <h2>State</h2>
     <form method="post" action="{{$base}}/state" class="actions">
-      {{if eq .Issue.State "open"}}<button type="submit" name="action" value="close">Close issue</button>
-      {{else}}<button type="submit" name="action" value="reopen">Reopen issue</button>{{end}}
+      {{if eq .Issue.State "open"}}<button type="submit" name="action" value="close" class="btn">Close issue</button>
+      {{else}}<button type="submit" name="action" value="reopen" class="btn">Reopen issue</button>{{end}}
     </form>
   </div>
   {{end}}
-  <div class="grp">
-    <h2>Labels</h2>
-    {{if .Issue.Labels}}<p class="row">{{range .Issue.Labels}}<a class="chip label" style="{{index $.LabelColors .}}" href="/{{$.Repo.OwnerName}}/{{$.Repo.Name}}/issues?label={{.}}">{{.}}</a> {{end}}</p>
-    {{else}}<p class="none">none yet</p>{{end}}
-    {{if .CanWrite}}
-    {{with field . "AllLabels"}}<details class="picker"><summary>Pick labels</summary>
-      <div class="picker-list">{{range .}}<form method="post" action="{{$base}}/label" class="inline">{{if hasStr $.Issue.Labels .Name}}<input type="hidden" name="remove" value="{{.Name}}"><button type="submit" class="picker-btn" aria-pressed="true">{{.Name}} ×</button>{{else}}<input type="hidden" name="add" value="{{.Name}}"><button type="submit" class="picker-btn" aria-pressed="false">{{.Name}}</button>{{end}}</form>{{end}}</div>
-    </details>
-    <datalist id="repo-labels">{{range .}}<option value="{{.Name}}"></option>{{end}}</datalist>{{end}}
-    <form method="post" action="{{$base}}/label" class="actions">
-      <input type="text" name="add" aria-label="Add labels" list="repo-labels" autocomplete="off" spellcheck="false" placeholder="add, space-separated">
-      <input type="text" name="remove" aria-label="Remove labels" list="repo-labels" autocomplete="off" spellcheck="false" placeholder="remove">
-      <button type="submit" class="btn">Apply</button>
-    </form>
-    {{end}}
-  </div>
-  <div class="grp">
-    <h2>Assignees</h2>
-    {{if .Issue.Assignees}}<p class="row">{{range .Issue.Assignees}}<a href="/{{.}}">{{.}}</a> {{end}}</p>
-    {{else}}<p class="none">nobody yet</p>{{end}}
-    {{if .CanWrite}}
-    {{with field . "People"}}<details class="picker"><summary>Pick assignees</summary>
-      <div class="picker-list">{{range .}}<form method="post" action="{{$base}}/assign" class="inline">{{if hasStr $.Issue.Assignees .}}<input type="hidden" name="remove" value="{{.}}"><button type="submit" class="picker-btn" aria-pressed="true">{{.}} ×</button>{{else}}<input type="hidden" name="add" value="{{.}}"><button type="submit" class="picker-btn" aria-pressed="false">{{.}}</button>{{end}}</form>{{end}}</div>
-    </details>
-    <datalist id="repo-people">{{range .}}<option value="{{.}}"></option>{{end}}</datalist>{{end}}
-    <form method="post" action="{{$base}}/assign" class="actions">
-      <input type="text" name="add" aria-label="Add assignees" list="repo-people" autocomplete="off" spellcheck="false" placeholder="add, space-separated">
-      <input type="text" name="remove" aria-label="Remove assignees" list="repo-people" autocomplete="off" spellcheck="false" placeholder="remove">
-      <button type="submit" class="btn">Apply</button>
-    </form>
-    {{end}}
-  </div>
-  <div class="grp">
-    <h2>Milestone</h2>
-    {{if .Issue.Milestone}}<p class="row"><a href="/{{.Repo.OwnerName}}/{{.Repo.Name}}/milestones">{{.Issue.Milestone}}</a></p>
-    {{else}}<p class="none">none yet</p>{{end}}
-    {{if .CanWrite}}
-    <form method="post" action="{{$base}}/milestone" class="actions">
-      <label class="none" for="milestone">Set milestone</label>
-      <select id="milestone" name="milestone">
-        <option value="none">No milestone</option>
-        {{range .Milestones}}<option value="{{.Title}}"{{if eq .Title $.Issue.Milestone}} selected{{end}}>{{.Title}}</option>{{end}}
-      </select>
-      <button type="submit" class="btn">Apply</button>
-    </form>
-    {{end}}
-  </div>
 </aside>
 </div>
 {{end}}

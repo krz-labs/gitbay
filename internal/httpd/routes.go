@@ -45,6 +45,7 @@ func (s *Server) Routes() []Route {
 		Route{Method: "GET", Pattern: "/healthz", Handler: s.healthz},
 		Route{Method: "GET", Pattern: "/privacy", Handler: s.privacy},
 		Route{Method: "GET", Pattern: "/static/style.css", Handler: s.stylesheet},
+		Route{Method: "GET", Pattern: "/static/app.js", Handler: s.appScript},
 	)
 	// One literal route per embedded font file: a {name} wildcard is
 	// ambiguous against /{owner}/{repo}/... patterns in ServeMux precedence,
@@ -312,7 +313,7 @@ func (s *Server) unmatched(mux *http.ServeMux) http.HandlerFunc {
 // still render; they are the one thing a reader-facing forge can't police
 // without a proxy.
 func (s *Server) securityHeaders(next http.Handler) http.Handler {
-	const csp = "default-src 'self'; script-src 'none'; style-src 'self' 'unsafe-inline'; " +
+	const csp = "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; " +
 		"img-src * data:; object-src 'none'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'"
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		hd := w.Header()
