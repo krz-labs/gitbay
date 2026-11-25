@@ -15,19 +15,19 @@
 <div class="shell">
 
 <nav class="rail" aria-label="Site">
-  <a class="brand" href="/" aria-label="{{.Site}} home">{{template "mark"}}<span class="vh">{{.Site}}</span></a>
+  <a class="brand" href="/" aria-label="{{.Site}} home"{{if eq (str . "Tab") "dashboard"}} aria-current="page"{{end}}>{{template "mark"}}<span class="brandname" aria-hidden="true">{{.Site}}</span><span class="vh">{{.Site}}</span></a>
   {{$items := railOptItems .}}
-  {{/* A square is .railopt when the phone rail drops it into the More
-       menu below. Every one of those destinations — strip, menu and
-       the foot's own Log out link — renders off $items, so the strip
-       and the menu can never drift out of step. */}}
   <ul class="raillist">
-    {{if .Viewer}}<li>{{template "raillink" dict "Href" "/" "Icon" "home" "Name" "Dashboard" "Current" (eq (str . "Tab") "dashboard")}}</li>{{end}}
-    <li>{{template "raillink" dict "Href" "/explore" "Icon" "compass" "Name" "Explore" "Current" (eq (str . "Tab") "explore")}}</li>
+    <li>{{template "raillink" dict "Href" "/explore" "Icon" "compass" "Name" "Explore" "Label" "Explore" "Current" (eq (str . "Tab") "explore")}}</li>
+    {{if .Viewer}}<li class="railpins-item"><details class="railpins">
+      <summary class="railicon raildrop-trigger" aria-label="Pinned repositories" title="Pinned repositories">{{template "icon" "bookmark"}}<span class="raillabel" aria-hidden="true">Pinned</span><span class="railcaret" aria-hidden="true">▾</span><span class="vh">Pinned repositories</span></summary>
+      <div class="raildrop">
+        {{range .Rail.Pins}}<a href="/{{.Owner}}/{{.Name}}">{{.Owner}}/{{.Name}}</a>{{else}}<span class="none">No pinned repos</span>{{end}}
+        <hr class="railsep">
+        <a href="/{{.Viewer}}/-/repositories">All repositories →</a>
+      </div>
+    </details></li>{{end}}
     <li class="railsearch-mob">{{template "raillink" dict "Href" "/search" "Icon" "search" "Name" "Search" "Current" (eq (str . "Tab") "sitesearch")}}</li>
-    {{if .Viewer}}<li>{{template "raillink" dict "Href" "/notifications" "Icon" "bell" "Name" "Notifications" "Current" (eq (str . "Tab") "notifications") "Count" .Rail.Unread}}</li>
-    <li class="railopt"><details class="railpins"><summary class="railicon" aria-label="Pinned repositories" title="Pinned repositories">{{template "icon" "bookmark"}}<span class="vh">Pinned repositories</span></summary><div class="raildrop">{{range .Rail.Pins}}<a href="/{{.Owner}}/{{.Name}}">{{.Owner}}/{{.Name}}</a>{{else}}<span class="none">No pinned repos</span>{{end}}<a href="/{{.Viewer}}/-/repositories">All repositories →</a></div></details></li>
-    <li class="railopt">{{template "raillink" (index $items 0)}}</li>{{end}}
   </ul>
   <form method="get" action="/search" class="railsearch" role="search">
     <input type="search" name="q" aria-label="Search repositories, issues, and merge requests" placeholder="Search repositories, issues, MRs…">
@@ -35,16 +35,22 @@
   </form>
   <span class="railgap"></span>
   <div class="railfoot">
-    {{if .Viewer}}<details class="railmore">
-      <summary class="railicon" aria-label="More" title="More">{{template "icon" "ellipsis"}}<span class="vh">More</span></summary>
+    {{if .Viewer}}
+    <details class="railcreate">
+      <summary class="railicon raildrop-trigger" aria-label="Create new" title="Create new">{{template "icon" "plus"}}<span class="railcaret" aria-hidden="true">▾</span><span class="vh">Create new</span></summary>
       <div class="raildrop">
-        {{range $items}}{{if .Show}}<a href="{{.Href}}">{{template "icon" .Icon}} {{.Name}}</a>{{end}}{{end}}
+        <a href="/new#create">{{template "icon" "plus"}} New repository</a>
+        <a href="/new#import">{{template "icon" "file"}} Import repository</a>
+        <a href="/new#org">{{template "icon" "person"}} New organization</a>
       </div>
     </details>
+    {{template "raillink" dict "Href" "/notifications" "Icon" "bell" "Name" "Notifications" "Current" (eq (str . "Tab") "notifications") "Count" .Rail.Unread}}
     <details class="railusermenu">
-      <summary class="railavatar" aria-label="Account menu" title="{{.Viewer}}"><span class="avatar">{{initial .Viewer}}</span></summary>
+      <summary class="railavatar" aria-label="Account menu" title="{{.Viewer}}"><span class="avatar">{{initial .Viewer}}</span><span class="railcaret" aria-hidden="true">▾</span></summary>
       <div class="raildrop">
         <a class="railuser" href="/{{.Viewer}}">{{template "icon" "person"}} <span><strong>{{.Viewer}}</strong></span></a>
+        <a href="/{{.Viewer}}/-/repositories">{{template "icon" "folder"}} Your repositories</a>
+        <a href="/{{.Viewer}}/-/bookmarks">{{template "icon" "bookmark"}} Bookmarks</a>
         <hr class="railsep">
         {{$settings := index $items 1}}<a{{if $settings.Current}} aria-current="page"{{end}} href="{{$settings.Href}}">{{template "icon" $settings.Icon}} {{$settings.Name}}</a>
         {{$admin := index $items 2}}{{if $admin.Show}}<a{{if $admin.Current}} aria-current="page"{{end}} href="{{$admin.Href}}">{{template "icon" $admin.Icon}} {{$admin.Name}}</a>{{end}}
@@ -52,7 +58,7 @@
         {{$logout := index $items 3}}<a href="{{$logout.Href}}">{{template "icon" $logout.Icon}} {{$logout.Name}}</a>
       </div>
     </details>
-    {{else}}<a class="railicon" href="/login" aria-label="Sign in" title="Sign in">{{template "icon" "person"}}<span class="vh">Sign in</span></a>{{end}}
+    {{else}}<a class="railicon" href="/login" aria-label="Sign in" title="Sign in">{{template "icon" "person"}}<span class="raillabel" aria-hidden="true">Sign in</span><span class="vh">Sign in</span></a>{{end}}
   </div>
 </nav>
 
@@ -135,7 +141,7 @@
 
 {{/* raillink draws one square in the rail: the icon, the name for a
      screen reader and in the tooltip, and the bell's unread badge. */}}
-{{define "raillink"}}<a class="railicon" {{if .Current}}aria-current="page" {{end}}href="{{.Href}}" aria-label="{{.Name}}" title="{{.Name}}">{{template "icon" .Icon}}<span class="vh">{{.Name}}</span>{{with .Count}}<b class="count">{{.}}</b>{{end}}</a>{{end}}
+{{define "raillink"}}<a class="railicon" {{if .Current}}aria-current="page" {{end}}href="{{.Href}}" aria-label="{{.Name}}" title="{{.Name}}">{{template "icon" .Icon}}{{with .Label}}<span class="raillabel" aria-hidden="true">{{.}}</span>{{end}}<span class="vh">{{.Name}}</span>{{with .Count}}<b class="count">{{.}}</b>{{end}}</a>{{end}}
 
 {{define "mark"}}<svg class="mark" width="19" height="19" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.25 18.75 12H5.25z" fill="#ff6b3d"/><rect x="3" y="13.5" width="18" height="3" fill="currentColor"/><rect x="7.5" y="18" width="9" height="3" fill="currentColor"/></svg>{{end}}
 {{define "width"}}reading{{end}}

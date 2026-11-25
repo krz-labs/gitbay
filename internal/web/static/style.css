@@ -280,26 +280,37 @@ a.skip:focus { top: var(--sp-3); text-decoration: none; }
    inline svg, its name in an aria-label and in a visually hidden span, so
    the nav reads the same to a screen reader as the old text list did. */
 .rail {
-  height: var(--rail-strip-h);
+  height: 48px;
   background: var(--shell-bg);
   color: var(--shell-fg);
   border-bottom: 1px solid var(--shell-line);
   display: flex;
   flex-direction: row;
   align-items: center;
-  padding: 0 var(--sp-1);
+  gap: var(--sp-1);
+  padding: 0 var(--sp-3);
 }
 a.brand {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
+  gap: var(--sp-2);
   flex: none;
-  width: var(--rail-mark-box);
-  height: var(--rail-strip-h);
+  height: 32px;
+  padding: 0 var(--sp-2);
+  border-radius: var(--r-ctl);
   color: var(--shell-fg);
+  font-size: var(--fs-2);
+  font-weight: 600;
+  letter-spacing: -0.01em;
 }
-a.brand:hover { text-decoration: none; }
+a.brand:hover { background: var(--shell-hover); text-decoration: none; }
+a.brand[aria-current="page"] { background: var(--shell-hover); }
 a.brand svg.mark { display: block; flex: none; width: var(--rail-mark); height: var(--rail-mark); }
+.brandname { display: inline; }
+@media (max-width: 44rem) {
+  .brandname { display: none; }
+}
 
 ul.raillist {
   list-style: none;
@@ -307,23 +318,26 @@ ul.raillist {
   padding: 0;
   display: flex;
   align-items: center;
+  gap: var(--sp-1);
   min-width: 0;
 }
-/* the spacer that holds settings, admin and the account cell at the far
-   end of the row */
 .railgap { flex: 1; }
 .railicon {
   position: relative;
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
+  gap: 6px;
   flex: none;
-  width: var(--rail-hit);
-  height: var(--rail-strip-h);
-  padding: 0;
+  min-width: 32px;
+  height: 32px;
+  padding: 0 var(--sp-2);
   border: 0;
+  border-radius: var(--r-ctl);
   background: none;
   color: var(--shell-fg);
+  font-size: var(--fs-2);
+  font-weight: 500;
   cursor: pointer;
 }
 .railicon:hover { background: var(--shell-hover); text-decoration: none; }
@@ -331,6 +345,20 @@ ul.raillist {
 .railicon[aria-current] {
   background: var(--shell-hover);
   box-shadow: inset 0 -2px 0 var(--shell-mark);
+}
+.raillabel { display: none; }
+@media (min-width: 64rem) {
+  .raillabel { display: inline; }
+}
+.railcaret {
+  font-size: 10px;
+  color: var(--shell-muted);
+  line-height: 1;
+}
+.raildrop-trigger { list-style: none; }
+.railpins-item { display: list-item; }
+@media (max-width: 44rem) {
+  .railpins-item { display: none; }
 }
 .count {
   font-size: var(--fs-0);
@@ -345,16 +373,17 @@ ul.raillist {
 /* the unread count is a badge on the bell's corner, not a trailing number */
 .railicon .count {
   position: absolute;
-  top: 2px;
-  right: 2px;
+  top: 0;
+  right: 0;
   margin: 0;
-  padding: 0 3px;
+  padding: 0 4px;
   line-height: 1.35;
 }
 .railfoot {
   flex: none;
   display: flex;
   align-items: center;
+  gap: var(--sp-1);
   min-width: 0;
 }
 .railfoot a { color: var(--shell-fg); }
@@ -2001,18 +2030,22 @@ button.react:hover { background: var(--surface); }
 button.react.mine { border-color: var(--accent); background: var(--surface); color: var(--fg); }
 
 /* ---- rail pinned switcher ---- */
-.railusermenu { position: relative; }
-.railusermenu > summary { list-style: none; cursor: pointer; }
-.railusermenu > summary::-webkit-details-marker { display: none; }
+.railusermenu, .railcreate { position: relative; }
+.railusermenu > summary, .railcreate > summary { list-style: none; cursor: pointer; }
+.railusermenu > summary::-webkit-details-marker, .railcreate > summary::-webkit-details-marker { display: none; }
+.railcreate[open] > summary, .railpins[open] > summary { background: var(--shell-hover); }
 .railavatar {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: var(--rail-hit);
-  height: var(--rail-strip-h);
+  gap: 5px;
+  height: 32px;
+  padding: 0 var(--sp-2);
+  border-radius: var(--r-ctl);
 }
 .railavatar:hover, .railusermenu[open] > .railavatar { background: var(--shell-hover); }
 .railavatar .avatar { width: var(--rail-mark); height: var(--rail-mark); }
+.raildrop { top: calc(100% + 6px); }
 .raildrop a.railuser {
   width: 100%;
   height: auto;
@@ -2031,8 +2064,9 @@ button.react.mine { border-color: var(--accent); background: var(--surface); col
 .railpins > summary { list-style: none; }
 .railpins > summary::-webkit-details-marker { display: none; }
 .railpins .raildrop {
-  left: calc(100% + var(--sp-1));
-  top: 0;
+  left: 0;
+  right: auto;
+  top: calc(100% + 6px);
   bottom: auto;
   min-width: 14rem;
 }
