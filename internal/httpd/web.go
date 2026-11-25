@@ -440,7 +440,6 @@ func (s *Server) repoFor(w http.ResponseWriter, r *http.Request, ref string) (re
 	}
 	openIssues, openMRs := s.st.OpenCounts(repo.ID)
 	bookmarksCount := s.st.BookmarkCount(repo.ID)
-	forksList, _ := s.st.ListForks(repo.ID)
 	return repoPage{
 		basePage:    s.baseFor(viewer),
 		CanAdmin:    canAdmin,
@@ -448,7 +447,7 @@ func (s *Server) repoFor(w http.ResponseWriter, r *http.Request, ref string) (re
 		Pinned:      pinned,
 		Marked:      marked,
 		Bookmarks:   bookmarksCount,
-		Forks:       len(forksList),
+		Forks:       s.st.PublicForkCount(repo.ID),
 		Watch:       watch,
 		HasWiki:     s.hasWiki(repo),
 		Host:        s.cfg.SiteHost(),
@@ -1165,15 +1164,20 @@ func (s *Server) blame(w http.ResponseWriter, r *http.Request) {
 	blameLexer := lexers.Match(filePath)
 	var hunks []hunkView
 	sigs := map[string]sigView{}
-	parents := map[string]string{}
+	var blamed []string
+	seenSHA := map[string]bool{}
+	for _, h := range out.Hunks {
+		if !seenSHA[h.SHA] {
+			seenSHA[h.SHA] = true
+			blamed = append(blamed, h.SHA)
+		}
+	}
+	parents := gitutil.FirstParents(p.Dir, blamed)
 	for _, h := range out.Hunks {
 		v, seen := sigs[h.SHA]
 		if !seen {
 			v, _ = s.sigFor(p.Repo, p.Dir, h.SHA)
 			sigs[h.SHA] = v
-			if ps := gitutil.Parents(p.Dir, h.SHA); len(ps) > 0 {
-				parents[h.SHA] = ps[0]
-			}
 		}
 		date := h.Date
 		if t, err := time.Parse(time.RFC3339, h.Date); err == nil {
@@ -2329,11 +2333,10 @@ type mrRow struct {
 
 // summarizeReviews computes the aggregate non-stale review state among
 // reviewers who count for merge gates: "changes_requested" beats "approved".
-func summarizeReviews(st *store.Store, repo store.Repo, revs []store.MRReview) string {
+func summarizeReviews(revs []store.MRReview, counts map[string]bool) string {
 	if len(revs) == 0 {
 		return ""
 	}
-	counts := control.ReviewersWhoCount(st, repo, revs)
 	latest := map[string]string{}
 	for _, rv := range revs {
 		if rv.Stale || !counts[rv.Reviewer] {
@@ -2409,12 +2412,19 @@ func (s *Server) mrs(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		labels = map[int64][]string{}
 	}
+	// Whose review counts is a per-reviewer lookup; one pass over every
+	// row's reviews rather than one per row.
+	var allReviews []store.MRReview
+	for _, revs := range reviewsMap {
+		allReviews = append(allReviews, revs...)
+	}
+	reviewCounts := control.ReviewersWhoCount(s.st, p.Repo, allReviews)
 	rows := make([]mrRow, len(mrs))
 	for i, m := range mrs {
 		m.Labels = labels[m.ID]
 		rows[i] = mrRow{
 			MR: m, Check: checks[m.HeadSHA],
-			Review:   summarizeReviews(s.st, p.Repo, reviewsMap[m.ID]),
+			Review:   summarizeReviews(reviewsMap[m.ID], reviewCounts),
 			Comments: comments[m.ID],
 		}
 	}
@@ -2498,7 +2508,9 @@ func (s *Server) mrPage(w http.ResponseWriter, r *http.Request, previewForm stri
 	var diffTruncated bool
 	selectedCommit := strings.TrimSpace(r.URL.Query().Get("commit"))
 	if selectedCommit != "" {
-		if full, err := gitutil.ResolveRef(p.Dir, selectedCommit); err == nil {
+		// Only a commit this merge request carries; any other revision in
+		// the repository is not part of what is under review.
+		if full, err := gitutil.ResolveRef(p.Dir, selectedCommit); err == nil && base != "" && inRange(p.Dir, base, headRef, full) {
 			selectedCommit = full
 			if patch, truncated, err := gitutil.ShowPatch(p.Dir, full, 4<<20); err == nil {
 				files, diffTruncated = parseDiff(patch), truncated
@@ -2506,7 +2518,8 @@ func (s *Server) mrPage(w http.ResponseWriter, r *http.Request, previewForm stri
 		} else {
 			selectedCommit = ""
 		}
-	} else if base != "" {
+	}
+	if selectedCommit == "" && base != "" {
 		if patch, truncated, err := gitutil.Diff(p.Dir, base, headRef, 4<<20); err == nil {
 			files, diffTruncated = parseDiff(patch), truncated
 		}
@@ -2540,10 +2553,17 @@ func (s *Server) mrPage(w http.ResponseWriter, r *http.Request, previewForm stri
 				fmt.Sprintf("gitbay mr apply-suggestion %s %d %d", p.Repo.Path(), m.Number, cm.ID))
 		}
 	}
+	// Review comments are anchored to lines of the head diff. One
+	// commit's diff has other line numbers, so it is shown read-only and
+	// without the threads.
+	threadComments := diffComments
+	if selectedCommit != "" {
+		threadComments = nil
+	}
 	var detachedThreads []diffThread
-	files, detachedThreads = attachThreads(files, diffComments, m.HeadSHA, md,
+	files, detachedThreads = attachThreads(files, threadComments, m.HeadSHA, md,
 		reviewRights{Viewer: p.Viewer, MRAuthor: m.Author, Write: canWrite}, suggestions)
-	if p.Viewer != "" {
+	if p.Viewer != "" && selectedCommit == "" {
 		markCompose(files, r.URL.Query())
 	}
 	layout := s.diffLayoutFor(r)
@@ -2667,6 +2687,20 @@ func (s *Server) mrPage(w http.ResponseWriter, r *http.Request, previewForm stri
 		reviewRows, files, diffTruncated, stat, commits, commitsTotal, branches, s.canEditItem(r, p.Repo, m.Author),
 		canWrite, unresolved, pendingComments, revisions, s.takeFlash(w, r), detachedThreads, stackedOn, stacked, supersedes, gates,
 		sourceGone(p, m), headMerged, headPruned, base, s.labelColors(p.Repo), allLabels, s.repoPeople(p.Repo), d, layout, selectedCommit, bars})
+}
+
+// inRange reports whether sha is one of the commits in base..head.
+func inRange(dir, base, head, sha string) bool {
+	shas, err := gitutil.RevListRange(dir, base, head)
+	if err != nil {
+		return false
+	}
+	for _, c := range shas {
+		if c == sha {
+			return true
+		}
+	}
+	return false
 }
 
 // sourceGone reports whether an MR's source branch no longer exists: the

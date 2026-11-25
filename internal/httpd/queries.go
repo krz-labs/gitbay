@@ -42,14 +42,20 @@ func (s *Server) queriesPage(w http.ResponseWriter, r *http.Request, viewer stor
 			return
 		}
 		if adHoc != "" {
-			items, count, next, err := control.RunAdHocQuery(s.st, viewer, adHoc, r.URL.Query().Get("cursor"), queryPerPage)
-			if err != nil {
-				data.Notice = err.Error()
+			argv := []string{"query", "run", "--q", adHoc, "--limit", strconv.Itoa(queryPerPage)}
+			if cursor := r.URL.Query().Get("cursor"); cursor != "" {
+				argv = append(argv, "--cursor", cursor)
+			}
+			var page struct {
+				Items []control.QueryItem `json:"items"`
+				Next  string              `json:"next"`
+			}
+			if msg, ok := s.runControlInto(viewer, argv, &page); !ok {
+				data.Notice = msg
 			} else {
-				data.Items = items
-				data.Count = count
-				if next != "" {
-					data.Next = "?" + url.Values{"q": {adHoc}, "cursor": {next}}.Encode()
+				data.Items = page.Items
+				if page.Next != "" {
+					data.Next = "?" + url.Values{"q": {adHoc}, "cursor": {page.Next}}.Encode()
 				}
 			}
 		}

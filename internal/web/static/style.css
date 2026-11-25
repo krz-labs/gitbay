@@ -132,6 +132,8 @@
 
   --r-ctl: 4px;   /* controls and chips */
   --r-card: 6px;  /* cards, lists, code blocks */
+  --r-mark: 2px;  /* inline highlights inside a line of code */
+  --shadow-card: 0 1px 2px rgb(0 0 0 / 0.03);
   --shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
 
   /* the native select arrow cannot be restyled, so draw our own;
@@ -401,12 +403,6 @@ a.railuser {
   height: var(--rail-strip-h);
 }
 a.railuser:hover { text-decoration: none; }
-/* the phone rail's overflow: every square .railopt hides, and log out,
-   as a labelled list under the rail. Shown only below 34rem. */
-.railmore { display: none; position: relative; }
-.railmore > summary { list-style: none; cursor: pointer; }
-.railmore > summary::-webkit-details-marker { display: none; }
-.railmore[open] > summary { background: var(--shell-hover); }
 .raildrop {
   position: absolute;
   top: 100%;
@@ -874,7 +870,7 @@ ul.milestonelist, .readme, .code, article.release, .blame, .teambody {
   background: var(--card);
   border: 1px solid var(--card-line);
   border-radius: var(--r-card);
-  box-shadow: 0 1px 2px rgb(0 0 0 / 0.03);
+  box-shadow: var(--shadow-card);
   overflow: hidden;
 }
 .cardhead {
@@ -920,7 +916,7 @@ table.tree, table.refs {
   background: var(--card);
   border: 1px solid var(--card-line);
   border-radius: var(--r-card);
-  box-shadow: 0 1px 2px rgb(0 0 0 / 0.03);
+  box-shadow: var(--shadow-card);
   /* collapsed borders defeat a radius on the table itself */
   border-collapse: separate;
   border-spacing: 0;
@@ -960,9 +956,11 @@ table.keys, table.assets { background: none; border: 0; border-radius: 0; }
 table.keys th, table.assets th, table.keys tr.cols th { background: transparent; padding-left: 0; }
 table.keys td { padding-left: 0; }
 table.keys td.act, table.assets td.size { text-align: right; }
-/* a fingerprint or an account row is read across, not down: the cells
-   keep one line each and .tablewrap scrolls what does not fit */
+/* an account row is read across, not down: the cells keep one line
+   each. A fingerprint, URL or id wraps instead, since .setcard
+   .tablewrap does not scroll (popovers would be clipped) */
 table.keys.nowrap th, table.keys.nowrap td { white-space: nowrap; }
+table.keys td.mono { white-space: normal; overflow-wrap: anywhere; }
 /* The account list types a username to confirm, which is longer than
    the key prefixes the confirm field is sized for elsewhere. 14rem, not
    11rem, because "type <name> to confirm" was cut mid-word for a name of
@@ -2280,7 +2278,7 @@ button.react.mine { border-color: var(--link); background: var(--surface); color
   cursor: pointer;
 }
 .cmdk-trigger:hover { color: var(--shell-fg); border-color: var(--shell-muted); filter: none; }
-.cmdk-trigger kbd { font-family: var(--mono); font-size: var(--fs-0); color: inherit; }
+.cmdk-trigger kbd { padding: 0; border: 0; background: none; font-family: var(--mono); font-size: var(--fs-0); color: inherit; }
 dialog.cmdk {
   padding: 0;
   border: 1px solid var(--faint);
@@ -2360,7 +2358,7 @@ dialog.cmdk::backdrop { background: rgb(0 0 0 / 0.45); }
   background: var(--card);
   border: 1px solid var(--card-line);
   border-radius: var(--r-card);
-  box-shadow: 0 1px 2px rgb(0 0 0 / 0.03);
+  box-shadow: var(--shadow-card);
   padding: var(--sp-5);
   margin: 0 0 var(--sp-5);
 }
@@ -2424,7 +2422,7 @@ html.js form.setform[data-autosave] > div:has(> button[type="submit"]) { display
   background: var(--card);
   border: 1px solid var(--card-line);
   border-radius: var(--r-card);
-  box-shadow: 0 1px 2px rgb(0 0 0 / 0.03);
+  box-shadow: var(--shadow-card);
   padding: var(--sp-4);
 }
 .dashcard-head {
@@ -2450,7 +2448,7 @@ html.js form.setform[data-autosave] > div:has(> button[type="submit"]) { display
   background: var(--card);
   border: 1px solid var(--card-line);
   border-radius: var(--r-card);
-  box-shadow: 0 1px 2px rgb(0 0 0 / 0.03);
+  box-shadow: var(--shadow-card);
   padding: var(--sp-5);
   margin-bottom: var(--sp-4);
 }
@@ -2519,7 +2517,7 @@ ul.issuelist li.unread {
   background: var(--card);
   border: 1px solid var(--card-line);
   border-radius: var(--r-card);
-  box-shadow: 0 1px 2px rgb(0 0 0 / 0.03);
+  box-shadow: var(--shadow-card);
   padding: var(--sp-4);
 }
 .popform-stack {
@@ -2637,11 +2635,11 @@ details.difffold .tablewrap { border-radius: 0 0 var(--r-card) var(--r-card); ov
 .difftoc-list li.toc-viewed a { color: var(--muted); text-decoration: line-through; }
 .idiff-del {
   background: color-mix(in srgb, var(--bad) 26%, transparent);
-  border-radius: 2px;
+  border-radius: var(--r-mark);
 }
 .idiff-add {
   background: color-mix(in srgb, var(--ok) 26%, transparent);
-  border-radius: 2px;
+  border-radius: var(--r-mark);
 }
 .hunk-expand {
   display: inline-flex;
@@ -2743,7 +2741,7 @@ kbd {
   margin-bottom: -1px;
 }
 .composer-tab:hover { color: var(--fg); background: var(--hover); filter: none; }
-.composer-tab[aria-selected="true"] {
+.composer-tab[aria-pressed="true"] {
   color: var(--fg);
   font-weight: 600;
   border-bottom-color: var(--mark);
@@ -2764,6 +2762,8 @@ kbd {
   background: var(--inset);
 }
 html.js button.js-hidden-preview { display: none; }
+/* controls that only work through app.js */
+html:not(.js) :is(.cmdk-trigger, .kbhelp-trigger, .quote-btn, [data-copy], [data-copy-url], [data-refresh]) { display: none; }
 .ac-menu {
   position: absolute;
   z-index: 70;

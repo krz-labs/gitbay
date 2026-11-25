@@ -53,7 +53,7 @@ func runCommitFile(c *Ctx, args []string) int {
 	if len(rest) != 2 || ref == "" {
 		return c.usage()
 	}
-	if strings.HasPrefix(ref, "-") || strings.HasPrefix(ref, "/") || strings.HasSuffix(ref, "/") || strings.HasSuffix(ref, ".lock") || strings.Contains(ref, "..") || strings.Contains(ref, "//") || strings.ContainsAny(ref, " \t\r\n~^:?*[\\@{") {
+	if strings.HasPrefix(ref, "-") || strings.HasPrefix(ref, "/") || strings.HasSuffix(ref, "/") || strings.HasSuffix(ref, ".lock") || strings.Contains(ref, "..") || strings.Contains(ref, "//") || strings.ContainsAny(ref, " \t\r\n~^:?*[\\") || strings.Contains(ref, "@{") || ref == "@" {
 		return c.fail(protocol.ExitUsage, "invalid branch name %q", ref)
 	}
 	repo, code := resolveRepo(c, rest[0], policy.CanWrite)

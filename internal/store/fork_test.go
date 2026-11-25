@@ -27,3 +27,25 @@ func TestCreateForkSetsParent(t *testing.T) {
 		t.Fatal("duplicate fork name accepted")
 	}
 }
+
+// A private fork is not counted: the count is shown to anyone who can
+// read the parent.
+func TestPublicForkCountSkipsPrivate(t *testing.T) {
+	s := open(t)
+	if err := s.MigrateUp(); err != nil {
+		t.Fatal(err)
+	}
+	uid, _ := s.CreateUser("alice", false)
+	bob, _ := s.CreateUser("bob", false)
+	carol, _ := s.CreateUser("carol", false)
+	parent, _ := s.CreateRepo("user", uid, "app", "public")
+	if _, err := s.CreateFork("user", bob, "app", "public", parent); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := s.CreateFork("user", carol, "app", "private", parent); err != nil {
+		t.Fatal(err)
+	}
+	if n := s.PublicForkCount(parent); n != 1 {
+		t.Fatalf("PublicForkCount = %d, want 1", n)
+	}
+}

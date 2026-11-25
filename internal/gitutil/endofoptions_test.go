@@ -44,6 +44,7 @@ func TestRefsAreNotOptions(t *testing.T) {
 		"StatPath":        func() error { StatPath(dir, ref, "f.txt"); return nil },
 		"LastCommitDate":  func() error { LastCommitDate(dir, ref); return nil },
 		"Parents":         func() error { Parents(dir, ref); return nil },
+		"FirstParents":    func() error { FirstParents(dir, []string{ref}); return nil },
 		"RevListAuthors":  func() error { _, err := RevListAuthors(dir, "", ref, 1); return err },
 		"RevListMessages": func() error { _, err := RevListMessages(dir, "", ref, 1); return err },
 		"IsAncestor":      func() error { _, err := IsAncestor(dir, ref, "main"); return err },

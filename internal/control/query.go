@@ -37,13 +37,14 @@ func init() {
 		Examples: []string{"query show mine"},
 		ReadOnly: true, Run: runQueryShow})
 	register(Command{Path: []string{"query", "run"},
-		Summary: "list the issues and merge requests a saved query matches",
-		Usage:   "query run <name> [--limit <n>] [--cursor <c>]",
+		Summary: "list the issues and merge requests a saved query, or one given with --q, matches",
+		Usage:   "query run (<name> | --q <query>) [--limit <n>] [--cursor <c>]",
 		Flags: []Flag{
+			{"--q", "<query>", "run this query instead of a saved one", ""},
 			{"--limit", "<n>", "rows per page", strconv.Itoa(queryDefaultLimit)},
 			{"--cursor", "<c>", "continue from the previous page", ""},
 		},
-		Examples: []string{"query run mine --limit 20"},
+		Examples: []string{"query run mine --limit 20", "query run --q 'is:open assignee:@me'"},
 		ReadOnly: true, Run: runQueryRun})
 	register(Command{Path: []string{"query", "remove"},
 		Summary:  "delete a saved query",
@@ -156,43 +157,6 @@ func PinnedQueries(st *store.Store, user store.User) ([]DashboardQuery, error) {
 		out = append(out, d)
 	}
 	return out, nil
-}
-
-// RunAdHocQuery evaluates an unsaved cross-repository query for the web
-// queries page using the same parser, visibility filter, and cursor as query run.
-func RunAdHocQuery(st *store.Store, user store.User, rawQuery, cursor string, limit int) ([]QueryItem, int, string, error) {
-	q, err := ParseItemQuery(rawQuery)
-	if err != nil {
-		return nil, 0, "", err
-	}
-	var after *store.ItemCursor
-	if cursor != "" {
-		key, err := decodeCursor("query", cursor)
-		if err != nil {
-			return nil, 0, "", errors.New("bad cursor")
-		}
-		if after, err = decodeItemCursor(key); err != nil {
-			return nil, 0, "", err
-		}
-	}
-	if limit <= 0 {
-		limit = queryDefaultLimit
-	}
-	f := q.Filter(user.Username, true, true)
-	total, err := st.CountItems(user.ID, f)
-	if err != nil {
-		return nil, 0, "", err
-	}
-	items, err := st.QueryItems(user.ID, f, after, limit+1)
-	if err != nil {
-		return nil, 0, "", err
-	}
-	next := ""
-	if len(items) > limit {
-		items = items[:limit]
-		next = encodeItemCursor(items[len(items)-1].Cursor())
-	}
-	return queryItems(items), total, next, nil
 }
 
 func encodeItemCursor(k store.ItemCursor) string {
@@ -463,6 +427,13 @@ func runQueryRun(c *Ctx, args []string) int {
 	rest, p, code := parsePageFlags(c, args, "query", false)
 	if code >= 0 {
 		return code
+	}
+	if len(rest) == 2 && rest[0] == "--q" {
+		q, err := ParseItemQuery(rest[1])
+		if err != nil {
+			return c.fail(protocol.ExitUsage, "%v", err)
+		}
+		return runItemQuery(c, q, true, true, p, "Results")
 	}
 	if len(rest) != 1 {
 		return c.usage()

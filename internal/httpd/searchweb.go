@@ -88,6 +88,17 @@ func searchHref(h control.SearchResult) string {
 // servePalette answers Cmd+K / 't' jump queries with files, symbols, issues,
 // merge requests, and repositories the viewer can read.
 func (s *Server) servePalette(w http.ResponseWriter, r *http.Request, viewer store.User) {
+	// Each call can walk a whole tree, and anonymous callers reach it, so
+	// it draws on the API's per-caller read budget.
+	key := "palette:" + s.clientIP(r)
+	if viewer.ID != 0 {
+		key = "palette:" + strconv.FormatInt(viewer.ID, 10)
+	}
+	if allowed, wait := s.apiLimit.allow(key, false); !allowed {
+		w.Header().Set("Retry-After", strconv.Itoa(int(wait.Seconds())+1))
+		http.Error(w, "too many requests", http.StatusTooManyRequests)
+		return
+	}
 	q := strings.ToLower(strings.TrimSpace(r.URL.Query().Get("q")))
 	repoPath := strings.TrimSpace(r.URL.Query().Get("repo"))
 	var items []paletteEntry
@@ -116,7 +127,7 @@ func (s *Server) servePalette(w http.ResponseWriter, r *http.Request, viewer sto
 						items = append(items, paletteEntry{
 							Group: "File",
 							Label: e.Name,
-							Href:  "/" + repo.Path() + "/blob/" + ref + "/" + e.Name,
+							Href:  "/" + repo.Path() + "/blob/" + escapePath(ref) + "/" + escapePath(e.Name),
 						})
 						count++
 						if count >= 40 {

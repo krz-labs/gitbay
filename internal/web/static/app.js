@@ -6,7 +6,9 @@
   document.documentElement.classList.add('js');
 
   let toastTimer = 0;
-  function showToast(msg, isErr = false) {
+  // The live region exists from boot: assistive tech often does not
+  // announce a region that appears together with its first message.
+  function toastRegion() {
     let el = document.getElementById('gb-toast');
     if (!el) {
       el = document.createElement('div');
@@ -15,6 +17,10 @@
       el.setAttribute('role', 'status');
       document.body.appendChild(el);
     }
+    return el;
+  }
+  function showToast(msg, isErr = false) {
+    const el = toastRegion();
     el.textContent = msg;
     el.classList.toggle('toast-err', isErr);
     el.classList.add('toast-show');
@@ -213,9 +219,13 @@
           const newPops = next.querySelectorAll('.popover');
           if (newPops[keepPopoverIdx]) newPops[keepPopoverIdx].open = true;
         } else if (foldId) {
-          const nextAside = doc.querySelector('.aside');
-          const curAside = document.querySelector('.aside');
-          if (nextAside && curAside) curAside.replaceWith(nextAside);
+          // The pending count shows in the aside on the conversation and
+          // in the Review changes popover on the diff view.
+          for (const sel of ['.aside', '.finish-review']) {
+            const nextEl = doc.querySelector(sel);
+            const curEl = document.querySelector(sel);
+            if (nextEl && curEl) curEl.replaceWith(nextEl);
+          }
         } else if (swapSel === '#notif-root') {
           const nextBell = doc.querySelector('.rail a[href="/notifications"]');
           const curBell = document.querySelector('.rail a[href="/notifications"]');
@@ -505,9 +515,12 @@
       return;
     }
     if ((e.metaKey || e.ctrlKey) && e.key === 'Enter' && e.target instanceof HTMLTextAreaElement && e.target.form) {
+      // Only a form with one way to submit: on a review form the buttons
+      // are verdicts, and the first of them is Approve.
+      const btns = e.target.form.querySelectorAll('button[type="submit"]:not([name="preview"]), button:not([type]):not([name="preview"])');
+      if (btns.length > 1) return;
       e.preventDefault();
-      const btn = e.target.form.querySelector('button[type="submit"]:not([name="preview"]), button:not([type]):not([name="preview"])');
-      if (btn) e.target.form.requestSubmit(btn);
+      if (btns.length) e.target.form.requestSubmit(btns[0]);
       else e.target.form.requestSubmit();
       return;
     }
@@ -602,7 +615,14 @@
           if (prevTheme === 'system') delete document.documentElement.dataset.theme;
           else document.documentElement.dataset.theme = prevTheme;
         }
-        if (e.target.id) {
+        // Put the control back to what the server holds. Radios have no
+        // id, so they are matched by name and value.
+        if (e.target instanceof HTMLInputElement && e.target.type === 'radio') {
+          for (const r of form.querySelectorAll('input[type="radio"]')) {
+            const sv = doc.querySelector(`input[type="radio"][name="${CSS.escape(r.name)}"][value="${CSS.escape(r.value)}"]`);
+            if (sv instanceof HTMLInputElement) r.checked = sv.checked;
+          }
+        } else if (e.target.id) {
           const serverCtl = doc.getElementById(e.target.id);
           if (serverCtl instanceof HTMLInputElement && e.target instanceof HTMLInputElement && serverCtl.type === 'checkbox') {
             e.target.checked = serverCtl.checked;
@@ -901,15 +921,24 @@
 
     // Inline hunk context expansion ("↑ Expand")
     if (repo && head) {
-      const hunkRe = /^@@ -(\d+)(?:,\d+)? \+(\d+)(?:,\d+)? @@/;
+      const hunkRe = /^@@ -(\d+)(?:,\d+)? \+(\d+)(?:,(\d+))? @@/;
       for (const tr of wrap.querySelectorAll('tr.hunk[data-hunk][data-file]')) {
         if (tr.dataset.expandWired) continue;
         tr.dataset.expandWired = '1';
+        // A deleted file has no head blob to read context from.
+        if (tr.closest('details.difffold')?.dataset.status === 'deleted') continue;
         const m = hunkRe.exec(tr.dataset.hunk || '');
         if (!m) continue;
         let curNewStart = parseInt(m[2], 10);
         let curOldStart = parseInt(m[1], 10);
-        if (curNewStart <= 1) continue;
+        // Context stops at the previous hunk's last new-side line, which
+        // that hunk already shows.
+        let floor = 1;
+        const hunks = Array.from(tr.closest('table')?.querySelectorAll('tr.hunk[data-hunk]') || []);
+        const prev = hunks[hunks.indexOf(tr) - 1];
+        const pm = prev && hunkRe.exec(prev.dataset.hunk || '');
+        if (pm) floor = parseInt(pm[2], 10) + (pm[3] === undefined ? 1 : parseInt(pm[3], 10));
+        if (curNewStart <= floor) continue;
         const srcTd = tr.querySelector('td.src');
         if (!srcTd) continue;
         const btn = document.createElement('button');
@@ -919,11 +948,11 @@
         btn.title = 'Load up to 20 preceding context lines';
         btn.addEventListener('click', async () => {
           const to = curNewStart - 1;
-          const from = Math.max(1, to - 19);
-          if (to < 1) { btn.remove(); return; }
+          const from = Math.max(floor, to - 19);
+          if (to < floor) { btn.remove(); return; }
           btn.disabled = true;
           try {
-            const fpath = tr.dataset.file;
+            const fpath = tr.dataset.file.split('/').map(encodeURIComponent).join('/');
             const res = await fetch(`/${repo}/blob/${head}/${fpath}?lines=${from}:${to}`, { credentials: 'same-origin' });
             if (!res.ok) throw new Error('fetch');
             const data = await res.json();
@@ -957,7 +986,7 @@
             inserted.reverse().forEach((n) => tr.parentNode.insertBefore(n, sib));
             curOldStart = Math.max(1, curOldStart - (curNewStart - from));
             curNewStart = from;
-            if (curNewStart <= 1) btn.remove();
+            if (curNewStart <= floor) btn.remove();
           } catch {
             showToast('Could not expand context', true);
           } finally {
@@ -1015,13 +1044,13 @@
       const writeTab = document.createElement('button');
       writeTab.type = 'button';
       writeTab.className = 'composer-tab';
-      writeTab.setAttribute('aria-selected', 'true');
+      writeTab.setAttribute('aria-pressed', 'true');
       writeTab.textContent = 'Write';
 
       const prevTab = document.createElement('button');
       prevTab.type = 'button';
       prevTab.className = 'composer-tab';
-      prevTab.setAttribute('aria-selected', 'false');
+      prevTab.setAttribute('aria-pressed', 'false');
       prevTab.textContent = 'Preview';
 
       const hint = document.createElement('span');
@@ -1039,16 +1068,16 @@
       previewBtn.classList.add('js-hidden-preview');
 
       writeTab.addEventListener('click', () => {
-        writeTab.setAttribute('aria-selected', 'true');
-        prevTab.setAttribute('aria-selected', 'false');
+        writeTab.setAttribute('aria-pressed', 'true');
+        prevTab.setAttribute('aria-pressed', 'false');
         pane.hidden = true;
         wrapTarget.hidden = false;
         ta.focus();
       });
 
       prevTab.addEventListener('click', async () => {
-        writeTab.setAttribute('aria-selected', 'false');
-        prevTab.setAttribute('aria-selected', 'true');
+        writeTab.setAttribute('aria-pressed', 'false');
+        prevTab.setAttribute('aria-pressed', 'true');
         wrapTarget.hidden = true;
         pane.hidden = false;
         if (!ta.value.trim()) {
@@ -1086,6 +1115,10 @@
 
   function closeAutocomplete() {
     if (acMenu) acMenu.hidden = true;
+    if (acContext) {
+      acContext.ta.setAttribute('aria-expanded', 'false');
+      acContext.ta.removeAttribute('aria-activedescendant');
+    }
     acItems = [];
     acContext = null;
   }
@@ -1094,6 +1127,8 @@
     if (acMenu) return acMenu;
     acMenu = document.createElement('ul');
     acMenu.className = 'ac-menu';
+    acMenu.id = 'ac-menu';
+    acMenu.setAttribute('role', 'listbox');
     acMenu.hidden = true;
     document.body.appendChild(acMenu);
     return acMenu;
@@ -1122,6 +1157,9 @@
     acItems.forEach((it, idx) => {
       const li = document.createElement('li');
       li.className = idx === acIndex ? 'ac-active' : '';
+      li.id = `ac-opt-${idx}`;
+      li.setAttribute('role', 'option');
+      li.setAttribute('aria-selected', idx === acIndex ? 'true' : 'false');
       const b = document.createElement('strong');
       b.textContent = it.insert;
       const sp = document.createElement('span');
@@ -1137,6 +1175,10 @@
     menu.style.left = `${Math.max(8, rect.left + window.scrollX + 12)}px`;
     menu.style.top = `${rect.top + window.scrollY + Math.min(rect.height, 42)}px`;
     menu.hidden = false;
+    ta.setAttribute('aria-autocomplete', 'list');
+    ta.setAttribute('aria-controls', menu.id);
+    ta.setAttribute('aria-expanded', 'true');
+    ta.setAttribute('aria-activedescendant', `ac-opt-${acIndex}`);
   }
 
   function collectPagePeople() {
@@ -1221,6 +1263,7 @@
   }, true);
 
   function bootAll() {
+    toastRegion();
     initCopyButtons();
     initScrollSpy();
     initPanelTabs();

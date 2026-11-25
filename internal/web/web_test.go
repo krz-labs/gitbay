@@ -243,21 +243,19 @@ func TestMixedTextLinksAreUnderlined(t *testing.T) {
 	}
 }
 
-// The main rail and the phone "More" menu render New repository,
-// Settings, Admin and Log out from one list, so adding a destination in
-// one place reaches both (#271).
+// The account menu renders Settings, Admin and Log out from one list.
 func TestRailOptItemsDriveBothRailAndMoreMenu(t *testing.T) {
 	items := railOptItems(struct {
 		Tab   string
 		Admin bool
 	}{Tab: "admin", Admin: true})
-	if len(items) != 4 {
-		t.Fatalf("got %d items, want 4 (New repository, Settings, Admin, Log out)", len(items))
+	if len(items) != 3 {
+		t.Fatalf("got %d items, want 3 (Settings, Admin, Log out)", len(items))
 	}
-	if items[2].Name != "Admin" || !items[2].Show {
-		t.Errorf("Admin item: %+v", items[2])
+	if items[1].Name != "Admin" || !items[1].Show {
+		t.Errorf("Admin item: %+v", items[1])
 	}
-	if !items[2].Current {
+	if !items[1].Current {
 		t.Error("Admin item should be Current when Tab is admin")
 	}
 
@@ -265,10 +263,10 @@ func TestRailOptItemsDriveBothRailAndMoreMenu(t *testing.T) {
 		Tab   string
 		Admin bool
 	}{Tab: "account"})
-	if nonAdmin[2].Show {
+	if nonAdmin[1].Show {
 		t.Error("Admin item should not Show for a non-admin viewer")
 	}
-	if !nonAdmin[1].Current {
+	if !nonAdmin[0].Current {
 		t.Error("Settings item should be Current when Tab is account")
 	}
 

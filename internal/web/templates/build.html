@@ -11,7 +11,7 @@
 {{if and .CanWrite (not .Live) .Build.Job (ne .Build.Status "pending") (ne .Build.Status "running")}}
 <form method="post" action="/{{.Repo.OwnerName}}/{{.Repo.Name}}/builds" class="inline">
   <input type="hidden" name="job" value="{{.Build.Job}}">
-  <button type="submit" class="btn">Re-run {{.Build.Job}}</button>
+  <button type="submit" class="btn">Run {{.Build.Job}} on {{.Repo.DefaultBranch}}</button>
 </form>
 {{end}}
 {{if and .CanWrite (or (eq .Build.Status "pending") (eq .Build.Status "running"))}}

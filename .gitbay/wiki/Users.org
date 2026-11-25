@@ -595,6 +595,7 @@ gitbay query save triage 'repo:krz/*' is:issue is:open no:label
 gitbay query save v2 owner:krz label:bug 'label:needs review' milestone:v2
 gitbay query list / show mine / remove mine
 gitbay query run mine [--limit 20] [--cursor <c>]   # issues and MRs
+gitbay query run --q 'is:open assignee:@me'        # unsaved, issues and MRs
 gitbay issue list --query mine                     # only the issues
 gitbay mr list --q 'owner:krz is:open author:@me'  # a query written out
 gitbay query pin mine                              # on the dashboard; unpin

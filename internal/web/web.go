@@ -40,9 +40,7 @@ var ImageFS embed.FS
 var StyleVersion string
 var ScriptVersion string
 
-// railItem is one destination the rail's icon strip and the phone
-// "More" menu both render — from this one list, so a destination added
-// here reaches both instead of the two being hand-kept in step (#271).
+// railItem is one destination of the account menu.
 type railItem struct {
 	Href    string
 	Icon    string
@@ -83,8 +81,8 @@ func railBool(v any, name string) bool {
 	return f.IsValid() && f.Kind() == reflect.Bool && f.Bool()
 }
 
-// railOptItems is the rail's "New repository", "Settings", "Admin" and
-// "Log out" destinations, in the order the rail shows them. v is the
+// railOptItems is the account menu's "Settings", "Admin" and "Log out"
+// destinations, in the order the menu shows them. v is the
 // page value the layout renders (any page struct that embeds
 // basePage), read by field name since the layout has no single common
 // type for every page.
@@ -92,7 +90,6 @@ func railOptItems(v any) []railItem {
 	tab := railField(v, "Tab")
 	admin := railBool(v, "Admin")
 	return []railItem{
-		{Href: "/new", Icon: "plus", Name: "New repository", Show: true},
 		{Href: "/settings", Icon: "gear", Name: "Settings", Current: tab == "account", Show: true},
 		{Href: "/admin", Icon: "shield", Name: "Admin", Current: tab == "admin", Show: admin},
 		{Href: "/logout", Icon: "signout", Name: "Log out", Show: true},

@@ -60,7 +60,7 @@
 </section>
 
 <section id="access" class="setcard"><h2>Access</h2>
-<form method="post" action="{{$base}}" class="setform" data-autosave="1">
+<form method="post" action="{{$base}}" class="setform">
   <input type="hidden" name="field" value="visibility">
   <div><span class="fieldname">Visibility</span></div>
   <div class="check">
@@ -69,7 +69,7 @@
   </div>
   <div><button type="submit" class="btn">Save</button></div>
 </form>
-<form method="post" action="{{$base}}" class="setform" data-autosave="1">
+<form method="post" action="{{$base}}" class="setform">
   <input type="hidden" name="field" value="git-daemon">
   <div><label for="git-daemon">Serve over git://</label><p class="hint">Public repositories only.</p></div>
   <div class="check"><input type="checkbox" id="git-daemon" name="git-daemon" value="on"{{if .Repo.Settings.GitDaemon}} checked{{end}}></div>
@@ -144,7 +144,7 @@
 
 <section id="gates" class="setcard"><h2>Merge gates</h2>
 <p class="meta">Checked before a merge, in this order: checks, approvals, resolved threads, signatures.</p>
-<form method="post" action="{{$base}}" class="setform" data-autosave="1">
+<form method="post" action="{{$base}}" class="setform">
   <input type="hidden" name="field" value="require-checks">
   <div><label for="require-checks">Required checks</label><p class="hint">Requires CI to succeed.{{with .Repo.Settings.RequiredContexts}} Also waits for {{range $i, $c := .}}{{if $i}}, {{end}}<code>{{$c}}</code>{{end}} until they report{{if not $.Repo.Settings.RequireChecks}}, once this is on{{end}}.{{end}}</p></div>
   <div class="check"><input type="checkbox" id="require-checks" name="require-checks" value="on"{{if .Repo.Settings.RequireChecks}} checked{{end}}></div>
@@ -162,19 +162,19 @@
   <div class="num"><input type="number" id="approvals" name="approvals" min="0" max="10" value="{{.Repo.Settings.RequireApprovals}}"></div>
   <div><button type="submit" class="btn">Save</button></div>
 </form>
-<form method="post" action="{{$base}}" class="setform" data-autosave="1">
+<form method="post" action="{{$base}}" class="setform">
   <input type="hidden" name="field" value="require-resolved">
   <div><label for="require-resolved">Review threads</label><p class="hint">Every thread on the diff must be resolved before merging.</p></div>
   <div class="check"><input type="checkbox" id="require-resolved" name="require-resolved" value="on"{{if .Repo.Settings.RequireResolved}} checked{{end}}></div>
   <div><button type="submit" class="btn">Save</button></div>
 </form>
-<form method="post" action="{{$base}}" class="setform" data-autosave="1">
+<form method="post" action="{{$base}}" class="setform">
   <input type="hidden" name="field" value="require-codeowners">
   <div><label for="require-codeowners">CODEOWNERS</label><p class="hint">Code owners must approve.</p></div>
   <div class="check"><input type="checkbox" id="require-codeowners" name="require-codeowners" value="on"{{if .Repo.Settings.RequireCodeowners}} checked{{end}}></div>
   <div><button type="submit" class="btn">Save</button></div>
 </form>
-<form method="post" action="{{$base}}" class="setform" data-autosave="1">
+<form method="post" action="{{$base}}" class="setform">
   <input type="hidden" name="field" value="require-signed">
   <div><label for="require-signed">Signed commits</label><p class="hint">Every commit in the request must carry a verified signature. Squash and merge strategies are refused, since both mint an unsigned commit.</p></div>
   <div class="check"><input type="checkbox" id="require-signed" name="require-signed" value="on"{{if .Repo.Settings.RequireSignedCommits}} checked{{end}}></div>
@@ -245,7 +245,7 @@
 {{end}}
 
 <section id="secrets" class="setcard"><h2>Secret scan</h2>
-<form method="post" action="{{$base}}" class="setform" data-autosave="1">
+<form method="post" action="{{$base}}" class="setform">
   <input type="hidden" name="field" value="secret-scan">
   <div><label for="secret-scan">Pushes</label><p class="hint">Each push's new files are checked for credentials in known formats. Warn accepts the push and tells the pusher where; block refuses it. Only the path, line and kind of credential are reported, never the value.</p></div>
   <div><select id="secret-scan" name="secret-scan">{{$mode := or .Repo.Settings.SecretScan "warn"}}<option value="off"{{if eq $mode "off"}} selected{{end}}>off</option><option value="warn"{{if eq $mode "warn"}} selected{{end}}>warn</option><option value="block"{{if eq $mode "block"}} selected{{end}}>block</option></select></div>
@@ -277,7 +277,7 @@
   <div><select id="branch" name="branch">{{range .Branches}}<option value="{{.Name}}">{{.Name}}</option>{{end}}</select></div>
   <div><button type="submit" class="btn">Protect</button></div>
 </form>
-<form method="post" action="{{$base}}" class="setform" data-autosave="1">
+<form method="post" action="{{$base}}" class="setform">
   <input type="hidden" name="field" value="require-mr">
   <div><label for="require-mr">Require merge requests</label><p class="hint">Every protected branch changes through a merge request. A direct push is refused in pre-receive.</p></div>
   <div class="check"><input type="checkbox" id="require-mr" name="require-mr" value="on"{{if .Repo.Settings.RequireMR}} checked{{end}}></div>

@@ -202,12 +202,17 @@ func CommitFileChange(dir, branch, path string, content []byte, name, email, mes
 	return CommitFileFrom(dir, branch, "", path, content, name, email, message)
 }
 
-// CommitFileFrom writes content to path on branch. When branch does not exist
-// yet and fromBranch is named, the new branch starts from fromBranch's tip.
+// CommitFileFrom writes content to path on branch. When fromBranch is
+// named, branch is created from fromBranch's tip and must not exist yet:
+// the content was read from fromBranch, and committing it onto another
+// branch's history would undo that branch's version of the file.
 func CommitFileFrom(dir, branch, fromBranch, path string, content []byte, name, email, message string) (string, error) {
 	branchRef := "refs/heads/" + branch
 	oldRef := ""
 	parent, err := ResolveRef(dir, branchRef)
+	if err == nil && fromBranch != "" {
+		return "", fmt.Errorf("branch %s already exists; pick a new name", branch)
+	}
 	if err != nil {
 		if fromBranch != "" {
 			baseSHA, berr := ResolveRef(dir, "refs/heads/"+fromBranch)
@@ -215,7 +220,6 @@ func CommitFileFrom(dir, branch, fromBranch, path string, content []byte, name, 
 				return "", fmt.Errorf("base branch %s: %w", fromBranch, berr)
 			}
 			parent = baseSHA
-			oldRef = ""
 		} else {
 			// An unborn branch is a root commit only in a repository with no
 			// refs at all. Anywhere else an unresolvable branch is a typo, and
@@ -233,10 +237,26 @@ func CommitFileFrom(dir, branch, fromBranch, path string, content []byte, name, 
 	if err != nil {
 		return "", err
 	}
-	if err := UpdateRefCAS(dir, branchRef, sha, oldRef); err != nil {
+	if oldRef == "" {
+		// A new branch: the empty old value makes update-ref refuse if
+		// someone created it meanwhile.
+		err = updateRefCreate(dir, branchRef, sha)
+	} else {
+		err = UpdateRefCAS(dir, branchRef, sha, oldRef)
+	}
+	if err != nil {
 		return "", fmt.Errorf("branch moved during edit; reload and retry: %w", err)
 	}
 	return sha, nil
+}
+
+// updateRefCreate points ref at newSHA only if ref does not exist.
+func updateRefCreate(dir, ref, newSHA string) error {
+	cmd := exec.Command(toolpath.Look("git"), "-C", dir, "update-ref", ref, newSHA, "")
+	if out, err := cmd.CombinedOutput(); err != nil {
+		return fmt.Errorf("update-ref %s: %v\n%s", ref, err, out)
+	}
+	return nil
 }
 
 // CommitWithFile writes a commit on parent ("" for a root commit) whose

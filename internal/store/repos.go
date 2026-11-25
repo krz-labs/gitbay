@@ -474,6 +474,15 @@ func (s *Store) ListForks(repoID int64) ([]Repo, error) {
 	return queryAll(s.DB, scanRepo, repoSelect+" WHERE r.fork_of = ? ORDER BY 4, r.name", repoID)
 }
 
+// PublicForkCount counts a repository's public forks: a private fork
+// is not counted, since the count is shown to anyone who can read the
+// parent.
+func (s *Store) PublicForkCount(repoID int64) int {
+	var n int
+	s.DB.QueryRow("SELECT COUNT(*) FROM repos WHERE fork_of = ? AND visibility = 'public'", repoID).Scan(&n)
+	return n
+}
+
 func (s *Store) UpdateDefaultBranch(repoID int64, branch string) error {
 	_, err := s.DB.Exec("UPDATE repos SET default_branch = ? WHERE id = ?", branch, repoID)
 	return err

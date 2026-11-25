@@ -135,7 +135,7 @@ var summaries = map[string]string{
 	"query list":                          "list your saved queries",
 	"query pin":                           "show a saved query on your dashboard",
 	"query remove":                        "delete a saved query",
-	"query run":                           "list the issues and merge requests a saved query matches",
+	"query run":                           "list the issues and merge requests a saved query, or one given with --q, matches",
 	"query save":                          "save an issue and merge request query across repositories under a name",
 	"query show":                          "show a saved query and how many rows it matches",
 	"query unpin":                         "take a saved query off your dashboard",

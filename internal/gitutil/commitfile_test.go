@@ -36,3 +36,48 @@ func TestCommitFileChangeEmptyRepo(t *testing.T) {
 		t.Error("committing to an unknown branch of a non-empty repository succeeded")
 	}
 }
+
+// --from creates a branch; it never commits onto one that exists, and a
+// branch created meanwhile is not overwritten.
+func TestCommitFileFromCreatesOnly(t *testing.T) {
+	dir := t.TempDir()
+	if err := InitBare(dir, "main", ""); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := CommitFileChange(dir, "main", "a.md", []byte("a\n"), "alice", "alice@example.org", "a"); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := CommitFileFrom(dir, "topic", "main", "a.md", []byte("b\n"), "alice", "alice@example.org", "b"); err != nil {
+		t.Fatalf("creating topic from main: %v", err)
+	}
+	if _, err := CommitFileFrom(dir, "topic", "main", "a.md", []byte("c\n"), "alice", "alice@example.org", "c"); err == nil {
+		t.Error("--from committed onto an existing branch")
+	}
+	raw, _ := ReadBlob(dir, "topic", "a.md", 1<<20)
+	if string(raw) != "b\n" {
+		t.Errorf("topic holds %q, want %q", raw, "b\n")
+	}
+	main, _ := ResolveRef(dir, "refs/heads/main")
+	if err := updateRefCreate(dir, "refs/heads/topic", main); err == nil {
+		t.Error("updateRefCreate moved an existing ref")
+	}
+}
+
+func TestFirstParents(t *testing.T) {
+	dir := t.TempDir()
+	if err := InitBare(dir, "main", ""); err != nil {
+		t.Fatal(err)
+	}
+	a, err := CommitFileChange(dir, "main", "a.md", []byte("a\n"), "alice", "alice@example.org", "a")
+	if err != nil {
+		t.Fatal(err)
+	}
+	b, err := CommitFileChange(dir, "main", "a.md", []byte("b\n"), "alice", "alice@example.org", "b")
+	if err != nil {
+		t.Fatal(err)
+	}
+	got := FirstParents(dir, []string{b, a})
+	if got[b] != a || len(got) != 1 {
+		t.Errorf("FirstParents = %v, want {%s: %s}", got, b, a)
+	}
+}

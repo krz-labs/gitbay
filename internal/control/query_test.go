@@ -150,6 +150,16 @@ func TestQueryCommands(t *testing.T) {
 		t.Errorf("paged run = %s", got)
 	}
 
+	// query run --q runs the same text unsaved, with the same visibility.
+	for user, want := range map[string]int{"alice": 3, "bob": 4} {
+		code, data, msg := e.run(user, "query", "run", "--q", "is:open", "--limit", "10")
+		var p pageOut
+		json.Unmarshal(data, &p)
+		if code != 0 || len(p.Items) != want {
+			t.Errorf("query run --q as %s: exit %d, %d items, want %d %s", user, code, len(p.Items), want, msg)
+		}
+	}
+
 	// issue list and mr list narrow to their own kind.
 	code, data, msg = e.run("alice", "issue", "list", "--query", "all")
 	var p pageOut

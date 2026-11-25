@@ -48,6 +48,26 @@ func Parents(dir, sha string) []string {
 	return strings.Fields(string(out))
 }
 
+// FirstParents maps each of shas to its first parent, in one git call. A
+// root commit, or a sha git cannot read, has no entry.
+func FirstParents(dir string, shas []string) map[string]string {
+	out := map[string]string{}
+	if len(shas) == 0 {
+		return out
+	}
+	args := append([]string{"-C", dir, "log", "--no-walk=unsorted", "--format=%H %P", "--end-of-options"}, shas...)
+	raw, err := exec.Command(toolpath.Look("git"), args...).Output()
+	if err != nil {
+		return out
+	}
+	for _, line := range strings.Split(string(raw), "\n") {
+		if f := strings.Fields(line); len(f) >= 2 {
+			out[f[0]] = f[1]
+		}
+	}
+	return out
+}
+
 // LastCommitDate returns the committer date (YYYY-MM-DD) of the ref tip,
 // or "" for empty repos.
 func LastCommitDate(dir, ref string) string {

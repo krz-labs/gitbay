@@ -340,8 +340,10 @@ func VerifyPendingSignup(cfg config.Config, st *store.Store, username, code stri
 	if username == "" || code == "" {
 		return store.User{}, "enter the verification code from your email"
 	}
+	// Only a pending signup signs in by code: an active account's codes
+	// come from `email add` and prove an address, not the account.
 	u, err := st.UserByUsername(username)
-	if err != nil || u.Disabled {
+	if err != nil || u.Disabled || !u.Pending {
 		return store.User{}, "that code is invalid, expired, or already used"
 	}
 	address, err := st.ConsumeEmailToken(u.ID, store.HashToken(code))
@@ -351,14 +353,11 @@ func VerifyPendingSignup(cfg config.Config, st *store.Store, username, code stri
 	if err := st.VerifyEmail(u.ID, address, "smtp"); err != nil {
 		return store.User{}, err.Error()
 	}
-	wasPending := u.Pending
 	if err := st.ClearPending(u.ID); err != nil {
 		return store.User{}, err.Error()
 	}
 	u.Pending = false
 	st.Audit(u.ID, "email.signup_verified", map[string]any{"address": address})
-	if wasPending {
-		notifyAdminsOfSignup(cfg, st, u.Username, "open")
-	}
+	notifyAdminsOfSignup(cfg, st, u.Username, "open")
 	return u, ""
 }
