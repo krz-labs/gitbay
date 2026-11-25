@@ -89,9 +89,13 @@
   {{if and .CanWrite (or (eq .MR.State "open") (eq .MR.State "source_gone"))}}
   <div class="grp">
     <h2>Review</h2>
+    {{$pc := field . "PendingComments"}}{{if $pc}}<p class="row review-pending">{{$pc}} pending diff comment{{if ne $pc 1}}s{{end}}</p>{{end}}
     <form method="post" action="{{$base}}/review" class="actions">
+      <textarea name="body" aria-label="Review note" rows="2" placeholder="Optional review note"></textarea>
       <button type="submit" name="verdict" value="approve" class="btn">Approve</button>
       <button type="submit" name="verdict" value="request-changes" class="btn">Request changes</button>
+      {{if $pc}}<button type="submit" name="verdict" value="comment" class="btn">Submit comments</button>
+      <button type="submit" name="verdict" value="discard" class="danger">Discard pending</button>{{end}}
     </form>
   </div>
   <div class="grp">
@@ -161,9 +165,13 @@
     {{if .MR.ReviewRequests}}<p class="row">{{range .MR.ReviewRequests}}<a href="/{{.}}">{{.}}</a> {{end}}</p>
     {{else}}<p class="none">no reviewers</p>{{end}}
     {{if and .CanWrite (or (eq .MR.State "open") (eq .MR.State "source_gone"))}}
+    {{with field . "People"}}<details class="picker"><summary>Pick reviewers</summary>
+      <div class="picker-list">{{range .}}<form method="post" action="{{$base}}/review-request" class="inline">{{if hasStr $.MR.ReviewRequests .}}<input type="hidden" name="remove" value="{{.}}"><button type="submit" class="picker-btn" aria-pressed="true">{{.}} ×</button>{{else}}<input type="hidden" name="add" value="{{.}}"><button type="submit" class="picker-btn" aria-pressed="false">{{.}}</button>{{end}}</form>{{end}}</div>
+    </details>
+    <datalist id="repo-people">{{range .}}<option value="{{.}}"></option>{{end}}</datalist>{{end}}
     <form method="post" action="{{$base}}/review-request" class="actions">
-      <input type="text" name="add" aria-label="Add reviewers" autocomplete="off" spellcheck="false" placeholder="add, space-separated">
-      <input type="text" name="remove" aria-label="Remove reviewers" autocomplete="off" spellcheck="false" placeholder="remove">
+      <input type="text" name="add" aria-label="Add reviewers" list="repo-people" autocomplete="off" spellcheck="false" placeholder="add, space-separated">
+      <input type="text" name="remove" aria-label="Remove reviewers" list="repo-people" autocomplete="off" spellcheck="false" placeholder="remove">
       <button type="submit" class="btn">Apply</button>
     </form>
     {{end}}
@@ -192,9 +200,13 @@
     {{if .MR.Labels}}<p class="row">{{range .MR.Labels}}<a class="chip label" style="{{index $.LabelColors .}}" href="/{{$.Repo.OwnerName}}/{{$.Repo.Name}}/mrs?label={{.}}">{{.}}</a> {{end}}</p>
     {{else}}<p class="none">{{if or (eq .MR.State "merged") (eq .MR.State "closed")}}no labels{{else}}none yet{{end}}</p>{{end}}
     {{if .CanWrite}}
+    {{with field . "AllLabels"}}<details class="picker"><summary>Pick labels</summary>
+      <div class="picker-list">{{range .}}<form method="post" action="{{$base}}/label" class="inline">{{if hasStr $.MR.Labels .Name}}<input type="hidden" name="remove" value="{{.Name}}"><button type="submit" class="picker-btn" aria-pressed="true">{{.Name}} ×</button>{{else}}<input type="hidden" name="add" value="{{.Name}}"><button type="submit" class="picker-btn" aria-pressed="false">{{.Name}}</button>{{end}}</form>{{end}}</div>
+    </details>
+    <datalist id="repo-labels">{{range .}}<option value="{{.Name}}"></option>{{end}}</datalist>{{end}}
     <form method="post" action="{{$base}}/label" class="actions">
-      <input type="text" name="add" aria-label="Add labels" autocomplete="off" spellcheck="false" placeholder="add, space-separated">
-      <input type="text" name="remove" aria-label="Remove labels" autocomplete="off" spellcheck="false" placeholder="remove">
+      <input type="text" name="add" aria-label="Add labels" list="repo-labels" autocomplete="off" spellcheck="false" placeholder="add, space-separated">
+      <input type="text" name="remove" aria-label="Remove labels" list="repo-labels" autocomplete="off" spellcheck="false" placeholder="remove">
       <button type="submit" class="btn">Apply</button>
     </form>
     {{end}}

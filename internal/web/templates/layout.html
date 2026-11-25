@@ -25,6 +25,7 @@
     <li>{{template "raillink" dict "Href" "/explore" "Icon" "compass" "Name" "Explore" "Current" (eq (str . "Tab") "explore")}}</li>
     <li>{{template "raillink" dict "Href" "/search" "Icon" "search" "Name" "Search" "Current" (eq (str . "Tab") "sitesearch")}}</li>
     {{if .Viewer}}<li>{{template "raillink" dict "Href" "/notifications" "Icon" "bell" "Name" "Notifications" "Current" (eq (str . "Tab") "notifications") "Count" .Rail.Unread}}</li>
+    <li class="railopt"><details class="railpins"><summary class="railicon" aria-label="Pinned repositories" title="Pinned repositories">{{template "icon" "bookmark"}}<span class="vh">Pinned repositories</span></summary><div class="raildrop">{{range .Rail.Pins}}<a href="/{{.Owner}}/{{.Name}}">{{.Owner}}/{{.Name}}</a>{{else}}<span class="none">No pinned repos</span>{{end}}<a href="/{{.Viewer}}/-/repositories">All repositories →</a></div></details></li>
     <li class="railopt">{{template "raillink" (index $items 0)}}</li>{{end}}
   </ul>
   <span class="railgap"></span>
@@ -207,6 +208,10 @@
      neither and gets the same diff without review controls. */}}
 {{define "difffiles"}}{{$base := .Base}}{{$viewer := .Viewer}}{{$L := .L}}{{$split := false}}{{with $L}}{{$split = .Split}}{{end}}
 {{with $L}}{{if .UnifiedURL}}<p class="layoutpick">Layout: {{if .Split}}<a href="{{.UnifiedURL}}">unified</a> · <strong aria-current="true">split</strong>{{else}}<strong aria-current="true">unified</strong> · <a href="{{.SplitURL}}">split</a>{{end}}</p>{{end}}{{end}}
+{{if gt (len .Files) 1}}<details class="difftoc" open>
+  <summary>Changed files ({{len .Files}})</summary>
+  <ul class="difftoc-list">{{range $fi, $f := .Files}}<li><a href="#f{{$fi}}">{{.Path}}</a>{{if ne .Status "modified"}} <span class="chip">{{.Status}}</span>{{end}} <span class="fstat">{{if .Adds}}<span class="add">+{{.Adds}}</span>{{end}}{{if .Dels}} <span class="del">−{{.Dels}}</span>{{end}}</span></li>{{end}}</ul>
+</details>{{end}}
 {{range $fi, $f := .Files}}<details class="difffold" id="f{{$fi}}"{{if .Open}} open{{end}}>
   <summary>
     <span class="fpath">{{if eq .Status "renamed"}}<span class="was">{{.OldPath}} →</span> {{end}}{{.Path}}</span>

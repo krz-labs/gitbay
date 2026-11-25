@@ -57,9 +57,13 @@
     {{if .Issue.Labels}}<p class="row">{{range .Issue.Labels}}<a class="chip label" style="{{index $.LabelColors .}}" href="/{{$.Repo.OwnerName}}/{{$.Repo.Name}}/issues?label={{.}}">{{.}}</a> {{end}}</p>
     {{else}}<p class="none">none yet</p>{{end}}
     {{if .CanWrite}}
+    {{with field . "AllLabels"}}<details class="picker"><summary>Pick labels</summary>
+      <div class="picker-list">{{range .}}<form method="post" action="{{$base}}/label" class="inline">{{if hasStr $.Issue.Labels .Name}}<input type="hidden" name="remove" value="{{.Name}}"><button type="submit" class="picker-btn" aria-pressed="true">{{.Name}} ×</button>{{else}}<input type="hidden" name="add" value="{{.Name}}"><button type="submit" class="picker-btn" aria-pressed="false">{{.Name}}</button>{{end}}</form>{{end}}</div>
+    </details>
+    <datalist id="repo-labels">{{range .}}<option value="{{.Name}}"></option>{{end}}</datalist>{{end}}
     <form method="post" action="{{$base}}/label" class="actions">
-      <input type="text" name="add" aria-label="Add labels" autocomplete="off" spellcheck="false" placeholder="add, space-separated">
-      <input type="text" name="remove" aria-label="Remove labels" autocomplete="off" spellcheck="false" placeholder="remove">
+      <input type="text" name="add" aria-label="Add labels" list="repo-labels" autocomplete="off" spellcheck="false" placeholder="add, space-separated">
+      <input type="text" name="remove" aria-label="Remove labels" list="repo-labels" autocomplete="off" spellcheck="false" placeholder="remove">
       <button type="submit" class="btn">Apply</button>
     </form>
     {{end}}
@@ -69,9 +73,13 @@
     {{if .Issue.Assignees}}<p class="row">{{range .Issue.Assignees}}<a href="/{{.}}">{{.}}</a> {{end}}</p>
     {{else}}<p class="none">nobody yet</p>{{end}}
     {{if .CanWrite}}
+    {{with field . "People"}}<details class="picker"><summary>Pick assignees</summary>
+      <div class="picker-list">{{range .}}<form method="post" action="{{$base}}/assign" class="inline">{{if hasStr $.Issue.Assignees .}}<input type="hidden" name="remove" value="{{.}}"><button type="submit" class="picker-btn" aria-pressed="true">{{.}} ×</button>{{else}}<input type="hidden" name="add" value="{{.}}"><button type="submit" class="picker-btn" aria-pressed="false">{{.}}</button>{{end}}</form>{{end}}</div>
+    </details>
+    <datalist id="repo-people">{{range .}}<option value="{{.}}"></option>{{end}}</datalist>{{end}}
     <form method="post" action="{{$base}}/assign" class="actions">
-      <input type="text" name="add" aria-label="Add assignees" autocomplete="off" spellcheck="false" placeholder="add, space-separated">
-      <input type="text" name="remove" aria-label="Remove assignees" autocomplete="off" spellcheck="false" placeholder="remove">
+      <input type="text" name="add" aria-label="Add assignees" list="repo-people" autocomplete="off" spellcheck="false" placeholder="add, space-separated">
+      <input type="text" name="remove" aria-label="Remove assignees" list="repo-people" autocomplete="off" spellcheck="false" placeholder="remove">
       <button type="submit" class="btn">Apply</button>
     </form>
     {{end}}

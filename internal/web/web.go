@@ -9,6 +9,7 @@ import (
 	"io"
 	"io/fs"
 	"reflect"
+	"slices"
 	"sort"
 	"strconv"
 	"strings"
@@ -97,6 +98,7 @@ func railOptItems(v any) []railItem {
 var funcs = template.FuncMap{
 	"styleVersion": func() string { return StyleVersion },
 	"join":         strings.Join,
+	"hasStr":       slices.Contains[[]string, string],
 	// paragraphs splits plain text on blank lines for safe rich display.
 	"paragraphs": func(s string) []string {
 		var out []string

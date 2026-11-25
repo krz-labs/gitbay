@@ -16,6 +16,7 @@
 {{if .CanOpenMR}}<p class="meta"><a href="/{{.Repo.OwnerName}}/{{.Repo.Name}}/mrs/new">New merge request</a></p>
 {{else if .Viewer}}<p class="meta"><a href="/{{.Repo.OwnerName}}/{{.Repo.Name}}/fork">Fork this repository to propose a change</a></p>
 {{else}}<p class="meta"><a href="/login">Sign in to propose a change</a></p>{{end}}
+{{if .Facets}}<nav class="statebar" aria-label="State">{{range (index .Facets 0).Items}}<a{{if .Active}} aria-current="page"{{end}} href="{{.Href}}">{{.Label}}</a>{{end}}</nav>{{end}}
 <ul class="issuelist rows">
 {{range .MRs}}{{$n := .Number}}<li>
   <div class="issuemain">

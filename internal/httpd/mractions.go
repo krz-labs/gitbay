@@ -42,14 +42,22 @@ func mrArgs(r *http.Request, verb string, extra ...string) []string {
 }
 
 func (s *Server) mrReviewSubmit(w http.ResponseWriter, r *http.Request, u store.User) {
+	verdict := r.FormValue("verdict")
 	flag := map[string]string{
 		"approve":         "--approve",
 		"request-changes": "--request-changes",
 		"comment":         "--comment",
-	}[r.FormValue("verdict")]
+		"discard":         "--discard",
+	}[verdict]
 	if flag == "" {
-		s.mrRedirect(w, r, "pick approve, request changes, or comment")
+		s.mrRedirect(w, r, "pick approve, request changes, comment, or discard")
 		return
+	}
+	if body := strings.TrimSpace(r.FormValue("body")); body != "" && verdict != "discard" {
+		if msg, code := s.runControlStdinCode(u, mrArgs(r, "comment", "--file", "-"), body); code != 0 {
+			s.done(w, r, code, msg, s.mrRedirect)
+			return
+		}
 	}
 	_, msg, code := s.runControlCode(u, mrArgs(r, "review", flag))
 	s.done(w, r, code, msg, s.mrRedirect)

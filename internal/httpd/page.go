@@ -6,11 +6,17 @@ import (
 	"gitbay.org/gitbay/internal/store"
 )
 
-// rail is the viewer's cross-repo state the layout needs. The rail itself
-// is icons only, so what is left is the unread count on its bell; the
-// pinned repositories it used to list are rendered by the dashboard.
+// railPin is one pinned repository in the rail's quick switcher.
+type railPin struct {
+	Owner string
+	Name  string
+}
+
+// rail is the viewer's cross-repo state the layout needs: the unread count
+// on the bell and pinned repositories for the quick switcher.
 type rail struct {
 	Unread int
+	Pins   []railPin
 }
 
 // basePage is what the layout needs on every page, repo or not. Page
@@ -62,9 +68,14 @@ func (s *Server) baseFor(viewer store.User) basePage {
 	return b
 }
 
-// railFor collects the viewer's unread count.
+// railFor collects the viewer's unread count and pinned repositories.
 func (s *Server) railFor(viewer store.User) rail {
 	var rl rail
 	rl.Unread = s.st.UnreadNotices(viewer.ID)
+	if pinned, err := s.st.PinnedRepos(viewer.ID); err == nil {
+		for _, r := range pinned {
+			rl.Pins = append(rl.Pins, railPin{Owner: r.OwnerName, Name: r.Name})
+		}
+	}
 	return rl
 }

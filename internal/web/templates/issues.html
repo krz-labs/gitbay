@@ -15,6 +15,7 @@
   <span class="spacer"></span>
   <p class="meta"><a href="/{{.Repo.OwnerName}}/{{.Repo.Name}}/milestones">milestones</a> · <a href="/{{.Repo.OwnerName}}/{{.Repo.Name}}/labels">labels</a>{{if .Viewer}} · <a href="/{{.Repo.OwnerName}}/{{.Repo.Name}}/issues/new">new issue</a>{{end}}</p>
 </div>
+{{if .Facets}}<nav class="statebar" aria-label="State">{{range (index .Facets 0).Items}}<a{{if .Active}} aria-current="page"{{end}} href="{{.Href}}">{{.Label}}</a>{{end}}</nav>{{end}}
 <ul class="issuelist rows">
 {{range .Issues}}<li>
   <div class="issuemain">

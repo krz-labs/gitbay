@@ -2134,6 +2134,7 @@ func (s *Server) issuePage(w http.ResponseWriter, r *http.Request, previewForm s
 	}
 	// nil readable: the picker lists titles, never the progress counts.
 	milestones, _ := s.st.ListMilestones(p.Repo, "open", nil)
+	allLabels, _ := s.st.ListLabels(p.Repo, nil)
 	bars := s.reactionBars(r, "issue", iss.ID, comments, fmt.Sprintf("/%s/%s/issues/%d/react", p.Repo.OwnerName, p.Repo.Name, iss.Number))
 	s.render(w, "issue.html", struct {
 		repoPage
@@ -2143,13 +2144,29 @@ func (s *Server) issuePage(w http.ResponseWriter, r *http.Request, previewForm s
 		CanEdit     bool
 		CanWrite    bool
 		Milestones  []store.Milestone
+		AllLabels   []store.Label
+		People      []string
 		Notice      string
 		LabelColors map[string]template.CSS
 		Draft       *draft
 		Reactions   map[int64]reactionBar
 	}{p, iss, md(iss.Body, iss.BodyFormat), renderComments(comments, md),
 		s.canEditItem(r, p.Repo, iss.Author), s.canWriteRepo(r, p.Repo),
-		milestones, s.takeFlash(w, r), s.labelColors(p.Repo), d, bars})
+		milestones, allLabels, s.repoPeople(p.Repo), s.takeFlash(w, r), s.labelColors(p.Repo), d, bars})
+}
+
+// repoPeople returns the sorted usernames of accounts with access to repo,
+// for assignee and reviewer pickers.
+func (s *Server) repoPeople(repo store.Repo) []string {
+	entries, err := s.st.EffectiveAccess(repo.ID)
+	if err != nil {
+		return nil
+	}
+	out := make([]string, 0, len(entries))
+	for _, e := range entries {
+		out = append(out, e.Username)
+	}
+	return out
 }
 
 // canEditItem: the author or anyone with write access may edit.
@@ -2307,6 +2324,12 @@ func (s *Server) mrPage(w http.ResponseWriter, r *http.Request, previewForm stri
 	// The viewer sees their own unsubmitted review comments and nobody
 	// else's.
 	diffComments, _ := s.st.ListDiffComments(m.ID, s.webViewer(r).ID)
+	pendingComments := 0
+	for _, cm := range diffComments {
+		if cm.Pending {
+			pendingComments++
+		}
+	}
 
 	headRef := fmt.Sprintf("refs/merge-requests/%d/head", m.Number)
 	// An admin can prune the head ref; the diff is then unavailable, not
@@ -2441,6 +2464,7 @@ func (s *Server) mrPage(w http.ResponseWriter, r *http.Request, previewForm stri
 		d = s.draftFor(r, p.Repo, previewForm, "body", format)
 	}
 	bars := s.reactionBars(r, "mr", m.ID, comments, fmt.Sprintf("/%s/%s/mrs/%d/react", p.Repo.OwnerName, p.Repo.Name, m.Number))
+	allLabels, _ := s.st.ListLabels(p.Repo, nil)
 	s.render(w, "mr.html", struct {
 		repoPage
 		MR              store.MR
@@ -2459,6 +2483,7 @@ func (s *Server) mrPage(w http.ResponseWriter, r *http.Request, previewForm stri
 		CanEdit         bool
 		CanWrite        bool
 		Unresolved      int
+		PendingComments int
 		Revisions       []store.MRHead
 		Notice          string
 		DetachedThreads []diffThread
@@ -2471,13 +2496,15 @@ func (s *Server) mrPage(w http.ResponseWriter, r *http.Request, previewForm stri
 		HeadPruned      bool
 		Base            string
 		LabelColors     map[string]template.CSS
+		AllLabels       []store.Label
+		People          []string
 		Draft           *draft
 		Layout          diffLayout
 		Reactions       map[int64]reactionBar
 	}{p, m, view, md(m.Body, m.BodyFormat), checks, combined, renderComments(comments, md),
 		reviewRows, files, diffTruncated, stat, commits, commitsTotal, branches, s.canEditItem(r, p.Repo, m.Author),
-		canWrite, unresolved, revisions, s.takeFlash(w, r), detachedThreads, stackedOn, stacked, supersedes, gates,
-		sourceGone(p, m), headMerged, headPruned, base, s.labelColors(p.Repo), d, layout, bars})
+		canWrite, unresolved, pendingComments, revisions, s.takeFlash(w, r), detachedThreads, stackedOn, stacked, supersedes, gates,
+		sourceGone(p, m), headMerged, headPruned, base, s.labelColors(p.Repo), allLabels, s.repoPeople(p.Repo), d, layout, bars})
 }
 
 // sourceGone reports whether an MR's source branch no longer exists: the
