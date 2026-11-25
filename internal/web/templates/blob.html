@@ -10,11 +10,11 @@
   <span class="crumbs"><a href="/{{.Repo.OwnerName}}/{{.Repo.Name}}">{{.Repo.Name}}</a>/{{range .Crumbs}}<a href="{{.URL}}">{{.Name}}</a>/{{end}}<strong>{{.Base}}</strong></span>
   <span class="spacer"></span>
   <div class="btngroup">
-    {{if .Renderable}}{{if .Rendered}}<a class="button btn" aria-current="page" href="?">Rendered</a><a class="button btn" href="?view=source">Source</a>{{else}}<a class="button btn" href="?">Rendered</a><a class="button btn" aria-current="page" href="?view=source">Source</a>{{end}}{{end}}
-    <a class="button btn" href="/{{.Repo.OwnerName}}/{{.Repo.Name}}/log/{{.Ref}}?path={{.Path}}">History</a>
-    {{if not .Binary}}<a class="button btn" href="/{{.Repo.OwnerName}}/{{.Repo.Name}}/blame/{{.Ref}}/{{.Path}}">Blame</a>{{end}}
-    <a class="button btn" href="/{{.Repo.OwnerName}}/{{.Repo.Name}}/raw/{{.Ref}}/{{.Path}}">Raw</a>
-    {{if .Viewer}}<a class="button" href="/{{.Repo.OwnerName}}/{{.Repo.Name}}/edit/{{.Ref}}/{{.Path}}">Edit</a>{{end}}
+    {{if .Renderable}}{{if .Rendered}}<a class="button btn" aria-current="page" href="?"><strong>rendered</strong></a><a class="button btn" href="?view=source">source</a>{{else}}<a class="button btn" href="?">rendered</a><a class="button btn" aria-current="page" href="?view=source"><strong>source</strong></a>{{end}}{{end}}
+    <a class="button btn" href="/{{.Repo.OwnerName}}/{{.Repo.Name}}/log/{{.Ref}}?path={{.Path}}">history</a>
+    {{if not .Binary}}<a class="button btn" href="/{{.Repo.OwnerName}}/{{.Repo.Name}}/blame/{{.Ref}}/{{.Path}}">blame</a>{{end}}
+    <a class="button btn" href="/{{.Repo.OwnerName}}/{{.Repo.Name}}/raw/{{.Ref}}/{{.Path}}">raw</a>
+    {{if .Viewer}}<a class="button" href="/{{.Repo.OwnerName}}/{{.Repo.Name}}/edit/{{.Ref}}/{{.Path}}">edit</a>{{end}}
   </div>
 </div>
 <p class="filefacts">{{if .Lines}}{{.Lines}} lines · {{end}}{{.Size}} bytes{{if .Exec}} · executable{{end}}{{if .Symlink}} · symlink{{end}}</p>
