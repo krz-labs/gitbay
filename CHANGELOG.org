@@ -4,6 +4,47 @@ Versioning follows semver from v0.1.0. Database migrations run
 automatically on daemon start; upgrade notes appear per release when
 anything beyond "replace the binary and restart" is needed.
 
+* v1.49.0 — 2026-11-25
+
+No migrations. Built with Go 1.27.4. The web pages are redesigned and
+lean on a small script; every form still works without it.
+
+- Web: a top bar with search, a create menu and an account menu;
+  dashboard, profile, settings, =/admin=, =/new= and notifications as
+  cards with live filters; Cmd+K and =t= jump to files, issues and
+  merge requests; =?= lists the shortcuts.
+- Merge request review on the web: a full-width diff with a file list
+  and Viewed checkboxes, word-level highlighting, context expansion,
+  a per-commit diff (read-only), a coloured range-diff, comment
+  permalinks and quote replies, and a rebase button.
+- Blame with syntax highlighting and links to the prior commit; line
+  ranges by Shift+Click; the editor proposes an edit on a new branch
+  with a merge request in one step (=repo commit-file --from=, which
+  refuses a branch that exists).
+- Composer tabs with preview, @/#/! completion, Cmd+Enter to submit
+  on forms with one submit button; ANSI colours in build logs.
+- Web pages for build secrets, deploy keys, mirrors, pages domains,
+  SSH key expiry and last use, and browser sessions. Signup accepts the
+  emailed code on the page and signs in.
+- =query run --q '<query>'= runs an unsaved query over issues and merge
+  requests; the web's queries page dispatches it.
+- CLI: short flags (=-t -m -b -s -l -a -d -f -n=) and =--flag=value=;
+  =gitbay issue 42= / =gitbay mr !12= show, a bare noun lists; the
+  merge request and build of the current branch are inferred;
+  =gitbay open= opens the web page; =issue create= and =mr create=
+  without =-t= take title and body from =$EDITOR=, =mr create=
+  starting from the head commit. A push to a side
+  branch prints its open merge request, or how to open one.
+- =repo mirror set-url= changes a mirror's URL on the same scheme and
+  host, keeping its token (#355). Archived repositories do not sync
+  their mirrors.
+- Code scanning sets aside more false positives: unquoted expansions
+  the shell does not split (#352), string concatenation inside a call
+  (#353), return hits on lines without a return, =is_= names defined
+  as attributes, and insecure-random in tests (#354).
+- The fork count shows public forks only.
+- golang.org/x/crypto 0.59.0, golang.org/x/net 0.63.0 (#351).
+
 * v1.48.0 — 2026-11-18
 
 Migrations 0083 and 0084. Built with Go 1.27.4 (GO-2026-6859, an
