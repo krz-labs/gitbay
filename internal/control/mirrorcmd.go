@@ -78,6 +78,9 @@ func runMirrorAdd(c *Ctx, args []string) int {
 	if code >= 0 {
 		return code
 	}
+	if code := refuseArchived(c, repo); code >= 0 {
+		return code
+	}
 	token := ""
 	if tokenStdin {
 		line, err := bufio.NewReader(io.LimitReader(c.Stdin, 4096)).ReadString('\n')
@@ -132,10 +135,12 @@ func runMirrorList(c *Ctx, args []string) int {
 		tb := c.table(w, "ID", "DIRECTION", "URL", "LAST", "STATUS")
 		for _, d := range ds {
 			status := "ok"
-			if d.Pending {
+			if repo.Settings.Archived {
+				status = "disabled (archived)"
+			} else if d.Pending {
 				status = "pending"
 			}
-			if d.LastError != "" {
+			if !repo.Settings.Archived && d.LastError != "" {
 				status = "error: " + d.LastError
 			}
 			tb.row(cRef(fmt.Sprintf("%d", d.ID)), cText(d.Direction), cText(d.URL), cText("last "+orDash(d.LastSync)), cState(status))
@@ -145,10 +150,12 @@ func runMirrorList(c *Ctx, args []string) int {
 		rows := make([]row, len(ds))
 		for i, d := range ds {
 			state := "ok"
-			if d.Pending {
+			if repo.Settings.Archived {
+				state = "archived"
+			} else if d.Pending {
 				state = "pending"
 			}
-			if d.LastError != "" {
+			if !repo.Settings.Archived && d.LastError != "" {
 				state = "error"
 			}
 			synced := "never synced"
@@ -233,6 +240,9 @@ func runMirrorSync(c *Ctx, args []string) int {
 	}
 	repo, code := resolveRepo(c, args[0], policy.CanAdmin)
 	if code >= 0 {
+		return code
+	}
+	if code := refuseArchived(c, repo); code >= 0 {
 		return code
 	}
 	if err := c.Store.MarkMirrorsDirty(repo.ID, ""); err != nil {

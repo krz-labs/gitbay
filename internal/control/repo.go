@@ -1054,6 +1054,9 @@ func archiveRepo(c *Ctx, repo store.Repo, archived bool) int {
 	if err != nil {
 		return c.fail(protocol.ExitFailure, "%v", err)
 	}
+	if archived {
+		_ = c.Store.ClearMirrorsPending(repo.ID)
+	}
 	c.Store.RecordEvent(repo.ID, c.User.ID, "repo."+verb+"d", "{}")
 	return c.emit(s, func(w io.Writer) { fmt.Fprintf(w, "%sd %s\n", verb, repo.Path()) })
 }

@@ -180,12 +180,16 @@ func (s *Store) QueueStatus() (Queues, error) {
 		return q, err
 	}
 
-	if err := s.DB.QueryRow(`SELECT COUNT(*) FILTER (WHERE dirty = 1), COUNT(*) FILTER (WHERE last_error != '')
-		FROM mirrors`).Scan(&q.Mirrors.Dirty, &q.Mirrors.Errors); err != nil {
+	if err := s.DB.QueryRow(`SELECT COUNT(*) FILTER (WHERE m.dirty = 1), COUNT(*) FILTER (WHERE m.last_error != '')
+		FROM mirrors m
+		JOIN repos r ON r.id = m.repo_id
+		WHERE COALESCE(json_extract(r.settings_json, '$.archived'), 0) = 0`).Scan(&q.Mirrors.Dirty, &q.Mirrors.Errors); err != nil {
 		return q, err
 	}
 	if err := s.queryEach(`SELECT m.id, `+repoPathExpr+`, m.direction, m.url, m.last_sync, m.last_error
-		FROM mirrors m`+repoJoin("m.repo_id")+` WHERE m.last_error != '' ORDER BY m.id DESC LIMIT ?`, func(sc scanner) error {
+		FROM mirrors m`+repoJoin("m.repo_id")+` WHERE m.last_error != ''
+		  AND COALESCE(json_extract(r.settings_json, '$.archived'), 0) = 0
+		ORDER BY m.id DESC LIMIT ?`, func(sc scanner) error {
 		var m QueueMirrorRow
 		if err := sc.Scan(&m.ID, &m.Repo, &m.Direction, &m.URL, &m.LastSync, &m.LastError); err != nil {
 			return err

@@ -82,13 +82,25 @@ func (s *Store) ListMirrors(repoID int64) ([]Mirror, error) {
 }
 
 // DueMirrors returns mirrors needing a sync: anything dirty, plus pull
-// mirrors whose last sync is older than intervalSeconds.
+// mirrors whose last sync is older than intervalSeconds. Archived
+// repositories are skipped so their mirrors stay disabled until unarchived.
 func (s *Store) DueMirrors(intervalSeconds int) ([]Mirror, error) {
-	return s.mirrorQuery(mirrorSelect+`
-		WHERE dirty = 1
-		   OR (direction = 'pull' AND (last_sync = ''
-		       OR strftime('%s','now') - strftime('%s', last_sync) > ?))
-		ORDER BY id`, intervalSeconds)
+	return s.mirrorQuery(`
+		SELECT m.id, m.repo_id, m.direction, m.url, m.username, m.token, m.dirty, m.last_sync, m.last_error
+		FROM mirrors m
+		JOIN repos r ON r.id = m.repo_id
+		WHERE COALESCE(json_extract(r.settings_json, '$.archived'), 0) = 0
+		  AND (m.dirty = 1
+		   OR (m.direction = 'pull' AND (m.last_sync = ''
+		       OR strftime('%s','now') - strftime('%s', m.last_sync) > ?)))
+		ORDER BY m.id`, intervalSeconds)
+}
+
+// ClearMirrorsPending clears dirty flags and stored errors on a
+// repository's mirrors when it is archived.
+func (s *Store) ClearMirrorsPending(repoID int64) error {
+	_, err := s.DB.Exec("UPDATE mirrors SET dirty = 0, last_error = '' WHERE repo_id = ?", repoID)
+	return err
 }
 
 func (s *Store) RemoveMirror(repoID, id int64) error {
