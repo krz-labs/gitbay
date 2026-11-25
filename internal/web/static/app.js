@@ -87,6 +87,8 @@
       swapSel = '.identity';
     } else if (form.closest('.aside .popover')) {
       swapSel = '.aside';
+    } else if (form.dataset.notifForm) {
+      swapSel = '#notif-root';
     } else {
       return;
     }
@@ -111,6 +113,12 @@
       if (next && cur) {
         cur.replaceWith(next);
         initCopyButtons(next);
+        if (swapSel === '#notif-root') {
+          const nextBell = doc.querySelector('.rail a[href="/notifications"]');
+          const curBell = document.querySelector('.rail a[href="/notifications"]');
+          if (nextBell && curBell) curBell.replaceWith(nextBell);
+          showToast('Marked as read');
+        }
       } else {
         location.reload();
       }
@@ -466,10 +474,53 @@
     }
   }
 
+  // ---- 11. Client-side panel tabs (/new) & import repo-name inference ----
+  function initPanelTabs() {
+    const nav = document.querySelector('nav[data-panel-tabs]');
+    if (!nav) return;
+    const container = document.getElementById(nav.dataset.panelTabs);
+    if (!container) return;
+    const links = Array.from(nav.querySelectorAll('a[data-panel]'));
+    const panels = Array.from(container.querySelectorAll('[data-panel-id]'));
+    const show = (id) => {
+      const valid = panels.some((p) => p.dataset.panelId === id);
+      const target = valid ? id : panels[0]?.dataset.panelId;
+      for (const p of panels) p.hidden = p.dataset.panelId !== target;
+      for (const a of links) {
+        if (a.dataset.panel === target) a.setAttribute('aria-current', 'page');
+        else a.removeAttribute('aria-current');
+      }
+    };
+    const initial = location.hash.replace(/^#/, '') || (document.querySelector('#import input[name="from"]')?.value ? 'import' : 'create');
+    show(initial);
+    for (const a of links) {
+      a.addEventListener('click', (e) => {
+        e.preventDefault();
+        show(a.dataset.panel);
+        history.replaceState(null, '', '#' + a.dataset.panel);
+      });
+    }
+  }
+
+  document.addEventListener('input', (e) => {
+    const src = e.target.closest('input[data-infer-name]');
+    if (!src) return;
+    const dst = document.getElementById(src.dataset.inferName);
+    if (!dst || dst.dataset.userEdited === '1') return;
+    const raw = src.value.trim().replace(/\/+$/, '').replace(/\.git$/i, '');
+    const seg = raw.split('/').pop() || '';
+    const clean = seg.toLowerCase().replace(/[^a-z0-9._-]+/g, '-').replace(/^[^a-z0-9]+/, '').slice(0, 63);
+    if (clean) dst.value = clean;
+  });
+  document.addEventListener('input', (e) => {
+    if (e.target.id === 'imp-name') e.target.dataset.userEdited = e.target.value ? '1' : '';
+  });
+
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => { initCopyButtons(); initScrollSpy(); });
+    document.addEventListener('DOMContentLoaded', () => { initCopyButtons(); initScrollSpy(); initPanelTabs(); });
   } else {
     initCopyButtons();
     initScrollSpy();
+    initPanelTabs();
   }
 })();

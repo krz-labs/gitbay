@@ -2,53 +2,99 @@
 {{define "title"}}new repository · {{.Site}}{{end}}
 {{define "content"}}
 <h1>New</h1>
-<h2>Repository</h2>
 {{if .Error}}<p class="error" role="alert">{{.Error}}</p>{{end}}
-<form method="post" action="/new">
-<p><label>Owner <select name="owner">
-  <option value="{{.Viewer}}">{{.Viewer}}</option>
-  {{range .Orgs}}<option value="{{.}}">{{.}}</option>{{end}}
-</select></label>
-<label>/ Name <input name="name" required maxlength="63" pattern="[a-z0-9][a-z0-9._\-]{0,62}" aria-describedby="namehint" autocomplete="off" spellcheck="false"></label>
-<span class="hint" id="namehint">Lowercase letters, digits, dot, dash and underscore; must start with a letter or digit; up to 63 characters.</span></p>
-<fieldset class="segmented">
-  <legend>Visibility</legend>
-  <div class="options">
-    <label><input type="radio" name="visibility" value="public" checked><span>Public</span></label>
-    <label><input type="radio" name="visibility" value="private"><span>Private</span></label>
-  </div>
-</fieldset>
-<p><button type="submit">Create repository</button></p>
-</form>
 
-<h2 id="import">Import</h2>
-<p class="meta">Copies a repository from another host, over http or https. A private source needs an access token; it is sent to the remote for this one fetch and not stored.</p>
-<form method="post" action="/new" autocomplete="off">
-<input type="hidden" name="field" value="import">
-<p><label>Owner <select name="owner">
-  {{$o := index .Submitted "owner"}}<option value="{{.Viewer}}">{{.Viewer}}</option>
-  {{range .Orgs}}<option value="{{.}}"{{if eq . $o}} selected{{end}}>{{.}}</option>{{end}}
-</select></label>
-<label>/ Name <input name="name" value="{{index .Submitted "name"}}" required maxlength="63" pattern="[a-z0-9][a-z0-9._\-]{0,62}" autocomplete="off" spellcheck="false"></label></p>
-<p><label>From <input type="text" name="from" value="{{index .Submitted "from"}}" required placeholder="https://github.com/owner/repo.git" spellcheck="false" size="48"></label></p>
-<p><label>Access token <input type="password" name="token" autocomplete="new-password"></label> <span class="hint">Optional.</span></p>
-<fieldset class="segmented">
-  <legend>Visibility</legend>
-  <div class="options">
-    <label><input type="radio" name="visibility" value="public"{{if ne (index .Submitted "visibility") "private"}} checked{{end}}><span>Public</span></label>
-    <label><input type="radio" name="visibility" value="private"{{if eq (index .Submitted "visibility") "private"}} checked{{end}}><span>Private</span></label>
-  </div>
-</fieldset>
-<p><button type="submit">Import repository</button></p>
-</form>
+<nav class="tabs newtabs" aria-label="Create" data-panel-tabs="new-panels">
+  <a href="#create" aria-current="page" data-panel="create">Repository</a>
+  <a href="#import" data-panel="import">Import</a>
+  <a href="#org" data-panel="org">Organization</a>
+</nav>
 
-<h2 id="org">Organization</h2>
-<p class="meta">An organization owns repositories, labels and milestones, and
-grants access through teams. You are its first admin.</p>
-<form method="post" action="/new">
-<input type="hidden" name="field" value="org-create">
-<p><label>Name <input name="name" required maxlength="63" pattern="[a-z0-9][a-z0-9._\-]{0,62}" aria-describedby="orghint" autocomplete="off" spellcheck="false"></label>
-<span class="hint" id="orghint">The same rules as a repository name, and it becomes a top-level path.</span></p>
-<p><button type="submit">Create organization</button></p>
-</form>
+<div id="new-panels">
+<section id="create" class="setcard" data-panel-id="create">
+  <h2>Create a repository</h2>
+  <p class="meta">Start a fresh repository under your account or an organization you administer.</p>
+  <form method="post" action="/new">
+    <div class="field">
+      <div class="ownername">
+        <div class="ownerpick">
+          <label for="new-owner">Owner</label>
+          <select id="new-owner" name="owner">
+            <option value="{{.Viewer}}">{{.Viewer}}</option>
+            {{range .Orgs}}<option value="{{.}}">{{.}}</option>{{end}}
+          </select>
+        </div>
+        <span class="slash" aria-hidden="true">/</span>
+        <div class="namepick">
+          <label for="new-name">Repository name</label>
+          <input id="new-name" name="name" required maxlength="63" pattern="[a-z0-9][a-z0-9._\-]{0,62}" aria-describedby="namehint" autocomplete="off" spellcheck="false" placeholder="my-project">
+        </div>
+      </div>
+      <span class="hint" id="namehint">Lowercase letters, digits, dot, dash and underscore; must start with a letter or digit; up to 63 characters.</span>
+    </div>
+    <fieldset class="segmented">
+      <legend>Visibility</legend>
+      <div class="options">
+        <label><input type="radio" name="visibility" value="public" checked><span>Public</span></label>
+        <label><input type="radio" name="visibility" value="private"><span>Private</span></label>
+      </div>
+    </fieldset>
+    <p><button type="submit">Create repository</button></p>
+  </form>
+</section>
+
+<section id="import" class="setcard" data-panel-id="import">
+  <h2>Import a repository</h2>
+  <p class="meta">Copies a repository from another host over HTTP or HTTPS. A private source needs an access token; it is used for this fetch only and never stored.</p>
+  <form method="post" action="/new" autocomplete="off">
+    <input type="hidden" name="field" value="import">
+    <div class="field">
+      <label for="imp-from">Source URL</label>
+      <input type="text" id="imp-from" name="from" value="{{index .Submitted "from"}}" required placeholder="https://github.com/owner/repo.git" spellcheck="false" data-infer-name="imp-name">
+    </div>
+    <div class="field">
+      <div class="ownername">
+        <div class="ownerpick">
+          <label for="imp-owner">Owner</label>
+          <select id="imp-owner" name="owner">
+            {{$o := index .Submitted "owner"}}<option value="{{.Viewer}}">{{.Viewer}}</option>
+            {{range .Orgs}}<option value="{{.}}"{{if eq . $o}} selected{{end}}>{{.}}</option>{{end}}
+          </select>
+        </div>
+        <span class="slash" aria-hidden="true">/</span>
+        <div class="namepick">
+          <label for="imp-name">Repository name</label>
+          <input id="imp-name" name="name" value="{{index .Submitted "name"}}" required maxlength="63" pattern="[a-z0-9][a-z0-9._\-]{0,62}" autocomplete="off" spellcheck="false" placeholder="auto-filled from URL">
+        </div>
+      </div>
+    </div>
+    <div class="field">
+      <label for="imp-token">Access token</label>
+      <input type="password" id="imp-token" name="token" autocomplete="new-password" placeholder="Optional — only for private sources">
+    </div>
+    <fieldset class="segmented">
+      <legend>Visibility</legend>
+      <div class="options">
+        <label><input type="radio" name="visibility" value="public"{{if ne (index .Submitted "visibility") "private"}} checked{{end}}><span>Public</span></label>
+        <label><input type="radio" name="visibility" value="private"{{if eq (index .Submitted "visibility") "private"}} checked{{end}}><span>Private</span></label>
+      </div>
+    </fieldset>
+    <p><button type="submit">Import repository</button></p>
+  </form>
+</section>
+
+<section id="org" class="setcard" data-panel-id="org">
+  <h2>Create an organization</h2>
+  <p class="meta">An organization owns repositories, shared labels and milestones, and grants access through teams. You start as its admin.</p>
+  <form method="post" action="/new">
+    <input type="hidden" name="field" value="org-create">
+    <div class="field">
+      <label for="org-name">Organization name</label>
+      <input id="org-name" name="name" required maxlength="63" pattern="[a-z0-9][a-z0-9._\-]{0,62}" aria-describedby="orghint" autocomplete="off" spellcheck="false" placeholder="acme-labs">
+      <span class="hint" id="orghint">Same naming rules as a repository; becomes a top-level path.</span>
+    </div>
+    <p><button type="submit">Create organization</button></p>
+  </form>
+</section>
+</div>
 {{end}}
