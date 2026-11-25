@@ -333,3 +333,32 @@ func RegisterAccount(cfg config.Config, st *store.Store, pub ssh.PublicKey, user
 		return "", "registration is closed on this instance", protocol.ExitDenied
 	}
 }
+
+// VerifyPendingSignup redeems an emailed verification code right on the web
+// post-registration screen, activating the account in one step.
+func VerifyPendingSignup(cfg config.Config, st *store.Store, username, code string) (store.User, string) {
+	if username == "" || code == "" {
+		return store.User{}, "enter the verification code from your email"
+	}
+	u, err := st.UserByUsername(username)
+	if err != nil || u.Disabled {
+		return store.User{}, "that code is invalid, expired, or already used"
+	}
+	address, err := st.ConsumeEmailToken(u.ID, store.HashToken(code))
+	if err != nil {
+		return store.User{}, "that code is invalid, expired, or already used"
+	}
+	if err := st.VerifyEmail(u.ID, address, "smtp"); err != nil {
+		return store.User{}, err.Error()
+	}
+	wasPending := u.Pending
+	if err := st.ClearPending(u.ID); err != nil {
+		return store.User{}, err.Error()
+	}
+	u.Pending = false
+	st.Audit(u.ID, "email.signup_verified", map[string]any{"address": address})
+	if wasPending {
+		notifyAdminsOfSignup(cfg, st, u.Username, "open")
+	}
+	return u, ""
+}

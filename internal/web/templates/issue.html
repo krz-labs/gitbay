@@ -5,13 +5,13 @@
 <a href="/{{.Issue.Author}}">{{.Issue.Author}}</a> opened this on {{when .Issue.CreatedAt}}
 {{if .Issue.Labels}} · {{range .Issue.Labels}}<a class="chip label" style="{{index $.LabelColors .}}" href="/{{$.Repo.OwnerName}}/{{$.Repo.Name}}/issues?label={{.}}">{{.}}</a> {{end}}{{end}}
 {{if .Issue.Assignees}} · assigned to {{range .Issue.Assignees}}{{.}} {{end}}{{end}}
-{{if .Issue.Milestone}} · milestone <a href="/{{.Repo.OwnerName}}/{{.Repo.Name}}/milestones">{{.Issue.Milestone}}</a>{{end}}</p>
+{{if .Issue.Milestone}} · milestone <a href="/{{.Repo.OwnerName}}/{{.Repo.Name}}/issues?milestone={{urlquery .Issue.Milestone}}">{{.Issue.Milestone}}</a>{{end}}</p>
 {{if .Notice}}<p class="error" role="alert">{{.Notice}}</p>{{end}}
 
 <div class="withaside">
 <div class="mainside">
 <h2>Discussion</h2>
-{{if .CanEdit}}<details class="editbox"{{if .Draft.Is "edit"}} open{{end}}><summary>edit</summary>
+{{if .CanEdit}}<details class="editbox"{{if .Draft.Is "edit"}} open{{end}}><summary>Edit</summary>
 {{if .Draft.Is "edit"}}{{template "previewblock" .Draft.HTML}}{{end}}
 <form method="post" action="/{{.Repo.OwnerName}}/{{.Repo.Name}}/issues/{{.Issue.Number}}/edit" class="commentform">
 <p><input type="text" name="title" aria-label="Title" value="{{.Draft.Or "edit" "title" .Issue.Title}}" required></p>
@@ -19,15 +19,15 @@
 <p><input type="text" name="labels" aria-label="Labels" value="{{$.Draft.Or "edit" "labels" (join .Issue.Labels " ")}}" placeholder="labels, space-separated (write access)"></p>
 <p><button type="submit" class="btn">Save</button> {{template "previewbtn"}}</p>
 </form></details>{{end}}
-{{if .BodyHTML}}<article class="comment">
-  <header class="commenthead"><strong><a href="/{{.Issue.Author}}">{{.Issue.Author}}</a></strong> <span class="when">{{when .Issue.CreatedAt}}</span></header>
+{{if .BodyHTML}}<article class="comment" id="issue-body">
+  <header class="commenthead"><strong><a href="/{{.Issue.Author}}">{{.Issue.Author}}</a></strong> <span class="when">{{when .Issue.CreatedAt}}</span>{{if $.Viewer}}<span class="grow"></span><button type="button" class="linklike quote-btn" data-quote-from="issue-body">Quote</button>{{end}}</header>
   <div class="rendered">{{.BodyHTML}}</div>
   {{template "reactions" index .Reactions 0}}
 </article>{{else}}{{template "reactions" index .Reactions 0}}{{end}}
 {{range .Comments}}
 {{if eq .Kind "system"}}<div class="syscomment">{{.BodyHTML}} <span class="when">{{when .CreatedAt}}</span></div>
-{{else}}<article class="comment">
-  <header class="commenthead"><strong><a href="/{{.Author}}">{{.Author}}</a></strong> <span class="when">{{when .CreatedAt}}</span></header>
+{{else}}<article class="comment" id="comment-{{.ID}}">
+  <header class="commenthead"><strong><a href="/{{.Author}}">{{.Author}}</a></strong> <a class="when" href="#comment-{{.ID}}">{{when .CreatedAt}}</a>{{if $.Viewer}}<span class="grow"></span><button type="button" class="linklike quote-btn" data-quote-from="comment-{{.ID}}">Quote</button>{{end}}</header>
   <div class="rendered">{{.BodyHTML}}</div>
   {{template "reactions" index $.Reactions .ID}}
 </article>{{end}}
@@ -35,8 +35,8 @@
 {{if .Viewer}}
 {{if .Draft.Is "comment"}}{{template "previewblock" .Draft.HTML}}{{end}}
 <form method="post" action="/{{.Repo.OwnerName}}/{{.Repo.Name}}/issues/{{.Issue.Number}}/comment" class="commentform">
-<p><textarea name="body" aria-label="Comment" rows="4" placeholder="Comment as {{.Viewer}}">{{.Draft.Or "comment" "body" ""}}</textarea></p>
-<p><button type="submit">Comment</button> {{template "previewbtn"}}</p>
+<p><textarea id="main-comment-box" name="body" aria-label="Comment" rows="4" placeholder="Comment as {{.Viewer}}">{{.Draft.Or "comment" "body" ""}}</textarea></p>
+<p class="btngroup"><button type="submit">Comment</button> {{template "previewbtn"}} <label class="format-inline"><span class="vh">Comment markup</span><select name="format" aria-label="Comment markup">{{$cfmt := .Draft.Or "comment" "format" "md"}}<option value="md"{{if ne $cfmt "org"}} selected{{end}}>Markdown</option><option value="org"{{if eq $cfmt "org"}} selected{{end}}>Org</option></select></label></p>
 </form>
 {{end}}
 </div>
@@ -87,7 +87,7 @@
         </form>
       </div></details>{{end}}
     </div>
-    {{if .Issue.Milestone}}<p class="row"><a href="/{{.Repo.OwnerName}}/{{.Repo.Name}}/milestones">{{.Issue.Milestone}}</a></p>
+    {{if .Issue.Milestone}}<p class="row"><a href="/{{.Repo.OwnerName}}/{{.Repo.Name}}/issues?milestone={{urlquery .Issue.Milestone}}">{{.Issue.Milestone}}</a></p>
     {{else}}<p class="none">None</p>{{end}}
   </div>
   {{if .CanEdit}}

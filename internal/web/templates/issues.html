@@ -12,6 +12,14 @@
     <input type="hidden" name="state" value="{{.State}}">
   </form>
   {{range .Filters}}<p class="meta">{{.Key}}: {{if eq .Key "label"}}<span class="chip label" style="{{index $.LabelColors .Value}}">{{.Value}}</span>{{else}}<b>{{.Value}}</b>{{end}} <a href="{{.Clear}}">clear</a></p>{{end}}
+  {{with field . "People"}}{{if .}}
+  <details class="popover"><summary class="popbtn">Author ▾</summary><div class="popmenu">
+    <div class="picker-list">{{range .}}<a class="picker-btn" href="?state={{$.State}}&amp;author={{urlquery .}}">{{.}}</a>{{end}}</div>
+  </div></details>
+  <details class="popover"><summary class="popbtn">Assignee ▾</summary><div class="popmenu">
+    <div class="picker-list">{{range .}}<a class="picker-btn" href="?state={{$.State}}&amp;assignee={{urlquery .}}">{{.}}</a>{{end}}</div>
+  </div></details>
+  {{end}}{{end}}
   <span class="spacer"></span>
   <div class="btngroup">
     <a class="button btn" href="/{{.Repo.OwnerName}}/{{.Repo.Name}}/milestones">Milestones</a>
@@ -21,13 +29,15 @@
 </div>
 {{if .Facets}}<nav class="statebar" aria-label="State" data-tab-swap="issues-root">{{range (index .Facets 0).Items}}<a{{if .Active}} aria-current="page"{{end}} href="{{.Href}}">{{.Label}}</a>{{end}}</nav>{{end}}
 <ul class="issuelist rows">
-{{range .Issues}}<li>
+{{range $iss := .Issues}}<li>
   <div class="issuemain">
     <p class="title"><a href="/{{$.Repo.OwnerName}}/{{$.Repo.Name}}/issues/{{.Number}}">{{.Title}}</a>
     {{range .Labels}}<a class="chip label" style="{{index $.LabelColors .}}" href="?label={{.}}">{{.}}</a> {{end}}</p>
-    <p class="meta">#{{.Number}} opened by <a href="/{{.Author}}">{{.Author}}</a>{{if .Milestone}} · in <a href="/{{$.Repo.OwnerName}}/{{$.Repo.Name}}/milestones">{{.Milestone}}</a>{{end}}</p>
+    <p class="meta">#{{.Number}} opened by <a href="/{{.Author}}">{{.Author}}</a>{{if .Assignees}} · assigned to {{range $i, $a := .Assignees}}{{if $i}}, {{end}}<a href="?state={{$.State}}&amp;assignee={{urlquery $a}}">{{$a}}</a>{{end}}{{end}}{{if .Milestone}} · in <a href="/{{$.Repo.OwnerName}}/{{$.Repo.Name}}/issues?milestone={{urlquery .Milestone}}">{{.Milestone}}</a>{{end}}{{if .UpdatedAt}} · {{when .UpdatedAt}}{{end}}</p>
   </div>
-  {{if eq $.State "all"}}<span class="chip {{if eq .State "open"}}chip-open{{else}}chip-done{{end}}">{{.State}}</span>{{end}}
+  <div class="issueside">
+    {{if eq $.State "all"}}<span class="chip {{if eq .State "open"}}chip-open{{else}}chip-done{{end}}">{{.State}}</span> {{end}}{{with field $ "CommentCounts"}}{{with index . $iss.ID}}<span class="chip chip-neutral" title="{{.}} comment{{if ne . 1}}s{{end}}">{{.}} <span class="vh">comments</span></span>{{end}}{{end}}
+  </div>
 </li>
 {{else}}{{if .Query}}<li class="empty">no {{if ne .State "all"}}{{.State}} {{end}}issues matching “{{.Query}}”</li>
 {{else}}<li class="empty">no {{if ne .State "all"}}{{.State}} {{end}}issues{{if .Viewer}} — <a href="/{{.Repo.OwnerName}}/{{.Repo.Name}}/issues/new">open one</a>{{end}}</li>{{end}}{{end}}

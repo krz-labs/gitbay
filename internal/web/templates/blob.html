@@ -4,7 +4,7 @@
 <h1 class="vh">{{.Path}}</h1>
 <div class="blobgrid">
 {{template "filenav" .Nav}}
-<div class="blobmain">
+<div class="blobmain" data-commit="{{.Commit}}" data-permalink="/{{.Repo.OwnerName}}/{{.Repo.Name}}/blob/{{.Commit}}/{{.Path}}">
 <div class="pathbar">
   {{template "refmenu" .}}
   <span class="crumbs"><a href="/{{.Repo.OwnerName}}/{{.Repo.Name}}">{{.Repo.Name}}</a>/{{range .Crumbs}}<a href="{{.URL}}">{{.Name}}</a>/{{end}}<strong>{{.Base}}</strong></span>
@@ -13,10 +13,12 @@
     {{if .Renderable}}{{if .Rendered}}<a class="button btn" aria-current="page" href="?"><strong>rendered</strong></a><a class="button btn" href="?view=source">source</a>{{else}}<a class="button btn" href="?">rendered</a><a class="button btn" aria-current="page" href="?view=source"><strong>source</strong></a>{{end}}{{end}}
     <a class="button btn" href="/{{.Repo.OwnerName}}/{{.Repo.Name}}/log/{{.Ref}}?path={{.Path}}">history</a>
     {{if not .Binary}}<a class="button btn" href="/{{.Repo.OwnerName}}/{{.Repo.Name}}/blame/{{.Ref}}/{{.Path}}">blame</a>{{end}}
+    {{if and (not .Binary) (not .Image)}}<button type="button" class="btn" data-copy-url="/{{.Repo.OwnerName}}/{{.Repo.Name}}/raw/{{.Ref}}/{{.Path}}">copy</button>{{end}}
     <a class="button btn" href="/{{.Repo.OwnerName}}/{{.Repo.Name}}/raw/{{.Ref}}/{{.Path}}">raw</a>
     {{if .Viewer}}<a class="button" href="/{{.Repo.OwnerName}}/{{.Repo.Name}}/edit/{{.Ref}}/{{.Path}}">edit</a>{{end}}
   </div>
 </div>
+{{with .Tip}}{{if .SHA}}<div class="blobtip"><span class="who">{{template "authorname" dict "Name" .Author "User" .User "Email" .Email}}</span> <a class="subject" href="/{{$.Repo.OwnerName}}/{{$.Repo.Name}}/commit/{{.SHA}}">{{.Subject}}</a><span class="spacer"></span><a class="sha" href="/{{$.Repo.OwnerName}}/{{$.Repo.Name}}/commit/{{.SHA}}"><code>{{short .SHA}}</code></a> <span class="age"{{if not .When.IsZero}} title="{{whenT .When}}"{{end}}>{{ago .When}}</span></div>{{end}}{{end}}
 <p class="filefacts">{{if .Lines}}{{.Lines}} lines · {{end}}{{.Size}} bytes{{if .Exec}} · executable{{end}}{{if .Symlink}} · symlink{{end}}</p>
 {{if .Symbols}}<details class="symlist"><summary>{{len .Symbols}} symbol{{if ne (len .Symbols) 1}}s{{end}} in this file</summary>
 <ul>{{range .Symbols}}<li><a href="{{if $.Rendered}}?view=source{{end}}#L{{.Line}}"><code>{{.Name}}</code></a> <span class="meta">{{.Kind}}, line {{.Line}}</span></li>

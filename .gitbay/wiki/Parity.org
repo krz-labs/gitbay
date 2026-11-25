@@ -215,10 +215,10 @@ there shows the app's rendering rather than the one the web page shows.
 | access grants               | yes | yes | yes |
 | effective access            | yes | yes | yes |
 | webhooks                    | yes | yes | yes |
-| build secrets               | yes | no  | yes |
-| deploy keys                 | yes | no  | yes |
-| mirrors                     | yes | no  | yes |
-| custom pages domains        | yes | no  | yes |
+| build secrets               | yes | yes | yes |
+| deploy keys                 | yes | yes | yes |
+| mirrors                     | yes | yes | yes |
+| custom pages domains        | yes | yes | yes |
 | runners attach, list, detach | yes | yes | n/a |
 | runner attached for some jobs | yes | yes | n/a |
 | import from a remote        | yes | yes | yes |
@@ -340,7 +340,7 @@ now render the way the reference does. go-org is not yet on the corpus.
 |----------------------------------+-----+-----+-----|
 | search repositories              | yes | yes | yes |
 | search issues and merge requests | yes | yes | yes |
-| saved query save, remove, pin    | yes | no  | yes |
+| saved query save, remove, pin    | yes | yes | yes |
 | saved query list and results     | yes | yes | yes |
 | pinned queries on the dashboard  | yes | yes | yes |
 | browse all public repositories   | yes | yes | yes |
@@ -414,7 +414,7 @@ client has no use for one (krz/gitbay#57).
 |-----------------------------+-----+-----+-----|
 | SSH keys: list, add, remove | yes | yes | yes |
 | SSH key label               | yes | yes | yes |
-| SSH key expiry and last use | yes | no  | yes |
+| SSH key expiry and last use | yes | yes | yes |
 | PGP keys: list, add, remove | yes | yes | yes |
 | email add and verify        | yes | yes | yes |
 | email list, remove, primary | yes | yes | yes |
@@ -432,7 +432,7 @@ client has no use for one (krz/gitbay#57).
 | API token mint              | yes | yes | yes |
 | API token list, revoke      | yes | yes | yes |
 | API token revoke with what it created | yes | no  | yes |
-| browser sessions: list, end | yes | no  | yes |
+| browser sessions: list, end | yes | yes | yes |
 | account export bundle       | yes | yes | n/a |
 | delete your own account     | yes | yes | yes |
 | profile set                 | yes | yes | yes |

@@ -19,7 +19,7 @@
   </p>
   <p><input type="text" name="title" aria-label="Title" placeholder="title (defaults to the tag)" value="{{.Draft.Or "release" "title" ""}}"></p>
   <p><textarea name="notes" aria-label="Notes" rows="6" placeholder="what changed">{{.Draft.Or "release" "notes" ""}}</textarea></p>
-  <p class="btngroup"><button type="submit">Create release</button> {{template "previewbtn"}} <button type="submit" name="summarize" value="1" class="btn">Summarize changes</button></p>
+  <p class="btngroup"><button type="submit">Create release</button> {{template "previewbtn"}} <button type="submit" name="summarize" value="1" class="btn">Summarize changes</button> <label class="format-inline"><span class="vh">Notes markup</span><select name="format" aria-label="Notes markup">{{$rfmt := .Draft.Or "release" "format" "md"}}<option value="md"{{if ne $rfmt "org"}} selected{{end}}>Markdown</option><option value="org"{{if eq $rfmt "org"}} selected{{end}}>Org</option></select></label></p>
 </form>
 </details>
 {{else if .CanWrite}}<p class="meta">Push a tag to create a release from it.</p>{{end}}

@@ -64,8 +64,16 @@ func (s *Server) watchToggle(w http.ResponseWriter, r *http.Request, u store.Use
 	}
 	next := map[string]string{"": "watch", "watching": "mute", "muted": "unwatch"}
 	verb := next[s.st.RepoWatchState(repo.ID, u.ID)]
+	switch r.FormValue("mode") {
+	case "default":
+		verb = "unwatch"
+	case "watching":
+		verb = "watch"
+	case "muted":
+		verb = "mute"
+	}
 	if _, msg, ok := s.runControl(u, []string{"repo", verb, repo.Path()}); !ok {
 		s.setFlash(w, msg)
 	}
-	http.Redirect(w, r, "/"+repo.Path(), http.StatusSeeOther)
+	http.Redirect(w, r, safeReturnTo(r, "/"+repo.Path()), http.StatusSeeOther)
 }

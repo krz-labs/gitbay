@@ -199,23 +199,41 @@ func MergeBase(dir, a, b string) (string, error) {
 // advances the branch with compare-and-swap. Used by web edits; hooks do not
 // run, so callers enforce policy themselves.
 func CommitFileChange(dir, branch, path string, content []byte, name, email, message string) (string, error) {
+	return CommitFileFrom(dir, branch, "", path, content, name, email, message)
+}
+
+// CommitFileFrom writes content to path on branch. When branch does not exist
+// yet and fromBranch is named, the new branch starts from fromBranch's tip.
+func CommitFileFrom(dir, branch, fromBranch, path string, content []byte, name, email, message string) (string, error) {
 	branchRef := "refs/heads/" + branch
+	oldRef := ""
 	parent, err := ResolveRef(dir, branchRef)
 	if err != nil {
-		// An unborn branch is a root commit only in a repository with no
-		// refs at all. Anywhere else an unresolvable branch is a typo, and
-		// starting an orphan branch for it would be worse than refusing.
-		if !isEmptyRepo(dir) {
-			return "", fmt.Errorf("branch %s: %w", branch, err)
+		if fromBranch != "" {
+			baseSHA, berr := ResolveRef(dir, "refs/heads/"+fromBranch)
+			if berr != nil {
+				return "", fmt.Errorf("base branch %s: %w", fromBranch, berr)
+			}
+			parent = baseSHA
+			oldRef = ""
+		} else {
+			// An unborn branch is a root commit only in a repository with no
+			// refs at all. Anywhere else an unresolvable branch is a typo, and
+			// starting an orphan branch for it would be worse than refusing.
+			if !isEmptyRepo(dir) {
+				return "", fmt.Errorf("branch %s: %w", branch, err)
+			}
+			parent = ""
 		}
-		parent = ""
+	} else {
+		oldRef = parent
 	}
 
 	sha, err := CommitWithFile(dir, parent, path, "100644", content, name, email, message)
 	if err != nil {
 		return "", err
 	}
-	if err := UpdateRefCAS(dir, branchRef, sha, parent); err != nil {
+	if err := UpdateRefCAS(dir, branchRef, sha, oldRef); err != nil {
 		return "", fmt.Errorf("branch moved during edit; reload and retry: %w", err)
 	}
 	return sha, nil

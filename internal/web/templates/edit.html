@@ -12,13 +12,15 @@
 {{if .Error}}<p class="error" role="alert">{{.Error}}</p>{{end}}
 {{if .Blocked}}<p class="empty-note">{{.Blocked}}</p>{{else}}
 <section class="setcard">
+{{if .RequireMR}}<p class="notice" role="status">Branch <code>{{.Ref}}</code> accepts changes through merge requests only. Committing below creates a new branch and opens a merge request.</p>{{end}}
 {{if .Creating}}<p class="meta"><code>{{.Path}}</code> does not exist on {{.Ref}}; committing creates it.</p>{{end}}
 {{if .Draft.Is "content"}}{{template "previewblock" .Draft.HTML}}{{end}}
 <form method="post" action="/{{.Repo.OwnerName}}/{{.Repo.Name}}/edit/{{.Ref}}/{{.Path}}" class="editform">
   <p><textarea name="content" aria-label="File contents" rows="24" spellcheck="false">{{.Content}}</textarea></p>
   <div class="commitbar">
     <input name="message" aria-label="Commit message" placeholder="Commit message" value="{{.Draft.Or "content" "message" ""}}">
-    <button type="submit">Commit to {{.Ref}}</button>
+    <input name="target_branch" class="branch-target-inp" aria-label="Target branch" placeholder="Branch (blank commits to {{.Ref}})" value="{{.ProposeBranch}}"{{if .RequireMR}} required{{end}}>
+    <button type="submit">{{if .RequireMR}}Propose merge request{{else}}Commit changes{{end}}</button>
     {{if .Markup}}{{template "previewbtn"}}{{end}}
   </div>
   <p class="crumbs">this commit will be unsigned and authored as {{.Viewer}} · ⌘↵ to commit</p>

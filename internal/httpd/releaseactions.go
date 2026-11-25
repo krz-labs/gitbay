@@ -73,6 +73,9 @@ func (s *Server) releaseSubmit(w http.ResponseWriter, r *http.Request, u store.U
 		verb = "edit"
 	}
 	argv := []string{"release", verb, repo, tag}
+	if verb == "create" {
+		argv = append(argv, "--format", bodyFormat(r))
+	}
 	if title != "" {
 		argv = append(argv, "--title", title)
 	}

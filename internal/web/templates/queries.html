@@ -1,28 +1,55 @@
 {{define "width"}}wide{{end}}
 {{define "title"}}{{if .Query.Name}}{{.Query.Name}} · {{end}}queries · {{.Site}}{{end}}
-{{define "content"}}
-{{if .Query.Name}}
-<div id="query-root">
-<div class="pagehead">
-  <h1>{{.Query.Name}} <span class="count">{{.Count}}</span></h1>
-  <span class="grow"></span>
-  <div class="btngroup">
-    <button type="button" class="btn" data-refresh="self" data-refresh-target="query-root">Refresh</button>
-    <a class="button btn" href="/{{.Viewer}}/-/queries">Saved queries</a>
-  </div>
-</div>
-<p class="meta"><code>{{.Query.Query}}</code> · the same read as <code>gitbay query run {{.Query.Name}}</code></p>
+{{define "queryrows"}}
 <ul class="issuelist rows">
 {{range .Items}}<li>
   <div class="issuemain">
     <p class="title"><a href="/{{.Repo}}/{{if eq .Kind "mr"}}mrs{{else}}issues{{end}}/{{.Number}}">{{.Title}}</a></p>
     <p class="meta"><span class="repo">{{.Ref}}</span> · <a href="/{{.Author}}">{{.Author}}</a>{{if .Milestone}} · in {{.Milestone}}{{end}} · {{when .CreatedAt}}</p>
   </div>
-  <span class="chip {{if eq .State "open"}}chip-open{{else if eq .State "merged"}}chip-done{{else}}chip-closed{{end}}">{{if .Draft}}draft{{else}}{{.State}}{{end}}</span>
+  <span class="chip {{if .Draft}}chip-neutral{{else if eq .State "open"}}chip-open{{else if or (eq .State "merged") (and (eq .Kind "issue") (eq .State "closed"))}}chip-done{{else if eq .State "source_gone"}}chip-source_gone{{else}}chip-closed{{end}}">{{if .Draft}}draft{{else}}{{.State}}{{end}}</span>
 </li>
 {{else}}<li class="empty">nothing matches</li>{{end}}
 </ul>
 {{if .Next}}<p class="pager"><a href="{{.Next}}">older →</a></p>{{end}}
+{{end}}
+{{define "content"}}
+{{$base := printf "/%s/-/queries" .Viewer}}
+{{if .Notice}}<p class="error" role="alert">{{.Notice}}</p>{{end}}
+{{if .Query.Name}}
+<div id="query-root">
+<div class="pagehead">
+  <h1>{{.Query.Name}} <span class="count">{{.Count}}</span>{{if .Query.Pinned}} <span class="chip">pinned</span>{{end}}</h1>
+  <span class="grow"></span>
+  <div class="btngroup">
+    <button type="button" class="btn" data-refresh="self" data-refresh-target="query-root">Refresh</button>
+    <form method="post" action="{{$base}}" class="inline">
+      <input type="hidden" name="action" value="{{if .Query.Pinned}}unpin{{else}}pin{{end}}">
+      <input type="hidden" name="name" value="{{.Query.Name}}">
+      <button type="submit" class="btn">{{if .Query.Pinned}}Unpin from dashboard{{else}}Pin to dashboard{{end}}</button>
+    </form>
+    <details class="popover"><summary class="popbtn popbtn-danger">Remove</summary><div class="popmenu">
+      <form method="post" action="{{$base}}" class="popform popform-stack">
+        <input type="hidden" name="action" value="remove">
+        <input type="hidden" name="name" value="{{.Query.Name}}">
+        <button type="submit" class="danger">Remove {{.Query.Name}}</button>
+      </form>
+    </div></details>
+    <a class="button btn" href="{{$base}}">Saved queries</a>
+  </div>
+</div>
+<p class="meta"><code>{{.Query.Query}}</code> · the same read as <code>gitbay query run {{.Query.Name}}</code></p>
+<details class="editbox"><summary>Edit query</summary>
+<form method="post" action="{{$base}}" class="setform stack">
+  <input type="hidden" name="action" value="save">
+  <input type="hidden" name="name" value="{{.Query.Name}}">
+  <input type="hidden" name="force" value="on">
+  <label for="edit-q-text">Query</label>
+  <input type="text" id="edit-q-text" name="query" value="{{.Query.Query}}" required spellcheck="false">
+  <span class="btngroup"><button type="submit">Update query</button></span>
+</form>
+</details>
+{{template "queryrows" .}}
 </div>
 {{else}}
 <div class="pagehead">
@@ -30,12 +57,48 @@
   <span class="grow"></span>
   {{if .Saved}}<input type="search" class="tablefilter" placeholder="Filter queries…" aria-label="Filter queries" data-filter-list="saved-queries">{{end}}
 </div>
-<p class="meta">Saved with <code>gitbay query save &lt;name&gt; &lt;query&gt;</code>; <code>gitbay query pin &lt;name&gt;</code> puts one on the dashboard.</p>
+<section class="setcard">
+<form method="get" action="{{$base}}" class="searchform querybar">
+  <label class="vh" for="adhoc-q">Query across repositories</label>
+  <input type="search" id="adhoc-q" name="q" value="{{.AdHoc}}" placeholder="is:open assignee:@me · is:mr author:@me · repo:owner/* label:bug" spellcheck="false">
+  <button type="submit">Run query</button>
+</form>
+<p class="hint">Qualifiers: <code>is:open|closed|merged|draft</code>, <code>is:issue|mr</code>, <code>author:@me|user</code>, <code>assignee:@me|user</code>, <code>label:name</code>, <code>milestone:name</code>, <code>repo:owner/*</code>, <code>owner:name</code>.</p>
+<details class="editbox"{{if .AdHoc}} open{{end}}><summary>Save as named query</summary>
+<form method="post" action="{{$base}}" class="setform stack">
+  <input type="hidden" name="action" value="save">
+  <label for="save-q-name">Name</label>
+  <input type="text" id="save-q-name" name="name" required placeholder="e.g. mine or triage" pattern="[a-z0-9][a-z0-9._-]{0,63}" spellcheck="false">
+  <label for="save-q-text">Query</label>
+  <input type="text" id="save-q-text" name="query" value="{{.AdHoc}}" required placeholder="is:open assignee:@me" spellcheck="false">
+  <label class="check"><input type="checkbox" name="force" value="on"> Replace existing query with this name</label>
+  <span class="btngroup"><button type="submit">Save query</button></span>
+</form>
+</details>
+</section>
+{{if .AdHoc}}
+<h2>Results <span class="count">{{.Count}}</span></h2>
+{{template "queryrows" .}}
+{{end}}
 <ul class="issuelist rows" id="saved-queries">
 {{range .Saved}}<li>
   <div class="issuemain">
     <p class="title"><a href="/{{$.Viewer}}/-/queries/{{.Name}}">{{.Name}}</a>{{if .Pinned}} <span class="chip">pinned</span>{{end}}</p>
     <p class="meta"><code>{{.Query}}</code></p>
+  </div>
+  <div class="issueside">
+    <form method="post" action="{{$base}}" class="inline">
+      <input type="hidden" name="action" value="{{if .Pinned}}unpin{{else}}pin{{end}}">
+      <input type="hidden" name="name" value="{{.Name}}">
+      <button type="submit" class="btn">{{if .Pinned}}Unpin{{else}}Pin{{end}}</button>
+    </form>
+    <details class="popover"><summary class="popbtn popbtn-danger">Remove</summary><div class="popmenu">
+      <form method="post" action="{{$base}}" class="popform popform-stack">
+        <input type="hidden" name="action" value="remove">
+        <input type="hidden" name="name" value="{{.Name}}">
+        <button type="submit" class="danger">Remove {{.Name}}</button>
+      </form>
+    </div></details>
   </div>
 </li>
 {{else}}<li class="empty">no saved queries</li>{{end}}

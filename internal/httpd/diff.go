@@ -190,8 +190,149 @@ func highlightFile(f *diffFile) {
 		hunk := f.Lines[start:end]
 		assign(hunk, "del", highlightLines(lexer, sideText(hunk, "del")))
 		assign(hunk, "add", highlightLines(lexer, sideText(hunk, "add")))
+		highlightIntraLine(hunk)
 		start = end
 	}
+}
+
+// highlightIntraLine marks the changed interior span on paired -/+ runs so
+// single-token edits pop out without scanning whole lines character by character.
+func highlightIntraLine(hunk []diffLine) {
+	for i := 0; i < len(hunk); {
+		if hunk[i].Class != "del" {
+			i++
+			continue
+		}
+		delStart := i
+		for i < len(hunk) && hunk[i].Class == "del" {
+			i++
+		}
+		delEnd := i
+		addStart := i
+		for i < len(hunk) && hunk[i].Class == "add" {
+			i++
+		}
+		addEnd := i
+		nDel, nAdd := delEnd-delStart, addEnd-addStart
+		if nDel == 0 || nAdd == 0 || nDel > 8 || nAdd > 8 {
+			continue
+		}
+		pairs := min(nDel, nAdd)
+		for k := 0; k < pairs; k++ {
+			dl := &hunk[delStart+k]
+			al := &hunk[addStart+k]
+			if dl.Code == "" || al.Code == "" || dl.Content == al.Content {
+				continue
+			}
+			dr, ar := []rune(dl.Content), []rune(al.Content)
+			pre := 0
+			for pre < len(dr) && pre < len(ar) && dr[pre] == ar[pre] {
+				pre++
+			}
+			suf := 0
+			for suf < len(dr)-pre && suf < len(ar)-pre && dr[len(dr)-1-suf] == ar[len(ar)-1-suf] {
+				suf++
+			}
+			minShared := 1
+			if nDel != nAdd {
+				minShared = 2
+			}
+			if pre < minShared && suf < minShared {
+				continue
+			}
+			dl.Code = template.HTML(markHTMLSpan(string(dl.Code), pre, len(dr)-suf, "idiff-del"))
+			al.Code = template.HTML(markHTMLSpan(string(al.Code), pre, len(ar)-suf, "idiff-add"))
+		}
+	}
+}
+
+// markHTMLSpan wraps visible runes [from, to) of balanced Chroma HTML in
+// <span class="cls">, closing and reopening any active tags at the boundaries.
+func markHTMLSpan(s string, from, to int, cls string) string {
+	if from >= to {
+		return s
+	}
+	var out strings.Builder
+	var open []string
+	pos := 0
+	inMark := false
+	openMark := func() {
+		if !inMark {
+			out.WriteString(`<span class="` + cls + `">`)
+			for _, t := range open {
+				out.WriteString(t)
+			}
+			inMark = true
+		}
+	}
+	closeMark := func() {
+		if inMark {
+			for range open {
+				out.WriteString("</span>")
+			}
+			out.WriteString("</span>")
+			for _, t := range open {
+				out.WriteString(t)
+			}
+			inMark = false
+		}
+	}
+	for i := 0; i < len(s); {
+		if s[i] == '<' {
+			j := strings.IndexByte(s[i:], '>')
+			if j < 0 {
+				out.WriteString(s[i:])
+				break
+			}
+			tag := s[i : i+j+1]
+			if strings.HasPrefix(tag, "</") {
+				if len(open) > 0 {
+					open = open[:len(open)-1]
+				}
+			} else if !strings.HasSuffix(tag, "/>") {
+				open = append(open, tag)
+			}
+			out.WriteString(tag)
+			i += j + 1
+			continue
+		}
+		if pos >= from && pos < to && !inMark {
+			for range open {
+				out.WriteString("</span>")
+			}
+			openMark()
+		} else if pos >= to && inMark {
+			closeMark()
+		}
+		if s[i] == '&' {
+			if semi := strings.IndexByte(s[i:], ';'); semi > 0 && semi <= 10 {
+				out.WriteString(s[i : i+semi+1])
+				i += semi + 1
+				pos++
+				continue
+			}
+		}
+		_, w := utf8DecodeRune(s[i:])
+		out.WriteString(s[i : i+w])
+		i += w
+		pos++
+	}
+	if inMark {
+		for range open {
+			out.WriteString("</span>")
+		}
+		out.WriteString("</span>")
+	}
+	return out.String()
+}
+
+func utf8DecodeRune(s string) (rune, int) {
+	for i, r := range s {
+		if i == 0 {
+			return r, len(string(r))
+		}
+	}
+	return 0, 1
 }
 
 // sideText joins one side of a hunk: context plus the given change class.

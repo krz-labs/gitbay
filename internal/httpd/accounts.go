@@ -212,9 +212,17 @@ func (s *Server) adminOrgs(u store.User) []string {
 
 func (s *Server) renderNewRepo(w http.ResponseWriter, u store.User, errMsg string, submitted url.Values) {
 	// A refused import keeps what was typed, except the token.
+	panel := "create"
+	switch submitted.Get("field") {
+	case "import":
+		panel = "import"
+	case "org-create":
+		panel = "org"
+	}
 	subm := map[string]string{
 		"owner": submitted.Get("owner"), "name": submitted.Get("name"),
 		"from": submitted.Get("from"), "visibility": submitted.Get("visibility"),
+		"panel": panel,
 	}
 	s.render(w, "new.html", struct {
 		basePage
@@ -232,10 +240,11 @@ func (s *Server) newRepoForm(w http.ResponseWriter, r *http.Request, u store.Use
 // forms, told apart by the org form's field. An organization's page is
 // the redirect, the same as org-create from anywhere else.
 func (s *Server) newSubmit(w http.ResponseWriter, r *http.Request, u store.User) {
+	r.ParseForm()
 	if r.FormValue("field") == "org-create" {
 		name := strings.TrimSpace(r.FormValue("name"))
 		if _, msg, ok := s.runControl(u, []string{"org", "create", name}); !ok {
-			s.renderNewRepo(w, u, msg, nil)
+			s.renderNewRepo(w, u, msg, r.Form)
 			return
 		}
 		http.Redirect(w, r, "/"+name, http.StatusSeeOther)
@@ -269,10 +278,35 @@ func (s *Server) newSubmit(w http.ResponseWriter, r *http.Request, u store.User)
 		argv = append(argv, "--private")
 	}
 	if _, msg, ok := s.runControl(u, argv); !ok {
-		s.renderNewRepo(w, u, msg, nil)
+		s.renderNewRepo(w, u, msg, r.Form)
 		return
 	}
 	http.Redirect(w, r, "/"+owner+"/"+name, http.StatusSeeOther)
+}
+
+// safeReturnTo returns a same-origin path from Referer when it lives under
+// prefix, falling back to prefix itself so toggling a repo-header button on
+// a subpage (/issues/42, /mrs/10) stays on that subpage.
+func safeReturnTo(r *http.Request, fallback string) string {
+	ref := r.Header.Get("Referer")
+	if ref == "" {
+		return fallback
+	}
+	u, err := url.Parse(ref)
+	if err != nil {
+		return fallback
+	}
+	if u.Host != "" && u.Host != r.Host {
+		return fallback
+	}
+	dest := u.RequestURI()
+	if !localPath(dest) || len(dest) > 300 {
+		return fallback
+	}
+	if dest == fallback || strings.HasPrefix(dest, fallback+"/") || strings.HasPrefix(dest, fallback+"?") {
+		return dest
+	}
+	return fallback
 }
 
 // pinToggle pins or unpins the repo for the logged-in viewer, through
@@ -290,7 +324,7 @@ func (s *Server) pinToggle(w http.ResponseWriter, r *http.Request, u store.User)
 	if _, msg, ok := s.runControl(u, []string{"repo", verb, repo.Path()}); !ok {
 		s.setFlash(w, msg)
 	}
-	http.Redirect(w, r, "/"+repo.Path(), http.StatusSeeOther)
+	http.Redirect(w, r, safeReturnTo(r, "/"+repo.Path()), http.StatusSeeOther)
 }
 
 // bookmarkToggle saves or unsaves a repository for the viewer. Read
@@ -308,7 +342,7 @@ func (s *Server) bookmarkToggle(w http.ResponseWriter, r *http.Request, u store.
 	if _, msg, ok := s.runControl(u, []string{"repo", verb, repo.Path()}); !ok {
 		s.setFlash(w, msg)
 	}
-	http.Redirect(w, r, "/"+repo.Path(), http.StatusSeeOther)
+	http.Redirect(w, r, safeReturnTo(r, "/"+repo.Path()), http.StatusSeeOther)
 }
 
 // bookmarksPage lists what the viewer has saved.
@@ -427,7 +461,42 @@ func (s *Server) signupSubmit(w http.ResponseWriter, r *http.Request) {
 		Username string
 		Message  string
 		Host     string
-	}{s.anonBase(), username, msg, s.cfg.SiteHost()})
+		Mode     string
+		Error    string
+	}{s.anonBase(), username, msg, s.cfg.SiteHost(), s.cfg.Registration.Mode, ""})
+}
+
+func (s *Server) signupVerifySubmit(w http.ResponseWriter, r *http.Request) {
+	if allowed, wait := s.apiLimit.allow("regverify"+s.clientIP(r), true); !allowed {
+		w.Header().Set("Retry-After", strconv.Itoa(int(wait.Seconds())+1))
+		http.Error(w, "too many verification attempts; wait a moment", http.StatusTooManyRequests)
+		return
+	}
+	username := strings.TrimSpace(r.FormValue("username"))
+	code := strings.TrimSpace(r.FormValue("code"))
+	u, errMsg := control.VerifyPendingSignup(s.cfg, s.st, username, code)
+	if errMsg != "" {
+		s.render(w, "registered.html", struct {
+			basePage
+			Username string
+			Message  string
+			Host     string
+			Mode     string
+			Error    string
+		}{s.anonBase(), username, "Check your inbox for the verification code.", s.cfg.SiteHost(), s.cfg.Registration.Mode, errMsg})
+		return
+	}
+	sessTok, sessHash, err := store.NewToken()
+	if err != nil {
+		http.Error(w, "internal error", http.StatusInternalServerError)
+		return
+	}
+	if err := s.st.CreateWebSession(sessHash, u.ID, 7*24*time.Hour); err != nil {
+		http.Error(w, "internal error", http.StatusInternalServerError)
+		return
+	}
+	http.SetCookie(w, s.sessionCookieFor(sessTok))
+	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
 
 // issueNewPage is what the new-issue form renders with, whether that is a
@@ -615,7 +684,7 @@ func (s *Server) mrCommentSubmit(w http.ResponseWriter, r *http.Request, u store
 func (s *Server) commentSubmit(w http.ResponseWriter, r *http.Request, u store.User, noun, segment string) {
 	repoPath := r.PathValue("owner") + "/" + r.PathValue("repo")
 	n := r.PathValue("n")
-	code, msg := s.dispatchJSON(u, []string{noun, "comment", repoPath, n, "--file", "-"}, strings.TrimSpace(r.FormValue("body")))
+	code, msg := s.dispatchJSON(u, []string{noun, "comment", repoPath, n, "--format", bodyFormat(r), "--file", "-"}, strings.TrimSpace(r.FormValue("body")))
 	if code != protocol.ExitOK {
 		http.Error(w, msg, statusForExit(code))
 		return
@@ -631,6 +700,11 @@ type editPage struct {
 	Content string
 	Error   string
 	Blocked string
+	// ProposeBranch is suggested when direct commits to Ref are blocked by
+	// require_mr (and signed commits are not required), enabling a 1-step
+	// branch-and-MR edit flow.
+	ProposeBranch string
+	RequireMR     bool
 	// Creating marks a path the branch does not have yet.
 	Creating bool
 	// Markup is set for a path the forge renders, which is where a
@@ -638,6 +712,17 @@ type editPage struct {
 	Markup bool
 	Draft  *draft
 	Nav    fileNav
+}
+
+func nextPatchBranch(dir, username string) string {
+	base := username + "-patch-"
+	for i := 1; i <= 50; i++ {
+		cand := base + strconv.Itoa(i)
+		if _, err := gitutil.ResolveRef(dir, "refs/heads/"+cand); err != nil {
+			return cand
+		}
+	}
+	return base + "edit"
 }
 
 func (s *Server) editForm(w http.ResponseWriter, r *http.Request, u store.User) {
@@ -648,14 +733,6 @@ func (s *Server) editForm(w http.ResponseWriter, r *http.Request, u store.User) 
 	ref := r.PathValue("ref")
 	filePath := strings.Trim(r.PathValue("path"), "/")
 
-	blocked := ""
-	switch {
-	case repo.Settings.RequireSignedCommits:
-		blocked = repo.Path() + " requires signed commits and the web editor cannot sign; edit locally and push a signed commit."
-	case repo.Settings.RequireMR && slices.Contains(repo.Settings.ProtectedBranches, ref):
-		blocked = "branch " + ref + " accepts changes through merge requests only; edit on another branch and open one."
-	}
-
 	dir := control.RepoDir(s.cfg.Server.Root, repo.OwnerName, repo.Name)
 	// A branch that does not exist has nothing to edit. A path that does
 	// not exist on a real branch is a new file: commit-file creates it.
@@ -663,6 +740,18 @@ func (s *Server) editForm(w http.ResponseWriter, r *http.Request, u store.User) 
 		s.notFound(w, r)
 		return
 	}
+
+	blocked := ""
+	requireMR := false
+	propose := ""
+	switch {
+	case repo.Settings.RequireSignedCommits:
+		blocked = repo.Path() + " requires signed commits and the web editor cannot sign; edit locally and push a signed commit."
+	case repo.Settings.RequireMR && slices.Contains(repo.Settings.ProtectedBranches, ref):
+		requireMR = true
+		propose = nextPatchBranch(dir, u.Username)
+	}
+
 	content, err := gitutil.ReadBlob(dir, "refs/heads/"+ref, filePath, maxRenderBytes)
 	creating := err != nil
 	if creating {
@@ -676,7 +765,8 @@ func (s *Server) editForm(w http.ResponseWriter, r *http.Request, u store.User) 
 	nav := fileNavFor(repo.Path(), ref, filePath, navEntries)
 	s.render(w, "edit.html", editPage{
 		basePage: s.baseFor(u), Repo: repo,
-		Ref: ref, Path: filePath, Content: string(content), Blocked: blocked, Creating: creating,
+		Ref: ref, Path: filePath, Content: string(content), Blocked: blocked,
+		ProposeBranch: propose, RequireMR: requireMR, Creating: creating,
 		Markup: markupFile(filePath),
 		Nav:    nav,
 	})
@@ -689,6 +779,8 @@ func (s *Server) editSubmit(w http.ResponseWriter, r *http.Request, u store.User
 	}
 	ref := r.PathValue("ref")
 	filePath := strings.Trim(r.PathValue("path"), "/")
+	targetBranch := strings.TrimSpace(r.FormValue("target_branch"))
+	requireMR := repo.Settings.RequireMR && slices.Contains(repo.Settings.ProtectedBranches, ref)
 
 	// Preview: the file as the blob page will render it, above the
 	// editor, with nothing committed. Only for paths the forge renders.
@@ -699,24 +791,41 @@ func (s *Server) editSubmit(w http.ResponseWriter, r *http.Request, u store.User
 		})
 		s.render(w, "edit.html", editPage{
 			basePage: s.baseFor(u), Repo: repo,
-			Ref: ref, Path: filePath, Content: content, Markup: true, Draft: d,
+			Ref: ref, Path: filePath, Content: content,
+			ProposeBranch: targetBranch, RequireMR: requireMR,
+			Markup: true, Draft: d,
 		})
 		return
 	}
 
-	// Editing is a control command; the web supplies the form and lets
-	// the registry enforce the rules — signed-commit policy, verified
-	// identity, archived repositories — so every surface agrees on them.
-	argv := []string{"repo", "commit-file", repo.Path(), filePath, "--ref", ref, "--file", "-"}
-	if message := strings.TrimSpace(r.FormValue("message")); message != "" {
+	commitRef := ref
+	var argv []string
+	if targetBranch != "" && targetBranch != ref {
+		commitRef = targetBranch
+		argv = []string{"repo", "commit-file", repo.Path(), filePath, "--ref", commitRef, "--from", ref, "--file", "-"}
+	} else {
+		argv = []string{"repo", "commit-file", repo.Path(), filePath, "--ref", ref, "--file", "-"}
+	}
+	message := strings.TrimSpace(r.FormValue("message"))
+	if message != "" {
 		argv = append(argv, "--message", message)
 	}
 	if msg, ok := s.runControlStdin(u, argv, r.FormValue("content")); !ok {
 		s.render(w, "edit.html", editPage{
 			basePage: s.baseFor(u), Repo: repo,
 			Ref: ref, Path: filePath, Content: r.FormValue("content"), Error: msg,
+			ProposeBranch: targetBranch, RequireMR: requireMR,
 			Markup: markupFile(filePath),
 		})
+		return
+	}
+	if commitRef != ref {
+		title := message
+		if title == "" {
+			title = "Update " + filePath
+		}
+		q := url.Values{"source": {commitRef}, "target": {ref}, "title": {title}}
+		http.Redirect(w, r, fmt.Sprintf("/%s/mrs/new?%s", repo.Path(), q.Encode()), http.StatusSeeOther)
 		return
 	}
 	http.Redirect(w, r, fmt.Sprintf("/%s/blob/%s/%s", repo.Path(), ref, filePath), http.StatusSeeOther)

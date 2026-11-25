@@ -22,6 +22,10 @@
     <li><a href="#tags">Protected tags</a></li>
     <li><a href="#deps">Dependencies</a></li>
     <li><a href="#runners">Runners</a></li>
+    <li><a href="#buildsecrets">Build secrets</a></li>
+    <li><a href="#deploykeys">Deploy keys</a></li>
+    <li><a href="#mirrors">Mirrors</a></li>
+    <li><a href="#domains">Pages domains</a></li>
     <li><a href="#lifecycle">Lifecycle</a></li>
   </ul></div>
 </details>
@@ -56,7 +60,7 @@
 </section>
 
 <section id="access" class="setcard"><h2>Access</h2>
-<form method="post" action="{{$base}}" class="setform">
+<form method="post" action="{{$base}}" class="setform" data-autosave="1">
   <input type="hidden" name="field" value="visibility">
   <div><span class="fieldname">Visibility</span></div>
   <div class="check">
@@ -179,7 +183,7 @@
 </section>
 
 {{if or .ScanAvailable .Security.Enabled}}<section id="security" class="setcard"><h2>Code scanning</h2>
-<form method="post" action="{{$base}}" class="setform">
+<form method="post" action="{{$base}}" class="setform" data-autosave="1">
   <input type="hidden" name="field" value="security">
   <div><label for="security-enabled">Scheduled scan</label><p class="hint">Runs the instance's code scanner over <code>{{.Repo.DefaultBranch}}</code> on its schedule, on a runner attached to this repository, and keeps an issue of what it finds.</p></div>
   <div class="check"><input type="checkbox" id="security-enabled" name="security" value="on"{{if .Security.Enabled}} checked{{end}}></div>
@@ -197,7 +201,7 @@
 {{if .Security.Findings}}<div class="tablewrap"><table class="keys">
 <tr class="cols"><th scope="col">location</th><th scope="col">rule</th><th scope="col">level</th><th scope="col"><span class="vh">dismiss</span></th></tr>
 {{range .Security.Findings}}<tr>
-  <td class="mono">{{.Path}}:{{.Line}}</td>
+  <td class="mono"><a href="/{{$.Repo.OwnerName}}/{{$.Repo.Name}}/blob/{{$.Repo.DefaultBranch}}/{{.Path}}#L{{.Line}}">{{.Path}}:{{.Line}}</a></td>
   <td class="mono">{{.Rule}}</td>
   <td>{{.Level}}</td>
   <td><form method="post" action="{{$base}}" class="inline">
@@ -214,7 +218,7 @@
 <div class="tablewrap"><table class="keys" id="sec-dismissed">
 <thead><tr class="cols"><th scope="col">location</th><th scope="col">rule</th><th scope="col">reason</th><th scope="col"><span class="vh">reopen</span></th></tr></thead>
 <tbody>{{range .Security.Dismissed}}<tr>
-  <td class="mono">{{.Path}}:{{.Line}}</td>
+  <td class="mono"><a href="/{{$.Repo.OwnerName}}/{{$.Repo.Name}}/blob/{{$.Repo.DefaultBranch}}/{{.Path}}#L{{.Line}}">{{.Path}}:{{.Line}}</a></td>
   <td class="mono">{{.Rule}}</td>
   <td>{{.Reason}}{{if .DismissedBy}} <span class="meta">by {{.DismissedBy}}</span>{{end}}</td>
   <td><form method="post" action="{{$base}}" class="inline">
@@ -302,7 +306,7 @@
 </section>
 
 <section id="deps" class="setcard"><h2>Dependencies</h2>
-<form method="post" action="{{$base}}" class="setform">
+<form method="post" action="{{$base}}" class="setform" data-autosave="1">
   <input type="hidden" name="field" value="deps">
   <div><label for="deps-enabled">Check for updates and advisories</label><p class="hint">Evaluates the manifests and lockfiles on <code>{{.Repo.DefaultBranch}}</code> against the registries and OSV, and opens an issue for each. Updates for Go, NPM, Crates, and PyPI; advisories for those and SwiftPM.</p></div>
   <div class="check"><input type="checkbox" id="deps-enabled" name="deps" value="on"{{if .DepsEnabled}} checked{{end}}></div>
@@ -380,6 +384,133 @@
     <span class="btngroup"><button type="submit">Attach runner</button></span>
   </form>
 </details>
+</section>
+
+<section id="buildsecrets" class="setcard"><h2>Build secrets</h2>
+<p class="meta">Injected into CI job environments on trusted branches. Values are write-only and never shown again.</p>
+{{if .Secrets}}
+<ul class="protlist">
+{{range .Secrets}}<li><code>{{.}}</code>
+  <form method="post" action="{{$base}}" class="inline">
+    <input type="hidden" name="field" value="secret-remove">
+    <input type="hidden" name="secret-name" value="{{.}}">
+    <button type="submit" class="danger">Remove</button>
+  </form></li>
+{{end}}
+</ul>
+{{else}}<p class="meta">No build secrets.</p>{{end}}
+<details class="editbox"{{if index .Submitted "secret-name"}} open{{end}}>
+  <summary>Set a build secret</summary>
+  <form method="post" action="{{$base}}" class="setform stack" autocomplete="off">
+    <input type="hidden" name="field" value="secret-set">
+    <label for="secret-name">Name</label>
+    <input type="text" id="secret-name" name="secret-name" value="{{index .Submitted "secret-name"}}" placeholder="DEPLOY_TOKEN" spellcheck="false" required>
+    <label for="secret-value">Value</label>
+    <input type="password" id="secret-value" name="secret-value" value="" autocomplete="new-password" required>
+    <span class="btngroup"><button type="submit">Save secret</button></span>
+  </form>
+</details>
+</section>
+
+<section id="deploykeys" class="setcard"><h2>Deploy keys</h2>
+<p class="meta">SSH keys bound to this repository only, for automated fetches or pushes.</p>
+{{if .DeployKeys}}<div class="tablewrap"><table class="keys nowrap">
+<thead><tr class="cols"><th scope="col">label</th><th scope="col">fingerprint</th><th scope="col">mode</th><th scope="col">last used</th><th scope="col">expires</th><th scope="col"><span class="vh">actions</span></th></tr></thead>
+<tbody>{{range .DeployKeys}}<tr>
+  <td>{{.Label}}</td>
+  <td class="mono">{{.Fingerprint}}</td>
+  <td><span class="chip">{{.Mode}}</span></td>
+  <td>{{if .LastUsedAt}}{{when .LastUsedAt}}{{else}}never{{end}}</td>
+  <td>{{if .ExpiresAt}}{{when .ExpiresAt}}{{else}}never{{end}}</td>
+  <td class="act"><form method="post" action="{{$base}}" class="inline">
+    <input type="hidden" name="field" value="deploykey-remove">
+    <input type="hidden" name="fingerprint" value="{{.Fingerprint}}">
+    <button type="submit" class="danger">Remove</button>
+  </form></td>
+</tr>{{end}}</tbody></table></div>
+{{else}}<p class="meta">No deploy keys.</p>{{end}}
+<details class="editbox"{{if index .Submitted "deploy-key"}} open{{end}}>
+  <summary>Add a deploy key</summary>
+  <form method="post" action="{{$base}}" class="setform stack">
+    <input type="hidden" name="field" value="deploykey-add">
+    <label for="deploy-key">Public key</label>
+    <textarea id="deploy-key" name="deploy-key" rows="3" spellcheck="false" placeholder="ssh-ed25519 AAAA… deploy@host" required>{{index .Submitted "deploy-key"}}</textarea>
+    <label for="deploy-ttl">Expires after</label>
+    <input type="text" id="deploy-ttl" name="ttl" placeholder="e.g. 30d or 720h; empty never expires" autocomplete="off">
+    <label class="check"><input type="checkbox" name="rw" value="on"> Allow push access (<code>--rw</code>)</label>
+    <span class="btngroup"><button type="submit">Add deploy key</button></span>
+  </form>
+</details>
+</section>
+
+<section id="mirrors" class="setcard"><h2>Mirrors</h2>
+<p class="meta">Push commits to an upstream HTTPS remote or pull refs from one.</p>
+{{if .Mirrors}}<div class="tablewrap"><table class="keys">
+<thead><tr class="cols"><th scope="col">id</th><th scope="col">direction</th><th scope="col">url</th><th scope="col">status</th><th scope="col"><span class="vh">actions</span></th></tr></thead>
+<tbody>{{range .Mirrors}}<tr>
+  <td class="mono">#{{.ID}}</td>
+  <td><span class="chip">{{.Direction}}</span></td>
+  <td class="mono">{{.URL}}</td>
+  <td>{{if .LastError}}<span class="check-failure">{{.LastError}}</span>{{else if .Pending}}pending sync{{else if .LastSync}}synced {{when .LastSync}}{{else}}never synced{{end}}</td>
+  <td class="act"><form method="post" action="{{$base}}" class="inline">
+    <input type="hidden" name="field" value="mirror-remove">
+    <input type="hidden" name="id" value="{{.ID}}">
+    <button type="submit" class="danger">Remove</button>
+  </form></td>
+</tr>{{end}}</tbody></table></div>
+<form method="post" action="{{$base}}" class="actions">
+  <input type="hidden" name="field" value="mirror-sync">
+  <button type="submit" class="btn">Sync mirrors now</button>
+</form>
+{{else}}<p class="meta">No mirrors configured.</p>{{end}}
+<details class="editbox"{{if index .Submitted "mirror-url"}} open{{end}}>
+  <summary>Add a mirror</summary>
+  <form method="post" action="{{$base}}" class="setform stack" autocomplete="off">
+    <input type="hidden" name="field" value="mirror-add">
+    <label for="mirror-url">Remote HTTPS URL</label>
+    <input type="text" id="mirror-url" name="mirror-url" value="{{index .Submitted "mirror-url"}}" placeholder="https://example.org/owner/repo.git" spellcheck="false" required>
+    <label for="mirror-dir">Direction</label>
+    <select id="mirror-dir" name="direction">
+      <option value="push">push: replicate local refs to remote</option>
+      <option value="pull">pull: track upstream refs (refuses local pushes)</option>
+    </select>
+    <label for="mirror-user">Remote username (optional)</label>
+    <input type="text" id="mirror-user" name="mirror-user" value="{{index .Submitted "mirror-user"}}" autocomplete="off" spellcheck="false">
+    <label for="mirror-token">Credential token (optional)</label>
+    <p class="hint">Sent once over stdin and stored encrypted; never shown again.</p>
+    <input type="password" id="mirror-token" name="mirror-token" value="" autocomplete="new-password">
+    <span class="btngroup"><button type="submit">Add mirror</button></span>
+  </form>
+</details>
+</section>
+
+<section id="domains" class="setcard"><h2>Pages domains</h2>
+<p class="meta">Custom hostnames serving this repository's pages branch once verified by DNS TXT record.</p>
+{{if .Domains}}<div class="tablewrap"><table class="keys">
+<thead><tr class="cols"><th scope="col">domain</th><th scope="col">state</th><th scope="col"><span class="vh">actions</span></th></tr></thead>
+<tbody>{{range .Domains}}<tr>
+  <td class="mono">{{.Domain}}</td>
+  <td><span class="chip {{if eq .State "verified"}}chip-open{{else if eq .State "expired"}}chip-closed{{else}}chip-stale{{end}}">{{.State}}</span></td>
+  <td class="act">
+    {{if ne .State "verified"}}<form method="post" action="{{$base}}" class="inline">
+      <input type="hidden" name="field" value="domain-verify">
+      <input type="hidden" name="domain" value="{{.Domain}}">
+      <button type="submit" class="btn">Verify DNS</button>
+    </form> {{end}}
+    <form method="post" action="{{$base}}" class="inline">
+      <input type="hidden" name="field" value="domain-remove">
+      <input type="hidden" name="domain" value="{{.Domain}}">
+      <button type="submit" class="danger">Remove</button>
+    </form>
+  </td>
+</tr>{{end}}</tbody></table></div>
+{{else}}<p class="meta">No custom pages domains.</p>{{end}}
+<form method="post" action="{{$base}}" class="setform">
+  <input type="hidden" name="field" value="domain-add">
+  <div><label for="pages-domain">Claim a domain</label><p class="hint">Public repositories only.</p></div>
+  <div><input type="text" id="pages-domain" name="domain" value="{{index .Submitted "domain"}}" placeholder="docs.example.org" spellcheck="false"></div>
+  <div><button type="submit" class="btn">Claim</button></div>
+</form>
 </section>
 
 <section id="lifecycle" class="setcard setcard-danger"><h2>Lifecycle</h2>

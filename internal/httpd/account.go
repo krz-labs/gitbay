@@ -21,6 +21,8 @@ type accountKey struct {
 	Algo        string
 	Scope       string
 	Label       string
+	LastUsed    string
+	Expires     string
 	Confirm     string // the 8 characters after SHA256: — a label can be empty
 }
 
@@ -73,7 +75,14 @@ func (s *Server) renderAccount(w http.ResponseWriter, r *http.Request, u store.U
 	if list, err := s.st.ListSSHKeys(u.ID); err == nil {
 		for _, k := range list {
 			confirm := prefix8(strings.TrimPrefix(k.Fingerprint, "SHA256:"))
-			keys = append(keys, accountKey{Fingerprint: k.Fingerprint, Algo: k.Algo, Scope: k.Scope, Label: k.Label, Confirm: confirm})
+			expires := "never"
+			if k.ExpiresAt != nil {
+				expires = k.ExpiresAt.UTC().Format("2006-01-02 15:04 UTC")
+			}
+			keys = append(keys, accountKey{
+				Fingerprint: k.Fingerprint, Algo: k.Algo, Scope: k.Scope, Label: k.Label,
+				LastUsed: k.LastUsedAt, Expires: expires, Confirm: confirm,
+			})
 		}
 	}
 	var pgp []accountPGP
@@ -122,6 +131,15 @@ func (s *Server) renderAccount(w http.ResponseWriter, r *http.Request, u store.U
 		}
 	}
 
+	var sessions []store.WebSession
+	s.runControlInto(u, []string{"web", "sessions", "list"}, &sessions)
+	currentSession := ""
+	if ck, err := r.Cookie(sessionCookie); err == nil {
+		if h := store.HashToken(ck.Value); len(h) >= 12 {
+			currentSession = h[:12]
+		}
+	}
+
 	// The about text is a file. The page points at it rather than editing
 	// it: the repository's own editor already does that job.
 	aboutRepo := u.Username + "/" + control.ProfileRepoName
@@ -135,33 +153,35 @@ func (s *Server) renderAccount(w http.ResponseWriter, r *http.Request, u store.U
 
 	s.render(w, "account.html", struct {
 		basePage
-		Tab          string // marks the rail's Settings row as current
-		Keys         []accountKey
-		PGP          []accountPGP
-		Emails       []store.Email
-		Profile      control.ProfileOut
-		LinksText    string
-		AboutRepo    string // <user>/.gitbay, which holds the about text
-		AboutEdit    string // the file editor's URL, empty when there is no file yet
-		Host         string
-		Notice       string
-		Message      string
-		MailOn       bool
-		WatchOn      bool
-		PushOn       bool
-		ReplyOn      bool
-		ReplyOffered bool // the instance reads replies to its mail
-		Devices      []accountDevice
-		ThemeSetting string // system, light or dark: the form's selected option
-		DiffSetting  string // unified or split: the form's selected option
-		Tokens       []accountToken
-		TokenShown   string // a token minted by this request, shown once
-		Reauth       bool   // Notice is the stale-session refusal: link to sign in
+		Tab            string // marks the rail's Settings row as current
+		Keys           []accountKey
+		PGP            []accountPGP
+		Emails         []store.Email
+		Profile        control.ProfileOut
+		LinksText      string
+		AboutRepo      string // <user>/.gitbay, which holds the about text
+		AboutEdit      string // the file editor's URL, empty when there is no file yet
+		Host           string
+		Notice         string
+		Message        string
+		MailOn         bool
+		WatchOn        bool
+		PushOn         bool
+		ReplyOn        bool
+		ReplyOffered   bool // the instance reads replies to its mail
+		Devices        []accountDevice
+		ThemeSetting   string // system, light or dark: the form's selected option
+		DiffSetting    string // unified or split: the form's selected option
+		Tokens         []accountToken
+		TokenShown     string // a token minted by this request, shown once
+		Sessions       []store.WebSession
+		CurrentSession string
+		Reauth         bool // Notice is the stale-session refusal: link to sign in
 	}{s.baseFor(u), "account", keys, pgp, emails, profile, profileLinksText(profile.Links),
 		aboutRepo, aboutEdit, s.cfg.SiteHost(),
 		notice, r.URL.Query().Get("m"), mailOn, watchOn, pushOn,
 		replyOn, s.cfg.Mail.Inbound.Enabled, devices, theme, diffPref,
-		tokens, tokenShown, reauth})
+		tokens, tokenShown, sessions, currentSession, reauth})
 }
 
 // accountExport hands the browser the same bundle `account export`
@@ -238,11 +258,33 @@ func (s *Server) accountSubmit(w http.ResponseWriter, r *http.Request, u store.U
 		if label := strings.TrimSpace(r.FormValue("label")); label != "" {
 			argv = append(argv, "--label", label)
 		}
+		if ttl := strings.TrimSpace(r.FormValue("ttl")); ttl != "" {
+			argv = append(argv, "--ttl", ttl)
+		}
 		if msg, ok := s.runControlStdin(u, argv, body+"\n"); !ok {
 			back(msg, "")
 			return
 		}
 		back("", "key registered")
+	case "session-revoke":
+		id := strings.TrimSpace(r.FormValue("id"))
+		if _, msg, ok := s.runControl(u, []string{"web", "sessions", "revoke", id}); !ok {
+			back(msg, "")
+			return
+		}
+		if ck, err := r.Cookie(sessionCookie); err == nil && strings.HasPrefix(store.HashToken(ck.Value), id) {
+			http.SetCookie(w, s.clearCookie(sessionCookie, sessionSameSite))
+			http.Redirect(w, r, "/", http.StatusSeeOther)
+			return
+		}
+		back("", "browser session ended")
+	case "session-revoke-all":
+		if _, msg, ok := s.runControl(u, []string{"web", "sessions", "revoke", "--all"}); !ok {
+			back(msg, "")
+			return
+		}
+		http.SetCookie(w, s.clearCookie(sessionCookie, sessionSameSite))
+		http.Redirect(w, r, "/", http.StatusSeeOther)
 	case "account-delete":
 		if ok, msg := confirmed(r, u.Username); !ok {
 			back(msg, "")

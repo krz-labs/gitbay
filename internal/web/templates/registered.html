@@ -2,8 +2,21 @@
 {{define "title"}}welcome · {{.Site}}{{end}}
 {{define "content"}}
 <div class="landing">
-<h1>Welcome, {{.Username}}</h1>
+<h1>welcome, {{.Username}}</h1>
+{{if str . "Error"}}<p class="error" role="alert">{{str . "Error"}}</p>{{end}}
 <pre class="quickstart" tabindex="0">{{.Message}}</pre>
+{{if eq (str . "Mode") "open"}}
+<section class="setcard">
+<h2>Verify your email now</h2>
+<p class="meta">Paste the verification code from your inbox to activate your account and sign straight in.</p>
+<form method="post" action="/register/verify" class="setform">
+  <input type="hidden" name="username" value="{{.Username}}">
+  <label for="reg-code">Verification code</label>
+  <input type="text" id="reg-code" name="code" required autocomplete="one-time-code" autocapitalize="none" spellcheck="false" placeholder="from the mail">
+  <button type="submit">Verify &amp; sign in</button>
+</form>
+</section>
+{{end}}
 <section class="setcard">
 <h2>On the web</h2>
 <ol>

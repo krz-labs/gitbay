@@ -149,3 +149,23 @@ func TestTokenContrast(t *testing.T) {
 		}
 	}
 }
+
+// TestEveryCSSVarIsDefined fails when style.css references a var(--name)
+// that neither :root nor a local component rule defines, catching stale
+// token names left over from earlier palettes.
+func TestEveryCSSVarIsDefined(t *testing.T) {
+	css := string(StyleCSS)
+	defined := map[string]bool{
+		// Supplied inline on .chip.label via style="--chip-l:...;--chip-d:..."
+		"chip-l": true,
+		"chip-d": true,
+	}
+	for _, m := range regexp.MustCompile(`--([a-zA-Z0-9_-]+)\s*:`).FindAllStringSubmatch(css, -1) {
+		defined[m[1]] = true
+	}
+	for _, m := range regexp.MustCompile(`var\(--([a-zA-Z0-9_-]+)`).FindAllStringSubmatch(css, -1) {
+		if !defined[m[1]] {
+			t.Errorf("style.css references undefined custom property --%s", m[1])
+		}
+	}
+}

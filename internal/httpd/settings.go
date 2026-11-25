@@ -32,6 +32,10 @@ type settingsPage struct {
 	ScanFrequency   string
 	ScanHour        int
 	Runners         []store.RepoRunner
+	Secrets         []string
+	DeployKeys      []deployKeyRow
+	Mirrors         []mirrorRow
+	Domains         []domainRow
 	Access          []accessRow
 	Hooks           []hookRow
 	Deliveries      []deliveryRow
@@ -39,6 +43,31 @@ type settingsPage struct {
 	Saved           bool
 	Reauth          bool // Notice is the stale-session refusal: link to sign in
 	Submitted       map[string]string
+}
+
+type deployKeyRow struct {
+	Fingerprint string `json:"fingerprint"`
+	Algo        string `json:"algo"`
+	Mode        string `json:"mode"`
+	Label       string `json:"label"`
+	LastUsedAt  string `json:"last_used_at"`
+	ExpiresAt   string `json:"expires_at"`
+}
+
+type mirrorRow struct {
+	ID        int64  `json:"id"`
+	Direction string `json:"direction"`
+	URL       string `json:"url"`
+	Username  string `json:"username"`
+	Pending   bool   `json:"pending"`
+	LastSync  string `json:"last_sync"`
+	LastError string `json:"last_error"`
+}
+
+type domainRow struct {
+	Domain   string `json:"domain"`
+	State    string `json:"state"`
+	Verified string `json:"verified_at"`
 }
 
 type accessRow struct {
@@ -92,6 +121,14 @@ func (s *Server) settingsFormWith(w http.ResponseWriter, r *http.Request, u stor
 	s.runControlInto(u, []string{"repo", "security", "status", repo.Path()}, &security)
 	var runners []store.RepoRunner
 	s.runControlInto(u, []string{"repo", "runner", "list", repo.Path()}, &runners)
+	var secrets []string
+	s.runControlInto(u, []string{"repo", "secret", "list", repo.Path()}, &secrets)
+	var deployKeys []deployKeyRow
+	s.runControlInto(u, []string{"repo", "deploy-key", "list", repo.Path()}, &deployKeys)
+	var mirrors []mirrorRow
+	s.runControlInto(u, []string{"repo", "mirror", "list", repo.Path()}, &mirrors)
+	var domains []domainRow
+	s.runControlInto(u, []string{"repo", "domain", "list", repo.Path()}, &domains)
 	var access []accessRow
 	s.runControlInto(u, []string{"repo", "access", "list", repo.Path()}, &access)
 	var hooks []hookRow
@@ -105,6 +142,7 @@ func (s *Server) settingsFormWith(w http.ResponseWriter, r *http.Request, u stor
 			"website":     submitted.Get("website"),
 			"topics":      submitted.Get("topics"),
 			"key":         submitted.Get("key"),
+			"deploy-key":  submitted.Get("deploy-key"),
 			"user":        submitted.Get("user"),
 			"role":        submitted.Get("role"),
 			"url":         submitted.Get("url"),
@@ -112,6 +150,10 @@ func (s *Server) settingsFormWith(w http.ResponseWriter, r *http.Request, u stor
 			"name":        submitted.Get("name"),
 			"new-owner":   submitted.Get("new-owner"),
 			"jobs":        submitted.Get("jobs"),
+			"secret-name": submitted.Get("secret-name"),
+			"mirror-url":  submitted.Get("mirror-url"),
+			"mirror-user": submitted.Get("mirror-user"),
+			"domain":      submitted.Get("domain"),
 		}
 	}
 	s.render(w, "settings.html", settingsPage{
@@ -122,6 +164,10 @@ func (s *Server) settingsFormWith(w http.ResponseWriter, r *http.Request, u stor
 		ScanFrequency:   s.cfg.Security.Frequency(repo.Settings.SecurityFrequency),
 		ScanHour:        s.cfg.Security.Hour,
 		Runners:         runners,
+		Secrets:         secrets,
+		DeployKeys:      deployKeys,
+		Mirrors:         mirrors,
+		Domains:         domains,
 		Access:          access, Hooks: hooks, Deliveries: deliveries,
 		Notice:    notice,
 		Saved:     strings.HasPrefix(notice, "Saved "),
@@ -283,6 +329,85 @@ func (s *Server) settingsSubmit(w http.ResponseWriter, r *http.Request, u store.
 		return
 	case "runner-remove":
 		argv = []string{"repo", "runner", "remove", repo, v("fingerprint")}
+	case "secret-set":
+		// Secret value travels on stdin only, never in argv, flash, or re-rendered HTML.
+		name := v("secret-name")
+		val := strings.TrimRight(r.FormValue("secret-value"), "\r\n")
+		if val == "" {
+			s.settingsFormWith(w, r, u, "enter a value for the build secret", r.Form)
+			return
+		}
+		if msg, ok := s.runControlStdin(u, []string{"repo", "secret", "set", repo, name}, val+"\n"); !ok {
+			s.settingsFormWith(w, r, u, msg, r.Form)
+			return
+		}
+		s.settingsRedirect(w, r, "Saved the build secret.")
+		return
+	case "secret-remove":
+		argv = []string{"repo", "secret", "remove", repo, v("secret-name")}
+	case "deploykey-add":
+		body := v("deploy-key")
+		if body == "" {
+			s.settingsFormWith(w, r, u, "paste a public key in authorized_keys format", r.Form)
+			return
+		}
+		argv := []string{"repo", "deploy-key", "add", repo}
+		if v("rw") == "on" {
+			argv = append(argv, "--rw")
+		}
+		if ttl := v("ttl"); ttl != "" {
+			argv = append(argv, "--ttl", ttl)
+		}
+		if msg, ok := s.runControlStdin(u, argv, body+"\n"); !ok {
+			s.settingsFormWith(w, r, u, msg, r.Form)
+			return
+		}
+		s.settingsRedirect(w, r, "Saved the deploy key.")
+		return
+	case "deploykey-remove":
+		argv = []string{"repo", "deploy-key", "remove", repo, v("fingerprint")}
+	case "mirror-add":
+		// Mirror token travels on stdin only, never in argv, flash, or re-rendered HTML.
+		argv := []string{"repo", "mirror", "add", repo, v("mirror-url"), "--direction", v("direction")}
+		if usr := v("mirror-user"); usr != "" {
+			argv = append(argv, "--username", usr)
+		}
+		var stdin string
+		if tok := strings.TrimSpace(r.FormValue("mirror-token")); tok != "" {
+			argv = append(argv, "--token-stdin")
+			stdin = tok + "\n"
+		}
+		if msg, ok := s.runControlStdin(u, argv, stdin); !ok {
+			s.settingsFormWith(w, r, u, msg, r.Form)
+			return
+		}
+		s.settingsRedirect(w, r, "Saved the mirror.")
+		return
+	case "mirror-remove":
+		argv = []string{"repo", "mirror", "remove", repo, v("id")}
+	case "mirror-sync":
+		if _, msg, ok := s.runControl(u, []string{"repo", "mirror", "sync", repo}); !ok {
+			s.settingsFormWith(w, r, u, msg, r.Form)
+			return
+		}
+		s.settingsRedirect(w, r, "Saved the mirror sync schedule.")
+		return
+	case "domain-add":
+		var claimed struct {
+			Domain         string `json:"domain"`
+			ChallengeName  string `json:"challenge_name"`
+			ChallengeValue string `json:"challenge_value"`
+		}
+		if msg, ok := s.runControlInto(u, []string{"repo", "domain", "add", repo, v("domain")}, &claimed); !ok {
+			s.settingsFormWith(w, r, u, msg, r.Form)
+			return
+		}
+		s.settingsRedirect(w, r, fmt.Sprintf("Saved the custom domain %s: add TXT %s = %s, then press Verify.", claimed.Domain, claimed.ChallengeName, claimed.ChallengeValue))
+		return
+	case "domain-verify":
+		argv = []string{"repo", "domain", "verify", repo, v("domain")}
+	case "domain-remove":
+		argv = []string{"repo", "domain", "remove", repo, v("domain")}
 	case "access-grant":
 		argv = []string{"repo", "access", "grant", repo, v("user"), v("role")}
 	case "access-revoke":
@@ -401,6 +526,14 @@ func fieldLabel(field string) string {
 		return "topics"
 	case "runner-add", "runner-remove":
 		return "runner"
+	case "secret-remove":
+		return "build secret"
+	case "deploykey-remove":
+		return "deploy key"
+	case "mirror-remove":
+		return "mirror"
+	case "domain-verify", "domain-remove":
+		return "custom domain"
 	case "access-grant", "access-revoke":
 		return "access"
 	case "webhook-remove":

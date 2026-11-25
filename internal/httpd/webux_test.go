@@ -172,3 +172,127 @@ func TestAccountAndAdminUX(t *testing.T) {
 		}
 	}
 }
+
+func TestPaletteJSONAndSafeReturnTo(t *testing.T) {
+	st, err := store.Open(":memory:")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer st.Close()
+	if err := st.MigrateUp(); err != nil {
+		t.Fatal(err)
+	}
+	uid, _ := st.CreateUser("alice", false)
+	repoID, _ := st.CreateRepo("user", uid, "rocket", "public")
+	st.CreateIssue(repoID, uid, "launch pad calibration", "body", "md")
+
+	var cfg config.Config
+	cfg.Server.Root = t.TempDir()
+	cfg.Server.SiteURL = "https://forge.test"
+	cfg.Web.Mode = "accounts"
+	srv := New(cfg, st, nil)
+	cookie := sessionCookieFor(t, srv, st, uid)
+	h := srv.Handler()
+
+	// Palette JSON endpoint returns matching repos and issues.
+	req := httptest.NewRequest("GET", "/search?format=palette&repo=alice/rocket&q=launch", nil)
+	req.AddCookie(cookie)
+	rec := httptest.NewRecorder()
+	h.ServeHTTP(rec, req)
+	if rec.Code != http.StatusOK || !strings.Contains(rec.Header().Get("Content-Type"), "application/json") {
+		t.Fatalf("palette search: %d %q", rec.Code, rec.Header().Get("Content-Type"))
+	}
+	if !strings.Contains(rec.Body.String(), "launch pad calibration") {
+		t.Errorf("palette response missing issue: %s", rec.Body.String())
+	}
+
+	// safeReturnTo preserves subpage under repo and rejects off-site or unrelated paths.
+	rSub := httptest.NewRequest("POST", "https://forge.test/alice/rocket/pin", nil)
+	rSub.Host = "forge.test"
+	rSub.Header.Set("Referer", "https://forge.test/alice/rocket/issues/1")
+	if got := safeReturnTo(rSub, "/alice/rocket"); got != "/alice/rocket/issues/1" {
+		t.Errorf("safeReturnTo subpage = %q, want /alice/rocket/issues/1", got)
+	}
+	rEvil := httptest.NewRequest("POST", "https://forge.test/alice/rocket/pin", nil)
+	rEvil.Host = "forge.test"
+	rEvil.Header.Set("Referer", "https://evil.example/alice/rocket/issues/1")
+	if got := safeReturnTo(rEvil, "/alice/rocket"); got != "/alice/rocket" {
+		t.Errorf("safeReturnTo cross-origin = %q, want /alice/rocket", got)
+	}
+}
+
+func TestANSIBuildLogAndSavedQueriesWebWrite(t *testing.T) {
+	got := string(ansiHTML("\x1b[1;31mFAIL\x1b[0m <script>alert(1)</script> \x1b[32mPASS\x1b[0m"))
+	for _, want := range []string{`class="ansi-bold ansi-red"`, `FAIL</span>`, `&lt;script&gt;`, `class="ansi-green"`, `PASS</span>`} {
+		if !strings.Contains(got, want) {
+			t.Errorf("ansiHTML missing %q in %s", want, got)
+		}
+	}
+
+	st, err := store.Open(":memory:")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer st.Close()
+	if err := st.MigrateUp(); err != nil {
+		t.Fatal(err)
+	}
+	uid, _ := st.CreateUser("alice", false)
+	repoID, _ := st.CreateRepo("user", uid, "app", "public")
+	st.CreateIssue(repoID, uid, "triage target", "", "md")
+
+	var cfg config.Config
+	cfg.Server.Root = t.TempDir()
+	cfg.Server.SiteURL = "https://forge.test"
+	cfg.Web.Mode = "accounts"
+	srv := New(cfg, st, nil)
+	cookie := sessionCookieFor(t, srv, st, uid)
+	h := srv.Handler()
+
+	// Save a query over the web, pin it, and run an ad-hoc query.
+	form := url.Values{"action": {"save"}, "name": {"triage"}, "query": {"is:open"}}
+	req := httptest.NewRequest("POST", "https://forge.test/alice/-/queries", strings.NewReader(form.Encode()))
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	req.Header.Set("Origin", "https://forge.test")
+	req.AddCookie(cookie)
+	rec := httptest.NewRecorder()
+	h.ServeHTTP(rec, req)
+	if rec.Code != http.StatusSeeOther || rec.Header().Get("Location") != "/alice/-/queries/triage" {
+		t.Fatalf("save query: %d loc=%q", rec.Code, rec.Header().Get("Location"))
+	}
+
+	req = httptest.NewRequest("GET", "/alice/-/queries?q=is%3Aopen", nil)
+	req.AddCookie(cookie)
+	rec = httptest.NewRecorder()
+	h.ServeHTTP(rec, req)
+	if rec.Code != http.StatusOK || !strings.Contains(rec.Body.String(), "triage target") {
+		t.Fatalf("ad-hoc query: %d\n%s", rec.Code, rec.Body.String())
+	}
+}
+
+func TestSettingsParitySectionsAndBrowserSessions(t *testing.T) {
+	e := newSettingsEnv(t)
+	rr := e.post(e.alice, url.Values{"field": {"secret-set"}, "secret-name": {"API_KEY"}, "secret-value": {"super-secret-val"}})
+	if rr.Code != http.StatusSeeOther {
+		t.Fatalf("secret-set: %d %s", rr.Code, rr.Body.String())
+	}
+	body := e.page(e.alice).Body.String()
+	if !strings.Contains(body, "API_KEY") || strings.Contains(body, "super-secret-val") {
+		t.Fatalf("secret visibility wrong on settings page:\n%s", body)
+	}
+	for _, want := range []string{`id="buildsecrets"`, `id="deploykeys"`, `id="mirrors"`, `id="domains"`} {
+		if !strings.Contains(body, want) {
+			t.Errorf("repo settings missing %s", want)
+		}
+	}
+
+	// Account settings lists browser sessions and revokes one.
+	cookie := sessionCookieFor(t, e.s, e.st, e.alice.ID)
+	req := httptest.NewRequest("GET", "/settings", nil)
+	req.AddCookie(cookie)
+	rec := httptest.NewRecorder()
+	e.s.accountPage(rec, req, e.alice)
+	if !strings.Contains(rec.Body.String(), `id="sessions"`) || !strings.Contains(rec.Body.String(), `this browser`) {
+		t.Errorf("account settings missing browser sessions:\n%s", rec.Body.String())
+	}
+}

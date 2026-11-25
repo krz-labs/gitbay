@@ -19,7 +19,7 @@
     <p class="meta">{{template "authorname" dict "Name" .AuthorName "User" .AuthorUser "Email" .AuthorEmail}} · {{when .Date}}</p>
   </div>
   <div class="commitside">
-    {{with .Check}}<a class="badge badge-{{.}}" href="/{{$.Repo.OwnerName}}/{{$.Repo.Name}}/commit/{{$c.SHA}}" title="checks: {{.}}">{{.}}</a>{{end}}
+    {{with .Check}}<a class="badge check-{{.}}" href="/{{$.Repo.OwnerName}}/{{$.Repo.Name}}/commit/{{$c.SHA}}" title="checks: {{.}}">{{.}}</a>{{end}}
     {{template "sigbadge" .Sig}}
     <code><a href="/{{$.Repo.OwnerName}}/{{$.Repo.Name}}/commit/{{.SHA}}">{{.ShortSHA}}</a></code>
   </div>

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"crypto/sha256"
 	"encoding/hex"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"hash/fnv"
@@ -354,6 +355,8 @@ type repoPage struct {
 	Topics      []string
 	Pinned      bool   // by the viewer
 	Marked      bool   // bookmarked by the viewer
+	Bookmarks   int    // public bookmark count
+	Forks       int    // public fork count
 	Watch       string // the viewer's watch state: watching, muted, or ""
 	HasWiki     bool
 	Host        string
@@ -436,12 +439,16 @@ func (s *Server) repoFor(w http.ResponseWriter, r *http.Request, ref string) (re
 		}
 	}
 	openIssues, openMRs := s.st.OpenCounts(repo.ID)
+	bookmarksCount := s.st.BookmarkCount(repo.ID)
+	forksList, _ := s.st.ListForks(repo.ID)
 	return repoPage{
 		basePage:    s.baseFor(viewer),
 		CanAdmin:    canAdmin,
 		Mirrors:     mirrors,
 		Pinned:      pinned,
 		Marked:      marked,
+		Bookmarks:   bookmarksCount,
+		Forks:       len(forksList),
 		Watch:       watch,
 		HasWiki:     s.hasWiki(repo),
 		Host:        s.cfg.SiteHost(),
@@ -777,6 +784,10 @@ func (s *Server) blob(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	binary := gitutil.IsBinary(data) || len(data) > maxRenderBytes
+	if linesParam := r.URL.Query().Get("lines"); linesParam != "" && !binary {
+		s.serveBlobLines(w, filePath, data, linesParam)
+		return
+	}
 	_, image := imageTypes[strings.ToLower(path.Ext(filePath))]
 
 	var codeHTML template.HTML
@@ -814,6 +825,12 @@ func (s *Server) blob(w http.ResponseWriter, r *http.Request) {
 	// The file listing leads with the last commit now, so the facts about
 	// the file itself are reported here instead.
 	entry, _ := gitutil.StatPath(p.Dir, p.Ref, filePath)
+	var fileTip namedCommit
+	if base != "" {
+		if lc := s.namedCommits(gitutil.LastCommits(p.Dir, p.Ref, navDir(filePath), []string{base})); lc != nil {
+			fileTip = lc[base]
+		}
+	}
 	s.render(w, "blob.html", struct {
 		repoPage
 		Crumbs       []crumb
@@ -821,6 +838,8 @@ func (s *Server) blob(w http.ResponseWriter, r *http.Request) {
 		Path         string
 		DirPath      string
 		RefKind      string
+		Commit       string
+		Tip          namedCommit
 		Binary       bool
 		Image        bool
 		Size         int
@@ -834,8 +853,46 @@ func (s *Server) blob(w http.ResponseWriter, r *http.Request) {
 		RenderedHTML template.HTML
 		Nav          fileNav
 		Symbols      []store.SymbolRow
-	}{p, cs, base, filePath, filePath, "blob", binary, image, len(data), lines,
+	}{p, cs, base, filePath, filePath, "blob", commit, fileTip, binary, image, len(data), lines,
 		entry.Mode == "100755", entry.Mode == "120000", branches, codeHTML, renderable, rendered, renderedHTML, nav, fileSymbols})
+}
+
+func (s *Server) serveBlobLines(w http.ResponseWriter, filePath string, data []byte, spec string) {
+	aStr, bStr, ok := strings.Cut(spec, ":")
+	from, err1 := strconv.Atoi(aStr)
+	to, err2 := strconv.Atoi(bStr)
+	if !ok || err1 != nil || err2 != nil || from < 1 || to < from || to-from > 100 {
+		http.Error(w, "bad lines range", http.StatusBadRequest)
+		return
+	}
+	rawLines := strings.Split(strings.TrimSuffix(string(data), "\n"), "\n")
+	if from > len(rawLines) {
+		w.Header().Set("Content-Type", "application/json; charset=utf-8")
+		w.Write([]byte(`{"lines":[]}`))
+		return
+	}
+	if to > len(rawLines) {
+		to = len(rawLines)
+	}
+	type lineItem struct {
+		N    int    `json:"n"`
+		HTML string `json:"html"`
+	}
+	lexer := lexers.Match(filePath)
+	var highlighted []template.HTML
+	if lexer != nil {
+		highlighted = highlightLines(lexer, strings.Join(rawLines[from-1:to], "\n")+"\n")
+	}
+	out := make([]lineItem, 0, to-from+1)
+	for idx := from - 1; idx < to; idx++ {
+		h := template.HTMLEscapeString(rawLines[idx])
+		if k := idx - (from - 1); k < len(highlighted) && highlighted[k] != "" {
+			h = string(highlighted[k])
+		}
+		out = append(out, lineItem{N: idx + 1, HTML: h})
+	}
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	json.NewEncoder(w).Encode(map[string]any{"lines": out})
 }
 
 // releases lists tag-anchored releases with notes and assets.
@@ -881,12 +938,13 @@ func (s *Server) releasesPage(w http.ResponseWriter, r *http.Request, previewFor
 			}
 		}
 	}
-	// An edit keeps the release's stored format; a new release has no
-	// picker and is markdown, as release create stores with no --format.
+	// An edit keeps the release's stored format; a new release reads the
+	// format picker, defaulting to markdown.
 	var d *draft
 	if previewForm != "" {
-		format := "md"
+		format := bodyFormat(r)
 		if tag, ok := strings.CutPrefix(previewForm, "release:"); ok {
+			format = "md"
 			for _, v := range views {
 				if v.Tag == tag {
 					format = v.NotesFormat
@@ -1098,18 +1156,24 @@ func (s *Server) blame(w http.ResponseWriter, r *http.Request) {
 
 	type hunkView struct {
 		gitutil.BlameHunk
-		ShortSHA string
-		Date     string
-		Sig      sigView
-		Numbered []numberedLine
+		ShortSHA  string
+		ParentSHA string
+		Date      string
+		Sig       sigView
+		Numbered  []numberedLine
 	}
+	blameLexer := lexers.Match(filePath)
 	var hunks []hunkView
 	sigs := map[string]sigView{}
+	parents := map[string]string{}
 	for _, h := range out.Hunks {
 		v, seen := sigs[h.SHA]
 		if !seen {
 			v, _ = s.sigFor(p.Repo, p.Dir, h.SHA)
 			sigs[h.SHA] = v
+			if ps := gitutil.Parents(p.Dir, h.SHA); len(ps) > 0 {
+				parents[h.SHA] = ps[0]
+			}
 		}
 		date := h.Date
 		if t, err := time.Parse(time.RFC3339, h.Date); err == nil {
@@ -1119,10 +1183,18 @@ func (s *Server) blame(w http.ResponseWriter, r *http.Request) {
 			BlameHunk: gitutil.BlameHunk{SHA: h.SHA, AuthorName: h.AuthorName,
 				AuthorEmail: h.AuthorEmail, Summary: h.Summary,
 				StartLine: h.StartLine, Lines: h.Lines},
-			ShortSHA: h.SHA[:min(10, len(h.SHA))], Date: date, Sig: v,
+			ShortSHA: h.SHA[:min(10, len(h.SHA))], ParentSHA: parents[h.SHA], Date: date, Sig: v,
+		}
+		var hl []template.HTML
+		if blameLexer != nil && len(h.Lines) > 0 {
+			hl = highlightLines(blameLexer, strings.Join(h.Lines, "\n")+"\n")
 		}
 		for i, l := range h.Lines {
-			hv.Numbered = append(hv.Numbered, numberedLine{h.StartLine + i, l})
+			var code template.HTML
+			if i < len(hl) {
+				code = hl[i]
+			}
+			hv.Numbered = append(hv.Numbered, numberedLine{h.StartLine + i, l, code})
 		}
 		hunks = append(hunks, hv)
 	}
@@ -1158,6 +1230,7 @@ func (s *Server) blame(w http.ResponseWriter, r *http.Request) {
 type numberedLine struct {
 	N    int
 	Text string
+	Code template.HTML
 }
 
 // chromaFormatter emits class-based markup (no inline colors), so the
@@ -1915,7 +1988,7 @@ var hexColorPat = regexp.MustCompile(`^#[0-9a-fA-F]{6}$`)
 // 4.5:1. TestChipCanvasMatchesStylesheet keeps these in step with the
 // tokens.
 const (
-	chipCanvasLight = "#ffffff"
+	chipCanvasLight = "#f7f8fa"
 	chipCanvasDark  = "#101114"
 	chipRatio       = 4.5
 )
@@ -2091,10 +2164,23 @@ func (s *Server) issues(w http.ResponseWriter, r *http.Request) {
 		issues = issues[:listPage]
 		older = olderLink(r, issues[len(issues)-1].Number)
 	}
+	ids := make([]int64, len(issues))
+	for i, iss := range issues {
+		ids[i] = iss.ID
+	}
 	if labels, err := s.st.ListIssueLabels(p.Repo); err == nil {
 		for i := range issues {
 			issues[i].Labels = labels[issues[i].ID]
 		}
+	}
+	if _, assignees, err := s.st.IssueLabelsFor(ids); err == nil {
+		for i := range issues {
+			issues[i].Assignees = assignees[issues[i].ID]
+		}
+	}
+	commentCounts, err := s.st.IssueCommentCounts(ids)
+	if err != nil {
+		commentCounts = map[int64]int{}
 	}
 	base := url.Values{"state": {state}, "label": {f.Label}, "assignee": {f.Assignee}, "author": {f.Author}, "milestone": {f.Milestone}, "q": {f.Search}}
 	readable, _ := control.ReadableScope(s.st, s.viewer(r), p.Repo)
@@ -2103,17 +2189,19 @@ func (s *Server) issues(w http.ResponseWriter, r *http.Request) {
 	facets := listFacets(base, []string{"open", "closed", "all"}, state, allLabels, openMS, false)
 	s.render(w, "issues.html", struct {
 		repoPage
-		State       string
-		Label       string
-		Query       string
-		Filters     []listFilter
-		Facets      []facetGroup
-		Issues      []store.Issue
-		LabelColors map[string]template.CSS
-		Older       string
+		State         string
+		Label         string
+		Query         string
+		Filters       []listFilter
+		Facets        []facetGroup
+		Issues        []store.Issue
+		CommentCounts map[int64]int
+		People        []string
+		LabelColors   map[string]template.CSS
+		Older         string
 	}{p, state, f.Label, f.Search,
 		activeFilters(state, [][2]string{{"label", f.Label}, {"assignee", f.Assignee}, {"author", f.Author}, {"milestone", f.Milestone}}),
-		facets, issues, s.labelColors(p.Repo), older})
+		facets, issues, commentCounts, s.repoPeople(p.Repo), s.labelColors(p.Repo), older})
 }
 
 func (s *Server) issue(w http.ResponseWriter, r *http.Request) {
@@ -2146,14 +2234,12 @@ func (s *Server) issuePage(w http.ResponseWriter, r *http.Request, previewForm s
 		return
 	}
 	md := s.ugcFor(r, p.Repo)
-	// An edit keeps the issue's stored format; a comment has no picker
-	// and is markdown, which is what issue comment stores with no
-	// --format.
+	// An edit keeps the issue's stored format; a comment reads the format picker.
 	var d *draft
 	if previewForm != "" {
 		format := iss.BodyFormat
 		if previewForm == "comment" {
-			format = "md"
+			format = bodyFormat(r)
 		}
 		d = s.draftFor(r, p.Repo, previewForm, "body", format)
 	}
@@ -2237,7 +2323,39 @@ func (s *Server) canEditItem(r *http.Request, repo store.Repo, author string) bo
 type mrRow struct {
 	store.MR
 	Check    string
+	Review   string
 	Comments int
+}
+
+// summarizeReviews computes the aggregate non-stale review state among
+// reviewers who count for merge gates: "changes_requested" beats "approved".
+func summarizeReviews(st *store.Store, repo store.Repo, revs []store.MRReview) string {
+	if len(revs) == 0 {
+		return ""
+	}
+	counts := control.ReviewersWhoCount(st, repo, revs)
+	latest := map[string]string{}
+	for _, rv := range revs {
+		if rv.Stale || !counts[rv.Reviewer] {
+			continue
+		}
+		if rv.Verdict == "approve" || rv.Verdict == "request_changes" {
+			latest[rv.Reviewer] = rv.Verdict
+		}
+	}
+	approved := false
+	for _, v := range latest {
+		if v == "request_changes" {
+			return "changes_requested"
+		}
+		if v == "approve" {
+			approved = true
+		}
+	}
+	if approved {
+		return "approved"
+	}
+	return ""
 }
 
 func (s *Server) mrs(w http.ResponseWriter, r *http.Request) {
@@ -2283,6 +2401,10 @@ func (s *Server) mrs(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		comments = map[int64]int{}
 	}
+	reviewsMap, err := s.st.MRReviewsFor(ids)
+	if err != nil {
+		reviewsMap = map[int64][]store.MRReview{}
+	}
 	labels, err := s.st.ListMRLabels(p.Repo)
 	if err != nil {
 		labels = map[int64][]string{}
@@ -2290,7 +2412,11 @@ func (s *Server) mrs(w http.ResponseWriter, r *http.Request) {
 	rows := make([]mrRow, len(mrs))
 	for i, m := range mrs {
 		m.Labels = labels[m.ID]
-		rows[i] = mrRow{MR: m, Check: checks[m.HeadSHA], Comments: comments[m.ID]}
+		rows[i] = mrRow{
+			MR: m, Check: checks[m.HeadSHA],
+			Review:   summarizeReviews(s.st, p.Repo, reviewsMap[m.ID]),
+			Comments: comments[m.ID],
+		}
 	}
 	base := url.Values{"state": {state}, "label": {mf.Label}, "author": {mf.Author}, "milestone": {mf.Milestone}, "q": {mf.Search}}
 	readable, _ := control.ReadableScope(s.st, s.viewer(r), p.Repo)
@@ -2305,12 +2431,13 @@ func (s *Server) mrs(w http.ResponseWriter, r *http.Request) {
 		Filters     []listFilter
 		Facets      []facetGroup
 		MRs         []mrRow
+		People      []string
 		LabelColors map[string]template.CSS
 		Older       string
 		CanOpenMR   bool
 	}{p, state, mf.Search,
 		activeFilters(state, [][2]string{{"label", mf.Label}, {"author", mf.Author}, {"milestone", mf.Milestone}}),
-		facets, rows, s.labelColors(p.Repo), older, canOpenMR})
+		facets, rows, s.repoPeople(p.Repo), s.labelColors(p.Repo), older, canOpenMR})
 }
 
 func (s *Server) mr(w http.ResponseWriter, r *http.Request) {
@@ -2369,7 +2496,17 @@ func (s *Server) mrPage(w http.ResponseWriter, r *http.Request, previewForm stri
 		}
 	}
 	var diffTruncated bool
-	if base != "" {
+	selectedCommit := strings.TrimSpace(r.URL.Query().Get("commit"))
+	if selectedCommit != "" {
+		if full, err := gitutil.ResolveRef(p.Dir, selectedCommit); err == nil {
+			selectedCommit = full
+			if patch, truncated, err := gitutil.ShowPatch(p.Dir, full, 4<<20); err == nil {
+				files, diffTruncated = parseDiff(patch), truncated
+			}
+		} else {
+			selectedCommit = ""
+		}
+	} else if base != "" {
 		if patch, truncated, err := gitutil.Diff(p.Dir, base, headRef, 4<<20); err == nil {
 			files, diffTruncated = parseDiff(patch), truncated
 		}
@@ -2478,13 +2615,12 @@ func (s *Server) mrPage(w http.ResponseWriter, r *http.Request, previewForm stri
 	// The merge requests this one superseded when it was closed, so the
 	// page it points to can also say what it supersedes.
 	supersedes, _ := s.st.MRsSuperseding(p.Repo.ID, m.Number)
-	// An edit keeps the merge request's stored format; a comment has no
-	// picker and is markdown, as mr comment stores with no --format.
+	// An edit keeps the merge request's stored format; a comment reads the format picker.
 	var d *draft
 	if previewForm != "" {
 		format := m.BodyFormat
 		if previewForm == "comment" {
-			format = "md"
+			format = bodyFormat(r)
 		}
 		d = s.draftFor(r, p.Repo, previewForm, "body", format)
 	}
@@ -2525,11 +2661,12 @@ func (s *Server) mrPage(w http.ResponseWriter, r *http.Request, previewForm stri
 		People          []string
 		Draft           *draft
 		Layout          diffLayout
+		SelectedCommit  string
 		Reactions       map[int64]reactionBar
 	}{p, m, view, md(m.Body, m.BodyFormat), checks, combined, renderComments(comments, md),
 		reviewRows, files, diffTruncated, stat, commits, commitsTotal, branches, s.canEditItem(r, p.Repo, m.Author),
 		canWrite, unresolved, pendingComments, revisions, s.takeFlash(w, r), detachedThreads, stackedOn, stacked, supersedes, gates,
-		sourceGone(p, m), headMerged, headPruned, base, s.labelColors(p.Repo), allLabels, s.repoPeople(p.Repo), d, layout, bars})
+		sourceGone(p, m), headMerged, headPruned, base, s.labelColors(p.Repo), allLabels, s.repoPeople(p.Repo), d, layout, selectedCommit, bars})
 }
 
 // sourceGone reports whether an MR's source branch no longer exists: the

@@ -151,6 +151,8 @@ func (s *Server) Routes() []Route {
 				Route{Method: "GET", Pattern: "/register", Handler: s.signupForm},
 				Route{Method: "POST", Pattern: "/register", Mutating: true,
 					Handler: s.checkOrigin(s.signupSubmit)},
+				Route{Method: "POST", Pattern: "/register/verify", Mutating: true,
+					Handler: s.checkOrigin(s.signupVerifySubmit)},
 			)
 		}
 		routes = append(routes,
@@ -193,6 +195,8 @@ func (s *Server) Routes() []Route {
 				Handler: s.checkOrigin(s.requireUser(s.orgMilestoneSubmit))},
 			Route{Method: "GET", Pattern: "/bookmarks", Handler: s.requireUser(s.bookmarksPage)},
 			Route{Method: "GET", Pattern: "/{owner}/-/queries", Handler: s.requireUser(s.queriesPage)},
+			Route{Method: "POST", Pattern: "/{owner}/-/queries", Mutating: true,
+				Handler: s.checkOrigin(s.requireUser(s.queriesSubmit))},
 			Route{Method: "GET", Pattern: "/{owner}/-/queries/{name}", Handler: s.requireUser(s.queriesPage)},
 			Route{Method: "GET", Pattern: "/{owner}/-/snippets/new", Handler: s.requireUser(s.snippetNewForm)},
 			Route{Method: "POST", Pattern: "/{owner}/-/snippets/new", Mutating: true,
@@ -243,6 +247,8 @@ func (s *Server) Routes() []Route {
 				Handler: s.checkOrigin(s.requireUser(s.mrDraftSubmit))},
 			Route{Method: "POST", Pattern: "/{owner}/{repo}/mrs/{n}/retarget", Mutating: true,
 				Handler: s.checkOrigin(s.requireUser(s.mrRetargetSubmit))},
+			Route{Method: "POST", Pattern: "/{owner}/{repo}/mrs/{n}/rebase", Mutating: true,
+				Handler: s.checkOrigin(s.requireUser(s.mrRebaseSubmit))},
 			Route{Method: "POST", Pattern: "/{owner}/{repo}/mrs/{n}/thread", Mutating: true,
 				Handler: s.checkOrigin(s.requireUser(s.mrThreadSubmit))},
 			Route{Method: "POST", Pattern: "/{owner}/{repo}/mrs/{n}/diff-comment", Mutating: true,

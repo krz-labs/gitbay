@@ -52,7 +52,7 @@ func TestSyntaxPaletteContrast(t *testing.T) {
 		exempt  map[chroma.TokenType]bool
 	}{
 		{lightStyle, map[string]chroma.Colour{
-			"page": chroma.NewColour(0xff, 0xff, 0xff),
+			"page": chroma.NewColour(0xf7, 0xf8, 0xfa),
 			"code": chroma.NewColour(0xff, 0xff, 0xff),
 			"add":  chroma.NewColour(0xe4, 0xf6, 0xea),
 			"del":  chroma.NewColour(0xfd, 0xea, 0xea),

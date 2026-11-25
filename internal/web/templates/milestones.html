@@ -28,7 +28,7 @@
 <ul class="milestonelist">
 {{range .Milestones}}<li>
   <div class="msmain">
-    <p class="title">{{.Title}} <span class="chip {{if eq .State "open"}}chip-open{{else}}chip-done{{end}}">{{.State}}</span>{{if .OrgID}} <span class="chip chip-neutral">org</span>{{end}}</p>
+    <p class="title"><a href="/{{$.Repo.OwnerName}}/{{$.Repo.Name}}/issues?milestone={{urlquery .Title}}">{{.Title}}</a> <span class="chip {{if eq .State "open"}}chip-open{{else}}chip-done{{end}}">{{.State}}</span>{{if .OrgID}} <span class="chip chip-neutral">org</span>{{end}}</p>
     {{if .Description}}<p class="desc">{{.Description}}</p>{{end}}
     <p class="meta">{{if .DueDate}}due {{.DueDate}} · {{end}}{{.ClosedItems}} closed, {{.OpenItems}} open · {{.Percent}}%</p>
     <div class="progress"><div class="bar" style="width: {{.Percent}}%"></div></div>

@@ -71,7 +71,7 @@
     <span class="count">{{.Bookmarks}}</span></p>
   {{if .Description}}<p class="desc">{{.Description}}</p>{{end}}
 </li>
-{{else}}<li class="empty">nothing bookmarked yet. open a repository and press Bookmark</li>{{end}}
+{{else}}<li class="empty">Nothing bookmarked yet — open a repository and press Bookmark.</li>{{end}}
 </ul>
 {{end}}
 
@@ -80,7 +80,7 @@
 {{if .Self}}<div class="listhead">
   <p class="meta"><code>gitbay snippet create &lt;file&gt; &lt; file</code></p>
   <span class="spacer"></span>
-  <a class="button" href="/{{.Owner}}/-/snippets/new">new snippet</a>
+  <a class="button" href="/{{.Owner}}/-/snippets/new" title="Create a new snippet">New snippet</a>
 </div>{{end}}
 <section class="setcard">
 {{if .SnippetRows}}<div class="tablewrap"><table class="keys">

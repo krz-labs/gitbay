@@ -4,7 +4,7 @@
 <h1>New</h1>
 {{if .Error}}<p class="error" role="alert">{{.Error}}</p>{{end}}
 
-<nav class="tabs newtabs" aria-label="Create" data-panel-tabs="new-panels">
+<nav class="tabs newtabs" aria-label="Create" data-panel-tabs="new-panels" data-active-panel="{{index .Submitted "panel"}}">
   <a href="#create" aria-current="page" data-panel="create">Repository</a>
   <a href="#import" data-panel="import">Import</a>
   <a href="#org" data-panel="org">Organization</a>
@@ -20,14 +20,14 @@
         <div class="ownerpick">
           <label for="new-owner">Owner</label>
           <select id="new-owner" name="owner">
-            <option value="{{.Viewer}}">{{.Viewer}}</option>
-            {{range .Orgs}}<option value="{{.}}">{{.}}</option>{{end}}
+            {{$co := index .Submitted "owner"}}<option value="{{.Viewer}}">{{.Viewer}}</option>
+            {{range .Orgs}}<option value="{{.}}"{{if eq . $co}} selected{{end}}>{{.}}</option>{{end}}
           </select>
         </div>
         <span class="slash" aria-hidden="true">/</span>
         <div class="namepick">
           <label for="new-name">Repository name</label>
-          <input id="new-name" name="name" required maxlength="63" pattern="[a-z0-9][a-z0-9._\-]{0,62}" aria-describedby="namehint" autocomplete="off" spellcheck="false" placeholder="my-project">
+          <input id="new-name" name="name" value="{{if ne (index .Submitted "panel") "import"}}{{if ne (index .Submitted "panel") "org"}}{{index .Submitted "name"}}{{end}}{{end}}" required maxlength="63" pattern="[a-z0-9][a-z0-9._\-]{0,62}" aria-describedby="namehint" autocomplete="off" spellcheck="false" placeholder="my-project">
         </div>
       </div>
       <span class="hint" id="namehint">Lowercase letters, digits, dot, dash and underscore; must start with a letter or digit; up to 63 characters.</span>
@@ -35,8 +35,8 @@
     <fieldset class="segmented">
       <legend>Visibility</legend>
       <div class="options">
-        <label><input type="radio" name="visibility" value="public" checked><span>Public</span></label>
-        <label><input type="radio" name="visibility" value="private"><span>Private</span></label>
+        <label><input type="radio" name="visibility" value="public"{{if ne (index .Submitted "visibility") "private"}} checked{{end}}><span>Public</span></label>
+        <label><input type="radio" name="visibility" value="private"{{if eq (index .Submitted "visibility") "private"}} checked{{end}}><span>Private</span></label>
       </div>
     </fieldset>
     <p><button type="submit">Create repository</button></p>
@@ -90,7 +90,7 @@
     <input type="hidden" name="field" value="org-create">
     <div class="field">
       <label for="org-name">Organization name</label>
-      <input id="org-name" name="name" required maxlength="63" pattern="[a-z0-9][a-z0-9._\-]{0,62}" aria-describedby="orghint" autocomplete="off" spellcheck="false" placeholder="acme-labs">
+      <input id="org-name" name="name" value="{{if eq (index .Submitted "panel") "org"}}{{index .Submitted "name"}}{{end}}" required maxlength="63" pattern="[a-z0-9][a-z0-9._\-]{0,62}" aria-describedby="orghint" autocomplete="off" spellcheck="false" placeholder="acme-labs">
       <span class="hint" id="orghint">Same naming rules as a repository; becomes a top-level path.</span>
     </div>
     <p><button type="submit">Create organization</button></p>

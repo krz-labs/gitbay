@@ -3,10 +3,41 @@ package httpd
 import (
 	"net/http"
 	"strconv"
+	"strings"
 
 	"gitbay.org/gitbay/internal/protocol"
 	"gitbay.org/gitbay/internal/store"
 )
+
+type rangeDiffLine struct {
+	Class string
+	Text  string
+}
+
+func parseRangeDiffLines(raw string) []rangeDiffLine {
+	if raw == "" {
+		return nil
+	}
+	rawLines := strings.Split(strings.TrimRight(raw, "\n"), "\n")
+	out := make([]rangeDiffLine, 0, len(rawLines))
+	for _, l := range rawLines {
+		cls := "rd-ctx"
+		switch {
+		case strings.HasPrefix(l, "++"), strings.HasPrefix(l, "+"):
+			cls = "rd-add"
+		case strings.HasPrefix(l, "--"), strings.HasPrefix(l, "-"):
+			cls = "rd-del"
+		case strings.HasPrefix(l, "    +"):
+			cls = "rd-add"
+		case strings.HasPrefix(l, "    -"):
+			cls = "rd-del"
+		case strings.Contains(l, ":  ") && (strings.Contains(l, " ! ") || strings.Contains(l, " = ") || strings.Contains(l, " < ") || strings.Contains(l, " > ")):
+			cls = "rd-hdr"
+		}
+		out = append(out, rangeDiffLine{Class: cls, Text: l})
+	}
+	return out
+}
 
 // mrRangeDiff renders what changed between two revisions of a merge
 // request — the same comparison `mr range-diff` prints on the CLI and
@@ -50,6 +81,7 @@ func (s *Server) mrRangeDiff(w http.ResponseWriter, r *http.Request) {
 		repoPage
 		MR    store.MR
 		Diff  string
+		Lines []rangeDiffLine
 		Error string
-	}{p, m, out, errMsg})
+	}{p, m, out, parseRangeDiffLines(out), errMsg})
 }

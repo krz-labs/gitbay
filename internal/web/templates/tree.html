@@ -9,7 +9,7 @@
   {{template "refmenu" .}}
   <span class="crumbs"><a href="/{{.Repo.OwnerName}}/{{.Repo.Name}}">{{.Repo.Name}}</a>/{{range .Crumbs}}<a href="{{.URL}}">{{.Name}}</a>/{{end}}</span>
   <span class="spacer"></span>
-  {{if .Entries}}<input type="search" class="treefilter" placeholder="Filter files…" aria-label="Filter files" data-filter-table="repo-tree">{{end}}
+  {{if .Entries}}<input type="search" class="treefilter" placeholder="Filter files…" aria-label="Filter files" data-filter-table="repo-tree" data-filter-col=".name">{{end}}
   <div class="acts">
     <a class="button btn" href="/{{.Repo.OwnerName}}/{{.Repo.Name}}/search">Search code</a>
     <a class="button btn" href="/{{.Repo.OwnerName}}/{{.Repo.Name}}/log/{{.Ref}}">History</a>
@@ -51,7 +51,7 @@
       {{if .Facts.Bookmarks}}<span><b>{{.Facts.Bookmarks}}</b> bookmark{{if ne .Facts.Bookmarks 1}}s{{end}}</span>{{end}}
       {{with .Facts.License}}<span class="fact">{{.}}</span>{{end}}
       {{with .Facts.Release}}<a href="{{$r}}/releases">latest <b>{{.}}</b></a>{{end}}
-      {{with .Facts.Build}}<a href="{{$r}}/builds">build <span class="badge badge-{{.}}">{{.}}</span></a>{{end}}
+      {{with .Facts.Build}}<a href="{{$r}}/builds">build <span class="badge check-{{.}}">{{.}}</span></a>{{end}}
     </div>
     {{with .Facts.Languages}}<p class="langbar" aria-hidden="true">{{range .}}<span class="lang lang-{{slug .Name}}" style="width:{{pct .Percent}}%"></span>{{end}}</p>
     <p class="langs">{{range .}}<span class="lang-name"><span class="dot lang-{{slug .Name}}"></span>{{.Name}} <span class="muted">{{pct .Percent}}%</span></span>{{end}}</p>{{end}}

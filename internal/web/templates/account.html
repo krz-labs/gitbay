@@ -22,6 +22,7 @@
     <li><a href="#notifications">Notifications</a></li>
     <li><a href="#appearance">Appearance</a></li>
     <li><a href="#tokens">API tokens</a></li>
+    <li><a href="#sessions">Browser sessions</a></li>
     <li><a href="#export">Export</a></li>
     <li><a href="#cli">On the command line</a></li>
     <li><a href="#delete">Delete account</a></li>
@@ -56,12 +57,14 @@ Write it with a push, or edit it here.</p>
 <p class="meta">Your keys are your identity here. A <code>full</code> key can run
 commands and push; a <code>git</code> key can only move git data (e.g., CI).</p>
 {{if .Keys}}<div class="tablewrap"><table class="keys nowrap">
-<tr class="cols"><th scope="col">label</th><th scope="col">fingerprint</th><th scope="col">type</th><th scope="col">scope</th><th scope="col"><span class="vh">actions</span></th></tr>
+<tr class="cols"><th scope="col">label</th><th scope="col">fingerprint</th><th scope="col">type</th><th scope="col">scope</th><th scope="col">last used</th><th scope="col">expires</th><th scope="col"><span class="vh">actions</span></th></tr>
 {{range .Keys}}<tr>
   <td>{{.Label}}</td>
   <td class="mono">{{.Fingerprint}}</td>
   <td>{{.Algo}}</td>
   <td><span class="chip">{{.Scope}}</span></td>
+  <td>{{if .LastUsed}}{{when .LastUsed}}{{else}}never{{end}}</td>
+  <td>{{.Expires}}</td>
   <td class="act"><details class="popover"><summary class="popbtn popbtn-danger">Remove</summary><div class="popmenu">
     <form method="post" action="/settings" class="popform"><input type="hidden" name="field" value="key-remove"><input type="hidden" name="fingerprint" value="{{.Fingerprint}}">{{template "confirmfield" .Confirm}}<button type="submit" class="danger">Remove</button></form>
   </div></details></td>
@@ -81,6 +84,8 @@ commands and push; a <code>git</code> key can only move git data (e.g., CI).</p>
       <option value="full">full: commands and git</option>
       <option value="git">git: git transport only</option>
     </select>
+    <label for="key-ttl">Expires after</label>
+    <input id="key-ttl" name="ttl" autocomplete="off" placeholder="e.g. 30d or 720h; empty never expires">
     <span class="btngroup"><button type="submit">Add key</button></span>
   </form>
 </details>
@@ -239,6 +244,29 @@ account and where notifications go.</p>
     <span class="btngroup"><button type="submit">Create token</button></span>
   </form>
 </details>
+</section>
+
+<section id="sessions" class="setcard"><h2>Browser sessions</h2>
+<p class="meta">Active browser sessions on your account, matching <code>gitbay web sessions list</code>.</p>
+{{if .Sessions}}<div class="tablewrap"><table class="keys nowrap">
+<tr class="cols"><th scope="col">id</th><th scope="col">signed in</th><th scope="col">last used</th><th scope="col">expires</th><th scope="col"><span class="vh">actions</span></th></tr>
+{{range .Sessions}}<tr>
+  <td class="mono">{{.ID}}{{if eq .ID $.CurrentSession}} <span class="chip">this browser</span>{{end}}</td>
+  <td>{{when .CreatedAt}}</td>
+  <td>{{if .LastUsedAt}}{{when .LastUsedAt}}{{else}}never{{end}}</td>
+  <td>{{when .ExpiresAt}}</td>
+  <td class="act"><form method="post" action="/settings" class="inline">
+    <input type="hidden" name="field" value="session-revoke">
+    <input type="hidden" name="id" value="{{.ID}}">
+    <button type="submit" class="danger">End</button>
+  </form></td>
+</tr>
+{{end}}</table></div>
+<form method="post" action="/settings" class="actions">
+  <input type="hidden" name="field" value="session-revoke-all">
+  <button type="submit" class="danger">End all browser sessions</button>
+</form>
+{{else}}<p class="none">No active browser sessions.</p>{{end}}
 </section>
 
 <section id="export" class="setcard"><h2>Export</h2>

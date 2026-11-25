@@ -15,5 +15,5 @@
   <pre class="message" tabindex="0">{{.Message}}</pre>
 </div>
 {{if .DiffTruncated}}<p class="error" role="alert">This patch is larger than 4 MiB and is cut off below. Clone the repository to see all of it.</p>{{end}}
-{{template "difffiles" dict "Files" .DiffFiles "Base" "" "Viewer" "" "L" .Layout}}
+{{template "difffiles" dict "Files" .DiffFiles "Base" "" "Viewer" "" "L" .Layout "RepoPath" .Repo.Path "HeadSHA" .SHA}}
 {{end}}

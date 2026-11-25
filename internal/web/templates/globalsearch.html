@@ -36,7 +36,7 @@
   {{/* the kind in the words the CLI prints, so a hit reads the same in
        both places; it is why the meta no longer says "repository" */}}
   <span class="chip chip-neutral">{{.Kind}}</span>
-  {{if .State}}<span class="chip chip-{{.State}}">{{.State}}</span>{{end}}
+  {{if .State}}<span class="chip {{if eq .State "open"}}chip-open{{else if or (eq .State "merged") (and (eq .Kind "issue") (eq .State "closed"))}}chip-done{{else if eq .State "source_gone"}}chip-source_gone{{else}}chip-closed{{end}}">{{.State}}</span>{{end}}
 </li>
 {{end}}
 </ul>

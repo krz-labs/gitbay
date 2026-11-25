@@ -179,6 +179,12 @@ func (s *Server) mrRetargetSubmit(w http.ResponseWriter, r *http.Request, u stor
 	s.done(w, r, code, msg, s.mrRedirect)
 }
 
+// mrRebaseSubmit rebases the merge request's source branch onto its target.
+func (s *Server) mrRebaseSubmit(w http.ResponseWriter, r *http.Request, u store.User) {
+	_, msg, code := s.runControlCode(u, mrArgs(r, "rebase"))
+	s.done(w, r, code, msg, s.mrRedirect)
+}
+
 // mrThreadSubmit resolves or reopens one review thread.
 func (s *Server) mrThreadSubmit(w http.ResponseWriter, r *http.Request, u store.User) {
 	verb := "resolve"

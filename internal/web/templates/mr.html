@@ -15,14 +15,47 @@
 
 {{if .Notice}}<p class="error" role="alert">{{.Notice}}</p>{{end}}
 
-<div class="withaside">
-<div class="mainside">
-
+{{$pc := field . "PendingComments"}}
+<div class="mrbar">
 <nav class="subtabs" aria-label="Merge request">
   <a {{if eq .View "conversation"}}aria-current="page" {{end}}href="{{$base}}">Conversation{{if .Comments}} <i>{{len .Comments}}</i>{{end}}</a>
   <a {{if eq .View "commits"}}aria-current="page" {{end}}href="{{$base}}?view=commits">Commits{{if .Commits}} <i>{{len .Commits}}</i>{{end}}</a>
   <a {{if eq .View "diff"}}aria-current="page" {{end}}href="{{$base}}?view=diff">Files changed{{if .Stat.Files}} <i>{{.Stat.Files}}</i>{{end}}</a>
 </nav>
+{{if and (eq .View "diff") .CanWrite (or (eq .MR.State "open") (eq .MR.State "source_gone"))}}
+<details class="popover finish-review">
+  <summary class="button">Review changes{{if $pc}} ({{$pc}}){{end}} ▾</summary>
+  <div class="popmenu review-popmenu">
+    {{if $pc}}<p class="review-pending">{{$pc}} pending diff comment{{if ne $pc 1}}s{{end}}</p>{{end}}
+    <form method="post" action="{{$base}}/review" class="actions">
+      <textarea name="body" aria-label="Review note" rows="3" placeholder="Summary review note (optional)…"></textarea>
+      <button type="submit" name="verdict" value="approve">Approve</button>
+      <button type="submit" name="verdict" value="request-changes" class="btn">Request changes</button>
+      {{if $pc}}<button type="submit" name="verdict" value="comment" class="btn">Submit comments</button>
+      <button type="submit" name="verdict" value="discard" class="danger">Discard pending</button>{{end}}
+    </form>
+  </div>
+</details>
+{{end}}
+</div>
+
+{{if eq .View "diff"}}
+{{$sel := str . "SelectedCommit"}}
+{{if gt (len .Commits) 1}}
+<nav class="statebar commit-picker" aria-label="Filter by commit">
+  <a {{if eq $sel ""}}aria-current="page" {{end}}href="{{$base}}?view=diff{{if .Layout.Carry}}&amp;layout={{.Layout.Carry}}{{end}}">All commits ({{len .Commits}})</a>
+  {{range .Commits}}<a {{if eq $sel .SHA}}aria-current="page" {{end}}href="{{$base}}?view=diff&amp;commit={{.SHA}}{{if $.Layout.Carry}}&amp;layout={{$.Layout.Carry}}{{end}}" title="{{.Subject}}"><code>{{.ShortSHA}}</code></a>{{end}}
+</nav>
+{{end}}
+{{if .DiffFiles}}<p class="diffstat">{{.Stat.Files}} file{{if ne .Stat.Files 1}}s{{end}} changed, <span class="add">+{{.Stat.Adds}}</span> <span class="del">−{{.Stat.Dels}}</span>{{if .DiffTruncated}} · shown up to 4 MiB; the counts and the last file are partial{{end}}</p>
+{{if .DiffTruncated}}<p class="error" role="alert">This diff is larger than 4 MiB and is cut off below. Fetch the branch to see all of it.</p>{{end}}
+{{template "difffiles" dict "Files" .DiffFiles "Base" $base "Viewer" .Viewer "L" .Layout "RepoPath" .Repo.Path "HeadSHA" .MR.HeadSHA}}
+{{else if .HeadPruned}}<p class="empty-note">The head of this merge request is no longer in the repository; its diff is not available.</p>
+{{else}}<p class="empty-note">No changes between the source and target.{{if .HeadMerged}} The source branch was already merged or fast-forwarded into <code>{{.MR.TargetRef}}</code>.{{end}}</p>{{end}}
+
+{{else}}
+<div class="withaside">
+<div class="mainside">
 
 {{if eq .View "conversation"}}
 <div class="prose">
@@ -34,15 +67,15 @@
 <p><textarea name="body" aria-label="Description" rows="8">{{.Draft.Or "edit" "body" .MR.Body}}</textarea></p>
 <p><button type="submit" class="btn">Save</button> {{template "previewbtn"}}</p>
 </form></details>{{end}}
-{{if .BodyHTML}}<article class="comment">
-  <header class="commenthead"><strong><a href="/{{.MR.Author}}">{{.MR.Author}}</a></strong></header>
+{{if .BodyHTML}}<article class="comment" id="mr-body">
+  <header class="commenthead"><strong><a href="/{{.MR.Author}}">{{.MR.Author}}</a></strong>{{if .MR.CreatedAt}} <span class="when">{{when .MR.CreatedAt}}</span>{{end}}{{if $.Viewer}}<span class="grow"></span><button type="button" class="linklike quote-btn" data-quote-from="mr-body">Quote</button>{{end}}</header>
   <div class="rendered">{{.BodyHTML}}</div>
   {{template "reactions" index .Reactions 0}}
 </article>{{else}}{{template "reactions" index .Reactions 0}}{{end}}
 {{range .Comments}}
 {{if eq .Kind "system"}}<div class="syscomment">{{.BodyHTML}} <span class="when">{{when .CreatedAt}}</span></div>
-{{else}}<article class="comment">
-  <header class="commenthead"><strong><a href="/{{.Author}}">{{.Author}}</a></strong> <span class="when">{{when .CreatedAt}}</span></header>
+{{else}}<article class="comment" id="comment-{{.ID}}">
+  <header class="commenthead"><strong><a href="/{{.Author}}">{{.Author}}</a></strong> <a class="when" href="#comment-{{.ID}}">{{when .CreatedAt}}</a>{{if $.Viewer}}<span class="grow"></span><button type="button" class="linklike quote-btn" data-quote-from="comment-{{.ID}}">Quote</button>{{end}}</header>
   <div class="rendered">{{.BodyHTML}}</div>
   {{template "reactions" index $.Reactions .ID}}
 </article>{{end}}
@@ -52,8 +85,8 @@
 {{if .Viewer}}
 {{if .Draft.Is "comment"}}{{template "previewblock" .Draft.HTML}}{{end}}
 <form method="post" action="{{$base}}/comment" class="commentform">
-<p><textarea name="body" aria-label="Comment" rows="4" placeholder="Comment as {{.Viewer}}">{{.Draft.Or "comment" "body" ""}}</textarea></p>
-<p><button type="submit">Comment</button> {{template "previewbtn"}}</p>
+<p><textarea id="main-comment-box" name="body" aria-label="Comment" rows="4" placeholder="Comment as {{.Viewer}}">{{.Draft.Or "comment" "body" ""}}</textarea></p>
+<p class="btngroup"><button type="submit">Comment</button> {{template "previewbtn"}} <label class="format-inline"><span class="vh">Comment markup</span><select name="format" aria-label="Comment markup">{{$cfmt := .Draft.Or "comment" "format" "md"}}<option value="md"{{if ne $cfmt "org"}} selected{{end}}>Markdown</option><option value="org"{{if eq $cfmt "org"}} selected{{end}}>Org</option></select></label></p>
 </form>
 {{end}}
 </div>
@@ -63,7 +96,7 @@
 <ul class="loglist">
 {{range .Commits}}<li>
   <div class="commitmain">
-    <p class="subject"><a href="/{{$.Repo.OwnerName}}/{{$.Repo.Name}}/commit/{{.SHA}}">{{.Subject}}</a></p>
+    <p class="subject"><a href="{{$base}}?view=diff&amp;commit={{.SHA}}">{{.Subject}}</a></p>
     <p class="meta">{{template "authorname" dict "Name" .AuthorName "User" .AuthorUser "Email" ""}} · {{when .Date}}</p>
   </div>
   <div class="commitside">
@@ -74,13 +107,6 @@
 {{else}}<li class="empty">no commits on this merge request</li>
 {{end}}
 </ul>
-
-{{else}}
-{{if .DiffFiles}}<p class="diffstat">{{.Stat.Files}} file{{if ne .Stat.Files 1}}s{{end}} changed, <span class="add">+{{.Stat.Adds}}</span> <span class="del">−{{.Stat.Dels}}</span>{{if .DiffTruncated}} · shown up to 4 MiB; the counts and the last file are partial{{end}}</p>
-{{if .DiffTruncated}}<p class="error" role="alert">This diff is larger than 4 MiB and is cut off below. Fetch the branch to see all of it.</p>{{end}}
-{{template "difffiles" dict "Files" .DiffFiles "Base" $base "Viewer" .Viewer "L" .Layout}}
-{{else if .HeadPruned}}<p class="empty-note">The head of this merge request is no longer in the repository; its diff is not available.</p>
-{{else}}<p class="empty-note">No changes between the source and target.{{if .HeadMerged}} The source branch was already merged or fast-forwarded into <code>{{.MR.TargetRef}}</code>.{{end}}</p>{{end}}
 {{end}}
 
 </div>
@@ -89,7 +115,7 @@
   {{if and .CanWrite (or (eq .MR.State "open") (eq .MR.State "source_gone"))}}
   <div class="grp">
     <h2>Review</h2>
-    {{$pc := field . "PendingComments"}}{{if $pc}}<p class="row review-pending">{{$pc}} pending diff comment{{if ne $pc 1}}s{{end}}</p>{{end}}
+    {{if $pc}}<p class="row review-pending">{{$pc}} pending diff comment{{if ne $pc 1}}s{{end}}</p>{{end}}
     <form method="post" action="{{$base}}/review" class="actions">
       <textarea name="body" aria-label="Review note" rows="2" placeholder="Optional review note"></textarea>
       <button type="submit" name="verdict" value="approve" class="btn">Approve</button>
@@ -107,18 +133,24 @@
       <input type="hidden" name="cancel" value="on">
       <button type="submit" class="btn">Cancel queued merge</button>
     </form>{{end}}
+    {{$reqSigned := .Repo.Settings.RequireSignedCommits}}{{$hasStacked := false}}{{with field . "Stacked"}}{{if .}}{{$hasStacked = true}}{{end}}{{end}}
     <form method="post" action="{{$base}}/merge" class="actions">
       <label class="none" for="strategy">Strategy</label>
       <select id="strategy" name="strategy">
         <option value="auto">Automatic</option>
         <option value="ff">Fast-forward</option>
-        <option value="merge">Merge commit</option>
-        <option value="squash">Squash</option>
-        <option value="rebase">Rebase</option>
+        <option value="merge"{{if $reqSigned}} disabled{{end}}>Merge commit{{if $reqSigned}} (disabled: signed commits){{end}}</option>
+        <option value="squash"{{if or $reqSigned $hasStacked}} disabled{{end}}>Squash{{if $reqSigned}} (disabled: signed commits){{else if $hasStacked}} (disabled: stacked MRs){{end}}</option>
+        <option value="rebase"{{if or $reqSigned $hasStacked}} disabled{{end}}>Rebase{{if $reqSigned}} (disabled: signed commits){{else if $hasStacked}} (disabled: stacked MRs){{end}}</option>
       </select>
       <button type="submit">Merge</button>
       <button type="submit" name="when_ready" value="on" class="btn">Merge when ready</button>
     </form>
+    {{with .Gates}}{{if and (not .FastForward) (not $reqSigned)}}
+    <form method="post" action="{{$base}}/rebase" class="actions">
+      <button type="submit" class="btn">Rebase onto {{$.MR.TargetRef}}</button>
+    </form>
+    {{end}}{{end}}
   </div>
   {{end}}
   {{if and .CanEdit (or (eq .MR.State "open") (eq .MR.State "source_gone"))}}
@@ -156,7 +188,7 @@
   </div>
   <div class="grp">
     <h2>Reviews</h2>
-    {{range .Reviews}}<p class="row"><span class="dot {{if eq .Verdict "approve"}}ok{{else}}pend{{end}}"></span><a href="/{{.Reviewer}}">{{.Reviewer}}</a> {{.Verdict}}{{if .Stale}} <span class="chip chip-stale">stale</span>{{end}}{{if not .Counts}} <span class="chip chip-neutral" title="This reviewer has no write access, so the merge gates do not count it">advisory</span>{{end}}<span class="sub">{{when .CreatedAt}}</span></p>
+    {{range .Reviews}}<p class="row"><span class="dot {{if eq .Verdict "approve"}}ok{{else if eq .Verdict "request_changes"}}bad{{else}}pend{{end}}"></span><a href="/{{.Reviewer}}">{{.Reviewer}}</a> {{if eq .Verdict "approve"}}approved{{else if eq .Verdict "request_changes"}}requested changes{{else if eq .Verdict "comment"}}commented{{else}}{{.Verdict}}{{end}}{{if .Stale}} <span class="chip chip-stale">stale</span>{{end}}{{if not .Counts}} <span class="chip chip-neutral" title="This reviewer has no write access, so the merge gates do not count it">advisory</span>{{end}}<span class="sub">{{when .CreatedAt}}</span></p>
     {{else}}<p class="none">none yet</p>{{end}}
   </div>
   {{if .Revisions}}<div class="grp">
@@ -198,7 +230,7 @@
   </div>
   {{if .MR.Milestone}}<div class="grp">
     <h2>Milestone</h2>
-    <p class="row"><a href="/{{.Repo.OwnerName}}/{{.Repo.Name}}/milestones">{{.MR.Milestone}}</a></p>
+    <p class="row"><a href="/{{.Repo.OwnerName}}/{{.Repo.Name}}/mrs?milestone={{urlquery .MR.Milestone}}">{{.MR.Milestone}}</a></p>
   </div>{{end}}
   <div class="grp">
     <div class="grp-head">
@@ -217,5 +249,6 @@
   </div>
 </aside>
 </div>
+{{end}}
 {{end}}
 

@@ -12,6 +12,11 @@
     <input type="hidden" name="state" value="{{.State}}">
   </form>
   {{range .Filters}}<p class="meta">{{.Key}}: {{if eq .Key "label"}}<span class="chip label" style="{{index $.LabelColors .Value}}">{{.Value}}</span>{{else}}<b>{{.Value}}</b>{{end}} <a href="{{.Clear}}">clear</a></p>{{end}}
+  {{with field . "People"}}{{if .}}
+  <details class="popover"><summary class="popbtn">Author ▾</summary><div class="popmenu">
+    <div class="picker-list">{{range .}}<a class="picker-btn" href="?state={{$.State}}&amp;author={{urlquery .}}">{{.}}</a>{{end}}</div>
+  </div></details>
+  {{end}}{{end}}
   <span class="spacer"></span>
   {{if .CanOpenMR}}<a class="button" href="/{{.Repo.OwnerName}}/{{.Repo.Name}}/mrs/new">New merge request</a>
   {{else if .Viewer}}<a class="button btn" href="/{{.Repo.OwnerName}}/{{.Repo.Name}}/fork">Fork this repository to propose a change</a>
@@ -23,10 +28,10 @@
   <div class="issuemain">
     <p class="title"><a href="/{{$.Repo.OwnerName}}/{{$.Repo.Name}}/mrs/{{.Number}}">{{.Title}}</a>
     {{range .Labels}}<a class="chip label" style="{{index $.LabelColors .}}" href="?label={{.}}">{{.}}</a> {{end}}</p>
-    <p class="meta">!{{.Number}} by <a href="/{{.Author}}">{{.Author}}</a> · {{if .SourcePath}}{{.SourcePath}}:{{end}}{{.SourceRef}} → {{.TargetRef}}</p>
+    <p class="meta">!{{.Number}} by <a href="/{{.Author}}">{{.Author}}</a> · {{if .SourcePath}}{{.SourcePath}}:{{end}}{{.SourceRef}} → {{.TargetRef}}{{if .Milestone}} · in <a href="/{{$.Repo.OwnerName}}/{{$.Repo.Name}}/mrs?milestone={{urlquery .Milestone}}">{{.Milestone}}</a>{{end}}{{if .UpdatedAt}} · {{when .UpdatedAt}}{{end}}</p>
   </div>
   <div class="issueside">
-    {{if .Draft}}<span class="chip chip-neutral">draft</span> {{end}}{{if eq $.State "all"}}<span class="chip chip-{{.State}}">{{.State}}</span> {{end}}{{with .Check}}<a class="chip check-{{.}}" href="/{{$.Repo.OwnerName}}/{{$.Repo.Name}}/mrs/{{$n}}?view=diff" title="checks: {{.}}">{{.}}</a> {{end}}{{if .Comments}}<span class="chip chip-neutral" title="{{.Comments}} comment{{if ne .Comments 1}}s{{end}}">{{.Comments}} <span class="vh">comments</span></span>{{end}}
+    {{if .Draft}}<span class="chip chip-neutral">draft</span> {{end}}{{if eq $.State "all"}}<span class="chip chip-{{.State}}">{{.State}}</span> {{end}}{{if eq .Review "approved"}}<span class="chip chip-open">approved</span> {{else if eq .Review "changes_requested"}}<span class="chip chip-closed">changes requested</span> {{end}}{{with .Check}}<a class="chip check-{{.}}" href="/{{$.Repo.OwnerName}}/{{$.Repo.Name}}/mrs/{{$n}}?view=diff" title="checks: {{.}}">{{.}}</a> {{end}}{{if .Comments}}<span class="chip chip-neutral" title="{{.Comments}} comment{{if ne .Comments 1}}s{{end}}">{{.Comments}} <span class="vh">comments</span></span>{{end}}
   </div>
 </li>
 {{else}}{{if .Query}}<li class="empty">no {{if ne .State "all"}}{{.State}} {{end}}merge requests matching “{{.Query}}”</li>

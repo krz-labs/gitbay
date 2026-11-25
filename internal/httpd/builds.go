@@ -283,6 +283,7 @@ func (s *Server) build(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	v.Log, _, _ = s.runControl(viewer, []string{"build", "log", p.Repo.Path(), n})
+	v.LogHTML = ansiHTML(v.Log)
 	v.Steps, v.Failed = logSteps(v.Log, b)
 	if b.DurationS > 0 {
 		v.Duration = (time.Duration(b.DurationS) * time.Second).String()
@@ -292,8 +293,9 @@ func (s *Server) build(w http.ResponseWriter, r *http.Request) {
 
 type buildView struct {
 	repoPage
-	Build control.BuildOut
-	Log   string
+	Build   control.BuildOut
+	Log     string
+	LogHTML template.HTML
 	// Steps is the finished log cut at its steps, nil when there is no
 	// step to cut at; Failed says whether one of them is marked failed.
 	Steps    []logStep
@@ -308,8 +310,9 @@ type logStep struct {
 	control.LogSection
 	// Head is the step's first line, which its fold's summary shows, as
 	// build show does; the full step is in the log below it.
-	Head   string
-	Failed bool
+	Head     string
+	TextHTML template.HTML
+	Failed   bool
 }
 
 // logSteps cuts a finished build's log at its steps and marks the one it
@@ -330,9 +333,114 @@ func logSteps(log string, b control.BuildOut) ([]logStep, bool) {
 	out := make([]logStep, len(sections))
 	for i, s := range sections {
 		head, _, _ := strings.Cut(s.Step, "\n")
-		out[i] = logStep{LogSection: s, Head: head, Failed: i == failed}
+		out[i] = logStep{LogSection: s, Head: head, TextHTML: ansiHTML(s.Text), Failed: i == failed}
 	}
 	return out, failed >= 0
+}
+
+// ansiHTML escapes build log text and converts standard SGR ANSI sequences
+// (\x1b[...m) into semantic <span class="ansi-*"> elements.
+func ansiHTML(raw string) template.HTML {
+	if !strings.ContainsRune(raw, '\x1b') {
+		return template.HTML(template.HTMLEscapeString(raw))
+	}
+	var b strings.Builder
+	b.Grow(len(raw) + 64)
+	var bold, dim bool
+	var fg string
+	open := false
+	closeSpan := func() {
+		if open {
+			b.WriteString("</span>")
+			open = false
+		}
+	}
+	openSpan := func() {
+		var cls []string
+		if bold {
+			cls = append(cls, "ansi-bold")
+		}
+		if dim {
+			cls = append(cls, "ansi-dim")
+		}
+		if fg != "" {
+			cls = append(cls, fg)
+		}
+		if len(cls) > 0 {
+			b.WriteString(`<span class="`)
+			b.WriteString(strings.Join(cls, " "))
+			b.WriteString(`">`)
+			open = true
+		}
+	}
+	for i := 0; i < len(raw); {
+		esc := strings.IndexByte(raw[i:], '\x1b')
+		if esc < 0 {
+			b.WriteString(template.HTMLEscapeString(raw[i:]))
+			break
+		}
+		if esc > 0 {
+			b.WriteString(template.HTMLEscapeString(raw[i : i+esc]))
+			i += esc
+		}
+		if i+1 >= len(raw) || raw[i+1] != '[' {
+			i++
+			continue
+		}
+		j := i + 2
+		for j < len(raw) && ((raw[j] >= '0' && raw[j] <= '9') || raw[j] == ';') {
+			j++
+		}
+		if j >= len(raw) {
+			break
+		}
+		cmd := raw[j]
+		params := raw[i+2 : j]
+		i = j + 1
+		if cmd != 'm' {
+			continue
+		}
+		closeSpan()
+		if params == "" || params == "0" {
+			bold, dim, fg = false, false, ""
+			continue
+		}
+		for _, part := range strings.Split(params, ";") {
+			code, err := strconv.Atoi(part)
+			if err != nil {
+				continue
+			}
+			switch code {
+			case 0:
+				bold, dim, fg = false, false, ""
+			case 1:
+				bold = true
+			case 2:
+				dim = true
+			case 22:
+				bold, dim = false, false
+			case 39:
+				fg = ""
+			case 31, 91:
+				fg = "ansi-red"
+			case 32, 92:
+				fg = "ansi-green"
+			case 33, 93:
+				fg = "ansi-yellow"
+			case 34, 94:
+				fg = "ansi-blue"
+			case 35, 95:
+				fg = "ansi-magenta"
+			case 36, 96:
+				fg = "ansi-cyan"
+			case 30, 37, 90, 97:
+				fg = "ansi-muted"
+			}
+		}
+		openSpan()
+	}
+	closeSpan()
+	return template.HTML(b.String())
 }
 
 // liveLogMarker stands in for the log when build.html is rendered for a

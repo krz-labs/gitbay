@@ -206,3 +206,28 @@ func TestParseDiffKeepsDashAfterMarker(t *testing.T) {
 		}
 	}
 }
+
+func TestParseDiffIntraLineHighlighting(t *testing.T) {
+	files := parseDiff(samplePatch)
+	var delCode, addCode string
+	for _, l := range files[0].Lines {
+		if l.Class == "del" && l.OldLine == 3 {
+			delCode = string(l.Code)
+		}
+		if l.Class == "add" && l.NewLine == 3 {
+			addCode = string(l.Code)
+		}
+	}
+	if !strings.Contains(delCode, `class="idiff-del"`) {
+		t.Errorf("deleted line missing idiff-del span: %s", delCode)
+	}
+	if !strings.Contains(addCode, `class="idiff-add"`) {
+		t.Errorf("added line missing idiff-add span: %s", addCode)
+	}
+	if got := stripTags(delCode); got != "func old() string {" {
+		t.Errorf("deleted line text corrupted: %q", got)
+	}
+	if got := stripTags(addCode); got != "func replaced() string {" {
+		t.Errorf("added line text corrupted: %q", got)
+	}
+}

@@ -76,12 +76,29 @@ func TestEveryTemplateClassHasARule(t *testing.T) {
 		for _, m := range attrRe.FindAllStringSubmatch(clean, -1) {
 			for _, c := range strings.Fields(m[1]) {
 				if strings.Contains(c, "\x00") {
+					prefix, _, _ := strings.Cut(c, "\x00")
+					if prefix != "" {
+						hasPrefix := false
+						for s := range styled {
+							if strings.HasPrefix(s, prefix) {
+								hasPrefix = true
+								break
+							}
+						}
+						if !hasPrefix {
+							missing[prefix+"*"] = append(missing[prefix+"*"], e.Name())
+						}
+					}
 					continue // composed at render time; the concrete values have rules
 				}
 				if !styled[c] {
 					missing[c] = append(missing[c], e.Name())
 				}
 			}
+		}
+		// Build/check states use check-*, never badge-* (which is for signatures).
+		if strings.Contains(string(src), `badge-{{.}}`) {
+			t.Errorf("%s uses badge-{{.}} instead of check-{{.}}", e.Name())
 		}
 	}
 	var names []string

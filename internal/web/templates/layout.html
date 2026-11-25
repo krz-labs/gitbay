@@ -35,6 +35,7 @@
   </form>
   <span class="railgap"></span>
   <div class="railfoot">
+    <button type="button" class="railicon kbhelp-trigger" aria-label="Keyboard shortcuts" title="Keyboard shortcuts (?)">{{template "icon" "kbd"}}<span class="vh">Keyboard shortcuts</span></button>
     {{if .Viewer}}
     <details class="railcreate">
       <summary class="railicon raildrop-trigger" aria-label="Create new" title="Create new">{{template "icon" "plus"}}<span class="railcaret" aria-hidden="true">▾</span><span class="vh">Create new</span></summary>
@@ -42,6 +43,7 @@
         <a href="/new#create">{{template "icon" "plus"}} New repository</a>
         <a href="/new#import">{{template "icon" "file"}} Import repository</a>
         <a href="/new#org">{{template "icon" "person"}} New organization</a>
+        <a href="/{{.Viewer}}/-/snippets/new">{{template "icon" "snippet"}} New snippet</a>
       </div>
     </details>
     {{template "raillink" dict "Href" "/notifications" "Icon" "bell" "Name" "Notifications" "Current" (eq (str . "Tab") "notifications") "Count" .Rail.Unread}}
@@ -50,7 +52,10 @@
       <div class="raildrop">
         <a class="railuser" href="/{{.Viewer}}">{{template "icon" "person"}} <span><strong>{{.Viewer}}</strong></span></a>
         <a href="/{{.Viewer}}/-/repositories">{{template "icon" "folder"}} Your repositories</a>
-        <a href="/{{.Viewer}}/-/bookmarks">{{template "icon" "bookmark"}} Bookmarks</a>
+        <a href="/{{.Viewer}}/-/snippets">{{template "icon" "snippet"}} Your snippets</a>
+        <a href="/{{.Viewer}}/-/queries">{{template "icon" "query"}} Saved queries</a>
+        <a href="/{{.Viewer}}/-/bookmarks">{{template "icon" "star"}} Bookmarks</a>
+        {{if .Rail.Pins}}<div class="railpins-mob"><hr class="railsep">{{range .Rail.Pins}}<a href="/{{.Owner}}/{{.Name}}">{{template "icon" "pin"}} {{.Owner}}/{{.Name}}</a>{{end}}</div>{{end}}
         <hr class="railsep">
         {{$settings := index $items 1}}<a{{if $settings.Current}} aria-current="page"{{end}} href="{{$settings.Href}}">{{template "icon" $settings.Icon}} {{$settings.Name}}</a>
         {{$admin := index $items 2}}{{if $admin.Show}}<a{{if $admin.Current}} aria-current="page"{{end}} href="{{$admin.Href}}">{{template "icon" $admin.Icon}} {{$admin.Name}}</a>{{end}}
@@ -67,7 +72,7 @@
 <header class="repohead">
 <div class="wrap">
   {{$top := topTab (str $ "Tab")}}
-  <div class="identity">
+  <div class="identity" data-repo="{{.OwnerName}}/{{.Name}}" data-ref="{{or (str $ "Ref") .DefaultBranch}}">
     {{if field $ "RepoHome"}}<h1 class="repotitle"><a class="owner" href="/{{.OwnerName}}">{{.OwnerName}}</a><span class="sep">/</span>{{.Name}}</h1>
     {{else}}<p class="repotitle"><a class="owner" href="/{{.OwnerName}}">{{.OwnerName}}</a><span class="sep">/</span><a href="/{{.OwnerName}}/{{.Name}}">{{.Name}}</a></p>{{end}}
     {{if eq .Visibility "private"}}<span class="chip">Private</span>{{end}}
@@ -76,10 +81,14 @@
          with the name so the header is two rows on every page. */}}
     {{if eq $top "code"}}{{if or (field $ "Desc") (field $ "Topics") $.Repo.Settings.Website}}<p class="repodesc">{{with field $ "Desc"}}{{.}}{{end}} {{with field $ "Topics"}}{{range .}}<a class="chip topic" href="/explore?q={{.}}">{{.}}</a> {{end}}{{end}}{{with $.Repo.Settings.Website}}<a class="site" href="{{.}}" rel="nofollow">{{.}}</a>{{end}}</p>{{end}}{{end}}
     <span class="grow"></span>
-    {{if $.Viewer}}<form method="post" action="/{{.OwnerName}}/{{.Name}}/pin" class="inline"><button type="submit" class="btn" aria-pressed="{{if field $ "Pinned"}}true{{else}}false{{end}}" title="Pinned repositories show on your dashboard"><span aria-hidden="true">{{if field $ "Pinned"}}★{{else}}☆{{end}}</span> {{if field $ "Pinned"}}Pinned{{else}}Pin{{end}}</button></form>
-    <form method="post" action="/{{.OwnerName}}/{{.Name}}/watch" class="inline"><button type="submit" class="btn" aria-pressed="{{if ne (str $ "Watch") ""}}true{{else}}false{{end}}" title="{{if eq (str $ "Watch") "watching"}}Watching: every issue, request and build. Click to mute.{{else if eq (str $ "Watch") "muted"}}Muted: nothing from this repository. Click to stop muting.{{else}}Only what involves you. Click to watch everything.{{end}}">{{if eq (str $ "Watch") "watching"}}Watching{{else if eq (str $ "Watch") "muted"}}Muted{{else}}Watch{{end}}</button></form>
-    <form method="post" action="/{{.OwnerName}}/{{.Name}}/bookmark" class="inline"><button type="submit" class="btn" aria-pressed="{{if field $ "Marked"}}true{{else}}false{{end}}" title="Bookmarked lists it under Bookmarks">{{if field $ "Marked"}}Bookmarked{{else}}Bookmark{{end}}</button></form>
-    <a class="button btn" href="/{{.OwnerName}}/{{.Name}}/fork">Fork</a>{{end}}
+    {{if $.Viewer}}<form method="post" action="/{{.OwnerName}}/{{.Name}}/pin" class="inline"><button type="submit" class="btn" aria-pressed="{{if field $ "Pinned"}}true{{else}}false{{end}}" title="Pinned repositories show on your dashboard"><span aria-hidden="true">{{template "icon" "pin"}}</span> {{if field $ "Pinned"}}Pinned{{else}}Pin{{end}}</button></form>
+    <div class="splitbtn"><form method="post" action="/{{.OwnerName}}/{{.Name}}/watch" class="inline"><button type="submit" class="btn" aria-pressed="{{if ne (str $ "Watch") ""}}true{{else}}false{{end}}" title="{{if eq (str $ "Watch") "watching"}}Watching: every issue, request and build. Click to mute.{{else if eq (str $ "Watch") "muted"}}Muted: nothing from this repository. Click to stop muting.{{else}}Only what involves you. Click to watch everything.{{end}}"><span class="btnicon" aria-hidden="true">{{template "icon" "eye"}}</span>{{if eq (str $ "Watch") "watching"}}Watching{{else if eq (str $ "Watch") "muted"}}Muted{{else}}Watch{{end}}</button></form><details class="popover watchpop"><summary class="button btn splitcaret" aria-label="Choose notification level">▾</summary><div class="popmenu">
+      <form method="post" action="/{{.OwnerName}}/{{.Name}}/watch" class="inline"><input type="hidden" name="mode" value="default"><button type="submit" class="watchopt" aria-pressed="{{if eq (str $ "Watch") ""}}true{{else}}false{{end}}"><b>Participating</b><span>Only threads and mentions that involve you.</span></button></form>
+      <form method="post" action="/{{.OwnerName}}/{{.Name}}/watch" class="inline"><input type="hidden" name="mode" value="watching"><button type="submit" class="watchopt" aria-pressed="{{if eq (str $ "Watch") "watching"}}true{{else}}false{{end}}"><b>Watching</b><span>Every issue, merge request, and build.</span></button></form>
+      <form method="post" action="/{{.OwnerName}}/{{.Name}}/watch" class="inline"><input type="hidden" name="mode" value="muted"><button type="submit" class="watchopt" aria-pressed="{{if eq (str $ "Watch") "muted"}}true{{else}}false{{end}}"><b>Muted</b><span>Silence all alerts from this repository.</span></button></form>
+    </div></details></div>
+    <form method="post" action="/{{.OwnerName}}/{{.Name}}/bookmark" class="inline"><button type="submit" class="btn" aria-pressed="{{if field $ "Marked"}}true{{else}}false{{end}}" title="Bookmarked lists it under Bookmarks">{{template "icon" "star"}} {{if field $ "Marked"}}Bookmarked{{else}}Bookmark{{end}}{{with field $ "Bookmarks"}}{{if .}} <i class="btncount">{{.}}</i>{{end}}{{end}}</button></form>
+    <a class="button btn" href="/{{.OwnerName}}/{{.Name}}/fork">{{template "icon" "fork"}} Fork{{with field $ "Forks"}}{{if .}} <i class="btncount">{{.}}</i>{{end}}{{end}}</a>{{end}}
   </div>
   {{if eq $top "code"}}{{if field $ "Mirrors"}}<p class="repometa">{{range $i, $m := field $ "Mirrors"}}{{if $i}} · {{end}}{{if eq $m.Direction "push"}}mirrors to{{else}}mirrors from{{end}} <a href="{{$m.URL}}" rel="nofollow">{{$m.Target}}</a>{{if $m.Error}}, <span class="bad">sync error: {{$m.Error}}</span>{{else if $m.Synced}}, synced {{$m.Synced}}{{end}}{{end}}</p>{{end}}{{end}}
   {{/* A tab's own count badge is omitted at zero (an empty <i> reads as
@@ -111,8 +120,39 @@
 </div>
 <dialog id="cmdk" class="cmdk" aria-label="Jump to">
   <div class="cmdk-box">
-    <input type="search" aria-label="Filter destinations" placeholder="Jump to repository, tab, or page…">
+    <input type="search" aria-label="Filter destinations" placeholder="Jump to repository, file, issue, MR, or page…">
     <ul class="cmdk-list"></ul>
+  </div>
+</dialog>
+<dialog id="kbhelp" class="cmdk kbhelp" aria-label="Keyboard shortcuts">
+  <div class="kbhelp-head">
+    <strong>Keyboard shortcuts</strong>
+    <button type="button" class="linklike kbhelp-close">Close</button>
+  </div>
+  <div class="kbhelp-grid">
+    <div>
+      <h2 class="colhead">Global</h2>
+      <dl class="kblist">
+        <div><dt><kbd>⌘K</kbd></dt><dd>Command palette &amp; jump</dd></div>
+        <div><dt><kbd>/</kbd></dt><dd>Focus search</dd></div>
+        <div><dt><kbd>?</kbd></dt><dd>Show this help</dd></div>
+        <div><dt><kbd>g</kbd> <kbd>d</kbd></dt><dd>Dashboard</dd></div>
+        <div><dt><kbd>g</kbd> <kbd>e</kbd></dt><dd>Explore repositories</dd></div>
+        <div><dt><kbd>g</kbd> <kbd>n</kbd></dt><dd>Notifications</dd></div>
+      </dl>
+    </div>
+    <div>
+      <h2 class="colhead">Repository &amp; editor</h2>
+      <dl class="kblist">
+        <div><dt><kbd>t</kbd></dt><dd>Find file in repository</dd></div>
+        <div><dt><kbd>y</kbd></dt><dd>Copy immutable SHA permalink</dd></div>
+        <div><dt><kbd>g</kbd> <kbd>c</kbd></dt><dd>Code tab</dd></div>
+        <div><dt><kbd>g</kbd> <kbd>i</kbd></dt><dd>Issues tab</dd></div>
+        <div><dt><kbd>g</kbd> <kbd>m</kbd></dt><dd>Merge requests tab</dd></div>
+        <div><dt><kbd>g</kbd> <kbd>b</kbd></dt><dd>Builds tab</dd></div>
+        <div><dt><kbd>⌘↵</kbd></dt><dd>Submit active form</dd></div>
+      </dl>
+    </div>
   </div>
 </dialog>
 </body>
@@ -137,6 +177,12 @@
 {{- else if eq . "person"}}<circle cx="8" cy="5.5" r="2.75"/><path d="M2.75 14a5.25 5.25 0 0 1 10.5 0"/>
 {{- else if eq . "folder"}}<path d="M1.75 3.25h4l1.5 1.75h6.5v7.5a.5.5 0 0 1-.5.5H2.25a.5.5 0 0 1-.5-.5Z"/>
 {{- else if eq . "file"}}<path d="M3.25 2.75h6L12.75 6v7.25a.5.5 0 0 1-.5.5H3.75a.5.5 0 0 1-.5-.5Z"/><path d="M9 2.75V6h3.75"/>
+{{- else if eq . "pin"}}<path d="m9.5 2.25 4.25 4.25-1.75 1.25-.75 3-4.5-4.5 3-.75Z"/><path d="M6.75 9.25 2.5 13.5"/>
+{{- else if eq . "star"}}<path d="m8 2 1.85 3.75 4.15.6-3 2.92.71 4.13L8 11.45 4.29 13.4 5 9.27 2 6.35l4.15-.6Z"/>
+{{- else if eq . "fork"}}<circle cx="5" cy="3.5" r="1.5"/><circle cx="11" cy="3.5" r="1.5"/><circle cx="8" cy="12.5" r="1.5"/><path d="M5 5v2a3 3 0 0 0 3 3m3-5v2a3 3 0 0 1-3 3m0 0v1"/>
+{{- else if eq . "eye"}}<path d="M1.5 8s2.5-4.5 6.5-4.5S14.5 8 14.5 8s-2.5 4.5-6.5 4.5S1.5 8 1.5 8Z"/><circle cx="8" cy="8" r="2"/>
+{{- else if eq . "query"}}<path d="M2.5 4.25h11M4.5 8h7M6.5 11.75h3"/>
+{{- else if eq . "kbd"}}<rect x="1.75" y="3.75" width="12.5" height="8.5" rx="1.5"/><path d="M4.5 6.75h.01M8 6.75h.01M11.5 6.75h.01M5 9.75h6"/>
 {{- end}}</svg>{{end}}
 
 {{/* raillink draws one square in the rail: the icon, the name for a
@@ -179,7 +225,7 @@
 {{define "sidecol"}}<nav class="sidecol" aria-label="Filters">
 <details class="sidedrop">
 <summary><span class="sideword">Filters</span>{{range .}}{{range .Items}}{{if .Active}} <span class="sideon">{{.Label}}</span>{{end}}{{end}}{{end}}</summary>
-  {{range .}}{{if .Items}}<div class="grp">
+  {{range .}}{{if .Items}}<div class="grp{{if eq .Title "State"}} grp-state{{end}}">
   <h2 class="colhead">{{.Title}}</h2>
   <ul>{{range .Items}}<li><a{{if .Active}} aria-current="page"{{end}} href="{{.Href}}">{{.Label}}{{if .Count}} <i>{{.Count}}</i>{{end}}</a></li>{{end}}</ul>
   </div>{{end}}{{end}}
@@ -208,7 +254,7 @@
      hands the page back instead of writing (#235). */}}
 {{/* reactions is one item's reaction bar (reactionBar in httpd). A
      signed-in viewer gets a button per reaction; anyone else the counts. */}}
-{{define "reactions"}}{{if .Items}}{{if .Signed}}<form method="post" action="{{.Action}}" class="reactions">{{if .Comment}}<input type="hidden" name="comment" value="{{.Comment}}">{{end}}
+{{define "reactions"}}{{if .Items}}{{if .Signed}}<form method="post" action="{{.Action}}" class="reactions" data-react-slot="{{.Comment}}">{{if .Comment}}<input type="hidden" name="comment" value="{{.Comment}}">{{end}}
 {{range .Items}}<button type="submit" name="{{if .Me}}remove{{else}}add{{end}}" value="{{.Name}}" class="react{{if .Me}} mine{{end}}" aria-pressed="{{.Me}}" aria-label="{{.Label}}">{{.Emoji}}{{if .Count}} <span>{{.Count}}</span>{{end}}</button>
 {{end}}</form>{{else}}<p class="reactions">{{range .Items}}<span class="react" aria-label="{{.Label}}">{{.Emoji}} {{.Count}}</span> {{end}}</p>{{end}}{{end}}{{end}}
 
@@ -229,21 +275,25 @@
      line-number gutters and review threads inline. Base is the MR's
      endpoint and Viewer the signed-in account; the commit page passes
      neither and gets the same diff without review controls. */}}
-{{define "difffiles"}}{{$base := .Base}}{{$viewer := .Viewer}}{{$L := .L}}{{$split := false}}{{with $L}}{{$split = .Split}}{{end}}
-{{with $L}}{{if .UnifiedURL}}<p class="layoutpick">Layout: {{if .Split}}<a href="{{.UnifiedURL}}">unified</a> · <strong aria-current="true">split</strong>{{else}}<strong aria-current="true">unified</strong> · <a href="{{.SplitURL}}">split</a>{{end}}</p>{{end}}{{end}}
+{{define "difffiles"}}{{$base := .Base}}{{$viewer := .Viewer}}{{$L := .L}}{{$repoPath := or .RepoPath ""}}{{$headSHA := or .HeadSHA ""}}{{$split := false}}{{with $L}}{{$split = .Split}}{{end}}
+{{with $L}}{{if .UnifiedURL}}<div class="diffbar"><p class="layoutpick">Layout: {{if .Split}}<a href="{{.UnifiedURL}}">unified</a> · <strong aria-current="true">split</strong>{{else}}<strong aria-current="true">unified</strong> · <a href="{{.SplitURL}}">split</a>{{end}}</p></div>{{end}}{{end}}
+<div class="diffwrap{{if gt (len .Files) 1}} diffgrid{{end}}"{{if $repoPath}} data-repo="{{$repoPath}}"{{end}}{{if $headSHA}} data-head="{{$headSHA}}"{{end}}>
 {{if gt (len .Files) 1}}<details class="difftoc" open>
   <summary>Changed files ({{len .Files}})</summary>
-  <ul class="difftoc-list">{{range $fi, $f := .Files}}<li><a href="#f{{$fi}}">{{.Path}}</a>{{if ne .Status "modified"}} <span class="chip">{{.Status}}</span>{{end}} <span class="fstat">{{if .Adds}}<span class="add">+{{.Adds}}</span>{{end}}{{if .Dels}} <span class="del">−{{.Dels}}</span>{{end}}</span></li>{{end}}</ul>
+  {{if gt (len .Files) 5}}<input type="search" class="reffilter" placeholder="Filter changed files…" aria-label="Filter changed files" data-filter-links="difftoc">{{end}}
+  <ul class="difftoc-list">{{range $fi, $f := .Files}}<li data-toc-path="{{.Path}}"><a href="#f{{$fi}}">{{.Path}}</a>{{if ne .Status "modified"}} <span class="chip">{{.Status}}</span>{{end}}{{if .Threads}} <span class="chip chip-neutral" title="{{.Threads}} thread{{if ne .Threads 1}}s{{end}}">💬 {{.Threads}}</span>{{end}} <span class="fstat">{{if .Adds}}<span class="add">+{{.Adds}}</span>{{end}}{{if .Dels}} <span class="del">−{{.Dels}}</span>{{end}}</span></li>{{end}}</ul>
 </details>{{end}}
-{{range $fi, $f := .Files}}<details class="difffold" id="f{{$fi}}"{{if .Open}} open{{end}}>
+<div class="difflist">
+{{range $fi, $f := .Files}}<details class="difffold" id="f{{$fi}}" data-file-path="{{.Path}}"{{if .Open}} open{{end}}>
   <summary>
     <span class="fpath">{{if eq .Status "renamed"}}<span class="was">{{.OldPath}} →</span> {{end}}{{.Path}}</span>
     {{if ne .Status "modified"}}<span class="chip">{{.Status}}</span>{{end}}
-    <span class="fstat">{{if .Adds}}<span class="add">+{{.Adds}}</span>{{end}}{{if .Dels}} <span class="del">−{{.Dels}}</span>{{end}}</span>
+    {{if .Threads}}<span class="chip chip-neutral">{{.Threads}} thread{{if ne .Threads 1}}s{{end}}</span>{{end}}
+    <span class="fstat">{{if .Adds}}<span class="add">+{{.Adds}}</span>{{end}}{{if .Dels}} <span class="del">−{{.Dels}}</span>{{end}}{{if and $repoPath $headSHA (ne .Status "deleted")}} · <a class="diffviewlink" href="/{{$repoPath}}/blob/{{$headSHA}}/{{.Path}}">view</a>{{end}}</span>
   </summary>
   {{if .Binary}}<p class="none">Binary file not shown.</p>
   {{else if $split}}<div class="tablewrap"><table class="difftable split"><colgroup><col class="cln"><col><col class="cln"><col></colgroup>
-  {{range .Rows}}{{if eq .Kind "hunk"}}<tr class="hunk"><td class="ln"></td><td class="src" colspan="3">{{.Text}}</td></tr>
+  {{range .Rows}}{{if eq .Kind "hunk"}}<tr class="hunk" data-hunk="{{.Text}}" data-file="{{$f.Path}}"><td class="ln"></td><td class="src" colspan="3">{{.Text}}</td></tr>
   {{else if eq .Kind "meta"}}<tr class="dmeta"><td class="ln"></td><td class="src" colspan="3">{{.Text}}</td></tr>
   {{else}}{{$r := .}}<tr class="pair">
     {{with .Old}}{{if eq .Class "del"}}<td class="ln del" id="f{{$fi}}-o{{.OldLine}}">{{template "cmtln" dict "N" .OldLine "Path" .Path "Side" "old" "Base" $base "Viewer" $viewer "Carry" $L.Carry}}</td><td class="src del chroma">{{if .Code}}{{.Code}}{{else}}{{.Content}}{{end}}{{with $r.OldNote}}<span class="nonl">{{.}}</span>{{end}}</td>{{else}}<td class="ln ctx old">{{.OldLine}}</td><td class="src ctx old chroma">{{if .Code}}{{.Code}}{{else}}{{.Content}}{{end}}{{with $r.OldNote}}<span class="nonl">{{.}}</span>{{end}}</td>{{end}}{{else}}<td class="ln none" aria-hidden="true"></td><td class="src none" aria-hidden="true"></td>{{end}}
@@ -263,7 +313,7 @@
   {{end}}{{end}}{{end}}
   </table></div>
   {{else}}<div class="tablewrap"><table class="difftable">
-  {{range .Lines}}{{if eq .Class "hunk"}}<tr class="hunk"><td class="ln" colspan="2"></td><td class="src">{{.Text}}</td></tr>
+  {{range .Lines}}{{if eq .Class "hunk"}}<tr class="hunk" data-hunk="{{.Text}}" data-file="{{$f.Path}}"><td class="ln" colspan="2"></td><td class="src">{{.Text}}</td></tr>
   {{else if eq .Class "meta"}}<tr class="dmeta"><td class="ln" colspan="2"></td><td class="src">{{.Text}}</td></tr>
   {{else}}<tr class="{{.Class}}" id="f{{$fi}}-{{if eq .Class "del"}}o{{.OldLine}}{{else}}n{{.NewLine}}{{end}}"><td class="ln">{{if .OldLine}}{{if eq .Class "del"}}{{template "cmtln" dict "N" .OldLine "Path" .Path "Side" "old" "Base" $base "Viewer" $viewer "Carry" $L.Carry}}{{else}}{{.OldLine}}{{end}}{{end}}</td><td class="ln">{{if .NewLine}}{{template "cmtln" dict "N" .NewLine "Path" .Path "Side" "new" "Base" $base "Viewer" $viewer "Carry" $L.Carry}}{{end}}</td><td class="src chroma">{{if .Code}}{{.Code}}{{else}}{{.Content}}{{end}}</td></tr>
   {{if .Compose}}<tr class="threadrow"><td colspan="3"><form id="compose" method="post" action="{{$base}}/diff-comment" class="thread composing">
@@ -280,7 +330,7 @@
   {{end}}{{end}}
   </table></div>{{end}}
 </details>
-{{end}}{{end}}
+{{end}}</div></div>{{end}}
 
 {{/* cmtln turns a line number into the link that opens the comment form
      on that line. No JavaScript: the anchor travels in the query. */}}

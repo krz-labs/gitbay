@@ -16,9 +16,10 @@ func init() {
 		Path:    []string{"repo", "commit-file"},
 		Summary: "write a file and commit it",
 		Usage: "repo commit-file <owner/name> <path> " +
-			"--ref <branch> [--message <m>] [--file -]",
+			"--ref <branch> [--from <base>] [--message <m>] [--file -]",
 		Flags: []Flag{
 			{"--ref", "<branch>", "branch to commit to", ""},
+			{"--from", "<base>", "base branch when creating a new branch", ""},
 			{"--message", "<m>", "the commit message", ""},
 			{"--file", "-", "read the new content from stdin", ""},
 		},
@@ -43,14 +44,17 @@ const maxCommitFileBytes = 1 << 20
 // A repository that requires verified signatures therefore refuses the
 // command rather than writing a commit its own policy would reject.
 func runCommitFile(c *Ctx, args []string) int {
-	f, err := c.parseArgs(args, flagSpec{Values: []string{"--ref", "--message", "--file"}, MaxPos: -1, Usage: c.Cmd.Usage})
+	f, err := c.parseArgs(args, flagSpec{Values: []string{"--ref", "--from", "--message", "--file"}, MaxPos: -1, Usage: c.Cmd.Usage})
 	if err != nil {
 		return c.fail(protocol.ExitUsage, "%v", err)
 	}
 	rest := f.Pos
-	ref, message, file := f.Value("--ref"), f.Value("--message"), f.Value("--file")
+	ref, fromRef, message, file := f.Value("--ref"), f.Value("--from"), f.Value("--message"), f.Value("--file")
 	if len(rest) != 2 || ref == "" {
 		return c.usage()
+	}
+	if strings.HasPrefix(ref, "-") || strings.HasPrefix(ref, "/") || strings.HasSuffix(ref, "/") || strings.HasSuffix(ref, ".lock") || strings.Contains(ref, "..") || strings.Contains(ref, "//") || strings.ContainsAny(ref, " \t\r\n~^:?*[\\@{") {
+		return c.fail(protocol.ExitUsage, "invalid branch name %q", ref)
 	}
 	repo, code := resolveRepo(c, rest[0], policy.CanWrite)
 	if code >= 0 {
@@ -101,9 +105,9 @@ func runCommitFile(c *Ctx, args []string) int {
 
 	dir := RepoDir(c.Cfg.Server.Root, repo.OwnerName, repo.Name)
 	// The head before the commit bounds what landed; a branch that does
-	// not exist fails in CommitFileChange with its own message.
+	// not exist fails in CommitFileFrom unless --from names its base.
 	parent, _ := gitutil.ResolveRef(dir, "refs/heads/"+ref)
-	sha, err := gitutil.CommitFileChange(dir, ref, filePath, content,
+	sha, err := gitutil.CommitFileFrom(dir, ref, fromRef, filePath, content,
 		c.User.Username, email, message)
 	if err != nil {
 		return c.fail(protocol.ExitFailure, "%v", err)
