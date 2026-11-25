@@ -2403,3 +2403,47 @@ nav.newtabs {
 ul.issuelist li.unread {
   box-shadow: inset 3px 0 0 var(--mark);
 }
+
+/* ---- repo-level tabs polish ---- */
+.treefilter {
+  width: 11rem;
+  min-width: 8rem;
+  height: 32px;
+}
+.reffilter {
+  display: block;
+  width: calc(100% - var(--sp-4));
+  margin: var(--sp-1) var(--sp-2) var(--sp-2);
+  height: 28px;
+  font-size: var(--fs-1);
+}
+.facts .about, .facts .clone {
+  background: var(--canvas);
+  border: 1px solid var(--faint);
+  border-radius: var(--r-card);
+  padding: var(--sp-4);
+}
+.popform-stack {
+  flex-direction: column;
+  align-items: stretch;
+}
+.popform-stack input, .popform-stack select, .popform-stack button {
+  width: 100%;
+}
+.releasehead-top {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  flex-wrap: wrap;
+}
+.releasehead-top h2 {
+  margin: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  flex-wrap: wrap;
+}
+article.release.setcard {
+  border-top: 1px solid var(--faint);
+  padding: var(--sp-5);
+}

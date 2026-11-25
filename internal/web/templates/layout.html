@@ -145,6 +145,7 @@
 {{define "refmenu"}}{{if .Branches}}<details class="refmenu">
   <summary class="refchip">{{template "branchicon"}} {{.Ref}}</summary>
   <div class="refdrop">
+  {{if gt (len .Branches) 5}}<input type="search" class="reffilter" placeholder="Filter branches…" aria-label="Filter branches" data-filter-links="refdrop">{{end}}
   {{range .Branches}}<a href="/{{$.Repo.OwnerName}}/{{$.Repo.Name}}/{{$.RefKind}}/{{.Name}}/{{$.DirPath}}">{{.Name}}</a>
   {{end}}<a class="allrefs" href="/{{.Repo.OwnerName}}/{{.Repo.Name}}/refs">All refs →</a>
   </div>

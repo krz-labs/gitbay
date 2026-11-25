@@ -374,11 +374,19 @@
     }
   });
 
-  // ---- 8. Live client-side table & list filters ----
+  // ---- 8. Live client-side table, list & link filters ----
   document.addEventListener('input', (e) => {
-    const inp = e.target.closest('input[data-filter-table], input[data-filter-list]');
+    const inp = e.target.closest('input[data-filter-table], input[data-filter-list], input[data-filter-links]');
     if (!inp) return;
     const q = inp.value.trim().toLowerCase();
+    if (inp.dataset.filterLinks) {
+      const box = inp.closest('.' + inp.dataset.filterLinks);
+      if (!box) return;
+      for (const a of box.querySelectorAll('a:not(.allrefs)')) {
+        a.hidden = q !== '' && !a.textContent.toLowerCase().includes(q);
+      }
+      return;
+    }
     if (inp.dataset.filterTable) {
       const table = document.getElementById(inp.dataset.filterTable);
       if (!table) return;
@@ -397,11 +405,11 @@
     }
   });
 
-  // ---- 9. In-place Refresh (/admin, /) ----
+  // ---- 9. In-place Refresh (/admin, /, /builds, /notifications) ----
   document.addEventListener('click', async (e) => {
     const btn = e.target.closest('button[data-refresh]');
     if (!btn) return;
-    const url = btn.dataset.refresh;
+    const url = btn.dataset.refresh === 'self' ? location.href : btn.dataset.refresh;
     const targetId = btn.dataset.refreshTarget || 'admin-queues';
     btn.disabled = true;
     try {
@@ -413,6 +421,7 @@
       const cur = document.getElementById(targetId);
       if (next && cur) {
         cur.replaceWith(next);
+        initCopyButtons(next);
         initScrollSpy();
         showToast('Refreshed');
       }

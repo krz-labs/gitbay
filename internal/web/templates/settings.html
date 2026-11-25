@@ -2,10 +2,12 @@
 {{define "title"}}settings · {{.Repo.OwnerName}}/{{.Repo.Name}}{{end}}
 {{define "content"}}
 {{$base := printf "/%s/%s/settings" .Repo.OwnerName .Repo.Name}}
-<h1>Settings</h1>
+<div class="pagehead">
+  <h1>Settings</h1>
+</div>
 {{if .Notice}}{{if .Saved}}<p class="notice" role="status">{{.Notice}}</p>{{else}}<p class="error" role="alert">{{.Notice}}{{if .Reauth}} <a href="/login">Sign in again</a>{{end}}</p>{{end}}{{end}}
 <div class="withcol narrow">
-<nav class="sidecol" aria-label="Sections">
+<nav class="sidecol sticky" aria-label="Sections" data-scrollspy="1">
 <details class="sidedrop">
 <summary><span class="sideword">Sections</span></summary>
   <div class="grp"><h2 class="colhead">Sections</h2>
@@ -26,7 +28,7 @@
 </nav>
 <div class="colmain">
 
-<section id="identity"><h2>Identity</h2>
+<section id="identity" class="setcard"><h2>Identity</h2>
 <form method="post" action="{{$base}}" class="setform">
   <input type="hidden" name="field" value="description">
   <div><label for="description">Description</label></div>
@@ -45,7 +47,7 @@
   <div><input type="text" id="topics" name="topics" value="{{or (index .Submitted "topics") (join .Topics ", ")}}"></div>
   <div><button type="submit" class="btn">Save</button></div>
 </form>
-{{if .Branches}}<form method="post" action="{{$base}}" class="setform">
+{{if .Branches}}<form method="post" action="{{$base}}" class="setform" data-autosave="1">
   <input type="hidden" name="field" value="default-branch">
   <div><label for="default-branch">Default branch</label></div>
   <div><select id="default-branch" name="default-branch">{{$cur := .Repo.DefaultBranch}}{{range .Branches}}<option value="{{.Name}}"{{if eq .Name $cur}} selected{{end}}>{{.Name}}</option>{{end}}</select></div>
@@ -53,7 +55,7 @@
 </form>{{end}}
 </section>
 
-<section id="access"><h2>Access</h2>
+<section id="access" class="setcard"><h2>Access</h2>
 <form method="post" action="{{$base}}" class="setform">
   <input type="hidden" name="field" value="visibility">
   <div><span class="fieldname">Visibility</span></div>
@@ -63,7 +65,7 @@
   </div>
   <div><button type="submit" class="btn">Save</button></div>
 </form>
-<form method="post" action="{{$base}}" class="setform">
+<form method="post" action="{{$base}}" class="setform" data-autosave="1">
   <input type="hidden" name="field" value="git-daemon">
   <div><label for="git-daemon">Serve over git://</label><p class="hint">Public repositories only.</p></div>
   <div class="check"><input type="checkbox" id="git-daemon" name="git-daemon" value="on"{{if .Repo.Settings.GitDaemon}} checked{{end}}></div>
@@ -92,7 +94,7 @@
 </form>
 </section>
 
-<section id="webhooks"><h2>Webhooks</h2>
+<section id="webhooks" class="setcard"><h2>Webhooks</h2>
 {{if .Hooks}}
 <ul class="protlist">
 {{range .Hooks}}<li><span class="mono">#{{.ID}}</span> <code>{{.URL}}</code> <span class="meta">{{.Events}}{{if .Secret}}, signed{{end}}</span>
@@ -104,18 +106,21 @@
 {{end}}
 </ul>
 {{else}}<p class="meta">No webhooks.</p>{{end}}
-<form method="post" action="{{$base}}" class="setform stack" autocomplete="off">
-  <input type="hidden" name="field" value="webhook-add">
-  <label for="hook-url">Add a webhook</label>
-  <input type="text" id="hook-url" name="url" value="{{index .Submitted "url"}}" placeholder="https://ci.example.org/hook" spellcheck="false">
-  <label for="hook-events">Events</label>
-  <p class="hint">Comma separated, or <code>*</code> for all.</p>
-  <input type="text" id="hook-events" name="events" value="{{or (index .Submitted "events") "*"}}" spellcheck="false">
-  <label for="hook-secret">Secret</label>
-  <p class="hint">Optional. Signs each delivery; it is not shown again.</p>
-  <input type="password" id="hook-secret" name="secret" value="" autocomplete="new-password">
-  <button type="submit" class="btn">Add</button>
-</form>
+<details class="editbox"{{if or (index .Submitted "url") (index .Submitted "events")}} open{{end}}>
+  <summary>Add a webhook</summary>
+  <form method="post" action="{{$base}}" class="setform stack" autocomplete="off">
+    <input type="hidden" name="field" value="webhook-add">
+    <label for="hook-url">Payload URL</label>
+    <input type="text" id="hook-url" name="url" value="{{index .Submitted "url"}}" placeholder="https://ci.example.org/hook" spellcheck="false">
+    <label for="hook-events">Events</label>
+    <p class="hint">Comma separated, or <code>*</code> for all.</p>
+    <input type="text" id="hook-events" name="events" value="{{or (index .Submitted "events") "*"}}" spellcheck="false">
+    <label for="hook-secret">Secret</label>
+    <p class="hint">Optional. Signs each delivery; it is not shown again.</p>
+    <input type="password" id="hook-secret" name="secret" value="" autocomplete="new-password">
+    <span class="btngroup"><button type="submit">Add webhook</button></span>
+  </form>
+</details>
 <h3>Recent deliveries</h3>
 {{if .Deliveries}}<div class="tablewrap"><table class="keys">
 <thead><tr class="cols"><th scope="col">id</th><th scope="col">event</th><th scope="col">url</th><th scope="col">state</th><th scope="col"><span class="vh">actions</span></th></tr></thead>
@@ -133,9 +138,9 @@
 {{else}}<p class="meta">Nothing delivered yet.</p>{{end}}
 </section>
 
-<section id="gates"><h2>Merge gates</h2>
+<section id="gates" class="setcard"><h2>Merge gates</h2>
 <p class="meta">Checked before a merge, in this order: checks, approvals, resolved threads, signatures.</p>
-<form method="post" action="{{$base}}" class="setform">
+<form method="post" action="{{$base}}" class="setform" data-autosave="1">
   <input type="hidden" name="field" value="require-checks">
   <div><label for="require-checks">Required checks</label><p class="hint">Requires CI to succeed.{{with .Repo.Settings.RequiredContexts}} Also waits for {{range $i, $c := .}}{{if $i}}, {{end}}<code>{{$c}}</code>{{end}} until they report{{if not $.Repo.Settings.RequireChecks}}, once this is on{{end}}.{{end}}</p></div>
   <div class="check"><input type="checkbox" id="require-checks" name="require-checks" value="on"{{if .Repo.Settings.RequireChecks}} checked{{end}}></div>
@@ -153,19 +158,19 @@
   <div class="num"><input type="number" id="approvals" name="approvals" min="0" max="10" value="{{.Repo.Settings.RequireApprovals}}"></div>
   <div><button type="submit" class="btn">Save</button></div>
 </form>
-<form method="post" action="{{$base}}" class="setform">
+<form method="post" action="{{$base}}" class="setform" data-autosave="1">
   <input type="hidden" name="field" value="require-resolved">
   <div><label for="require-resolved">Review threads</label><p class="hint">Every thread on the diff must be resolved before merging.</p></div>
   <div class="check"><input type="checkbox" id="require-resolved" name="require-resolved" value="on"{{if .Repo.Settings.RequireResolved}} checked{{end}}></div>
   <div><button type="submit" class="btn">Save</button></div>
 </form>
-<form method="post" action="{{$base}}" class="setform">
+<form method="post" action="{{$base}}" class="setform" data-autosave="1">
   <input type="hidden" name="field" value="require-codeowners">
   <div><label for="require-codeowners">CODEOWNERS</label><p class="hint">Code owners must approve.</p></div>
   <div class="check"><input type="checkbox" id="require-codeowners" name="require-codeowners" value="on"{{if .Repo.Settings.RequireCodeowners}} checked{{end}}></div>
   <div><button type="submit" class="btn">Save</button></div>
 </form>
-<form method="post" action="{{$base}}" class="setform">
+<form method="post" action="{{$base}}" class="setform" data-autosave="1">
   <input type="hidden" name="field" value="require-signed">
   <div><label for="require-signed">Signed commits</label><p class="hint">Every commit in the request must carry a verified signature. Squash and merge strategies are refused, since both mint an unsigned commit.</p></div>
   <div class="check"><input type="checkbox" id="require-signed" name="require-signed" value="on"{{if .Repo.Settings.RequireSignedCommits}} checked{{end}}></div>
@@ -173,14 +178,14 @@
 </form>
 </section>
 
-{{if or .ScanAvailable .Security.Enabled}}<section id="security"><h2>Code scanning</h2>
+{{if or .ScanAvailable .Security.Enabled}}<section id="security" class="setcard"><h2>Code scanning</h2>
 <form method="post" action="{{$base}}" class="setform">
   <input type="hidden" name="field" value="security">
   <div><label for="security-enabled">Scheduled scan</label><p class="hint">Runs the instance's code scanner over <code>{{.Repo.DefaultBranch}}</code> on its schedule, on a runner attached to this repository, and keeps an issue of what it finds.</p></div>
   <div class="check"><input type="checkbox" id="security-enabled" name="security" value="on"{{if .Security.Enabled}} checked{{end}}></div>
   <div><button type="submit" class="btn">Save</button></div>
 </form>
-{{if .ScanAvailable}}<form method="post" action="{{$base}}" class="setform">
+{{if .ScanAvailable}}<form method="post" action="{{$base}}" class="setform" data-autosave="1">
   <input type="hidden" name="field" value="security-frequency">
   <div><label for="security-frequency">Frequency</label><p class="hint">Daily, weekly on Sunday, or monthly on the 1st, at {{printf "%02d:00" .ScanHour}} UTC.</p></div>
   <div><select id="security-frequency" name="security-frequency">{{$freq := .ScanFrequency}}{{range .ScanFrequencies}}<option value="{{.}}"{{if eq . $freq}} selected{{end}}>{{.}}</option>{{end}}</select></div>
@@ -233,8 +238,8 @@
 </section>
 {{end}}
 
-<section id="secrets"><h2>Secret scan</h2>
-<form method="post" action="{{$base}}" class="setform">
+<section id="secrets" class="setcard"><h2>Secret scan</h2>
+<form method="post" action="{{$base}}" class="setform" data-autosave="1">
   <input type="hidden" name="field" value="secret-scan">
   <div><label for="secret-scan">Pushes</label><p class="hint">Each push's new files are checked for credentials in known formats. Warn accepts the push and tells the pusher where; block refuses it. Only the path, line and kind of credential are reported, never the value.</p></div>
   <div><select id="secret-scan" name="secret-scan">{{$mode := or .Repo.Settings.SecretScan "warn"}}<option value="off"{{if eq $mode "off"}} selected{{end}}>off</option><option value="warn"{{if eq $mode "warn"}} selected{{end}}>warn</option><option value="block"{{if eq $mode "block"}} selected{{end}}>block</option></select></div>
@@ -248,7 +253,7 @@
 </form>
 </section>
 
-<section id="branches"><h2>Protected branches</h2>
+<section id="branches" class="setcard"><h2>Protected branches</h2>
 {{if .Repo.Settings.ProtectedBranches}}
 <ul class="protlist">
 {{$mr := .Repo.Settings.RequireMR}}{{range .Repo.Settings.ProtectedBranches}}<li><code>{{.}}</code>{{if $mr}} <span class="hint">Direct pushes refused, merge requests only.</span>{{end}}
@@ -266,7 +271,7 @@
   <div><select id="branch" name="branch">{{range .Branches}}<option value="{{.Name}}">{{.Name}}</option>{{end}}</select></div>
   <div><button type="submit" class="btn">Protect</button></div>
 </form>
-<form method="post" action="{{$base}}" class="setform">
+<form method="post" action="{{$base}}" class="setform" data-autosave="1">
   <input type="hidden" name="field" value="require-mr">
   <div><label for="require-mr">Require merge requests</label><p class="hint">Every protected branch changes through a merge request. A direct push is refused in pre-receive.</p></div>
   <div class="check"><input type="checkbox" id="require-mr" name="require-mr" value="on"{{if .Repo.Settings.RequireMR}} checked{{end}}></div>
@@ -274,7 +279,7 @@
 </form>
 </section>
 
-<section id="tags"><h2>Protected tags</h2>
+<section id="tags" class="setcard"><h2>Protected tags</h2>
 {{if .Repo.Settings.ProtectedTags}}
 <ul class="protlist">
 {{range .Repo.Settings.ProtectedTags}}<li><code>{{.}}</code>
@@ -294,7 +299,7 @@
 </form>
 </section>
 
-<section id="deps"><h2>Dependencies</h2>
+<section id="deps" class="setcard"><h2>Dependencies</h2>
 <form method="post" action="{{$base}}" class="setform">
   <input type="hidden" name="field" value="deps">
   <div><label for="deps-enabled">Check for updates and advisories</label><p class="hint">Evaluates the manifests and lockfiles on <code>{{.Repo.DefaultBranch}}</code> against the registries and OSV, and opens an issue for each. Updates for Go, NPM, Crates, and PyPI; advisories for those and SwiftPM.</p></div>
@@ -346,7 +351,7 @@
 {{end}}
 </section>
 
-<section id="runners"><h2>Runners</h2>
+<section id="runners" class="setcard"><h2>Runners</h2>
 {{if .Runners}}
 <ul class="protlist">
 {{range .Runners}}<li><code>{{.Fingerprint}}</code> <span class="meta">{{.Username}}{{if .LastSeen}}, last poll {{when .LastSeen}}{{else}}, never polled{{end}}{{if .BuildNumber}}, running {{.BuildRepo}} #{{.BuildNumber}} {{.BuildJob}}{{end}}{{if .Jobs}}, only {{join .Jobs ", "}}{{end}}</span>
@@ -358,19 +363,22 @@
 {{end}}
 </ul>
 {{else}}<p class="meta">No runners attached. Builds for this repository run on the runners attached here; a repository with none queues builds nothing claims.</p>{{end}}
-<form method="post" action="{{$base}}" class="setform stack">
-  <input type="hidden" name="field" value="runner-add">
-  <label for="runner-key">Attach a runner</label>
-  <p class="hint">Install <code>gitbay-runner</code>, run <code>gitbay-runner init</code>, and paste the key it prints. The runner builds your commits with the repository's secrets; merge requests from forks wait unless it runs with <code>-untrusted</code>.</p>
-  <textarea id="runner-key" name="key" rows="3" spellcheck="false" placeholder="ssh-ed25519 AAAA… (from gitbay-runner init)">{{index .Submitted "key"}}</textarea>
-  <label for="runner-jobs">Jobs</label>
-  <p class="hint">Leave empty for every job. Name jobs, comma-separated, to have this runner claim only those here, for instance <code>gitbay-security</code> on a runner with the code scanning image.</p>
-  <input type="text" id="runner-jobs" name="jobs" value="{{index .Submitted "jobs"}}">
-  <button type="submit" class="btn">Attach</button>
-</form>
+<details class="editbox"{{if or (index .Submitted "key") (index .Submitted "jobs")}} open{{end}}>
+  <summary>Attach a runner</summary>
+  <form method="post" action="{{$base}}" class="setform stack">
+    <input type="hidden" name="field" value="runner-add">
+    <label for="runner-key">Runner public key</label>
+    <p class="hint">Install <code>gitbay-runner</code>, run <code>gitbay-runner init</code>, and paste the key it prints. The runner builds your commits with the repository's secrets; merge requests from forks wait unless it runs with <code>-untrusted</code>.</p>
+    <textarea id="runner-key" name="key" rows="3" spellcheck="false" placeholder="ssh-ed25519 AAAA… (from gitbay-runner init)">{{index .Submitted "key"}}</textarea>
+    <label for="runner-jobs">Jobs</label>
+    <p class="hint">Leave empty for every job. Name jobs, comma-separated, to have this runner claim only those here, for instance <code>gitbay-security</code> on a runner with the code scanning image.</p>
+    <input type="text" id="runner-jobs" name="jobs" value="{{index .Submitted "jobs"}}">
+    <span class="btngroup"><button type="submit">Attach runner</button></span>
+  </form>
+</details>
 </section>
 
-<section id="lifecycle"><h2>Lifecycle</h2>
+<section id="lifecycle" class="setcard setcard-danger"><h2>Lifecycle</h2>
 <form method="post" action="{{$base}}" class="setform">
   <input type="hidden" name="field" value="archive">
   <div><label for="archive">Archived</label><p class="hint">Read-only for everyone. Issues and requests close to new activity. Reversible.</p></div>

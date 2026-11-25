@@ -1,8 +1,8 @@
 {{define "width"}}wide{{end}}
 {{define "title"}}builds · {{.Repo.OwnerName}}/{{.Repo.Name}}{{end}}
 {{define "content"}}
-<div class="withcol">
-<nav class="sidecol" aria-label="Filters">
+<div class="withcol" id="builds-root">
+<nav class="sidecol" aria-label="Filters" data-tab-swap="builds-root">
 <details class="sidedrop">
 <summary><span class="sideword">Filters</span>{{range .Facets}}{{range .Items}}{{if .Active}} <span class="sideon">{{.Label}}</span>{{end}}{{end}}{{end}}</summary>
   {{range .Facets}}{{if .Items}}<div class="grp">
@@ -22,22 +22,29 @@
 <div class="colmain">
 <div class="listhead">
   <h1>Builds</h1>
+  <span class="spacer"></span>
+  <div class="btngroup">
+    <button type="button" class="btn" data-refresh="self" data-refresh-target="builds-root">Refresh</button>
+    {{if and .CanWrite .Jobs}}<details class="popover">
+      <summary class="button">Run job</summary>
+      <div class="popmenu">
+        <form method="post" action="/{{.Repo.OwnerName}}/{{.Repo.Name}}/builds" class="popform popform-stack">
+          <label for="job" class="colhead">Run a job now</label>
+          <select id="job" name="job">
+            {{range .Jobs}}<option value="{{.Name}}">{{.Name}}{{if .Schedule}} (schedule {{.Schedule}}){{else if .Tags}} (tags {{.Tags}}){{end}}</option>{{end}}
+          </select>
+          <button type="submit">Run</button>
+        </form>
+      </div>
+    </details>{{end}}
+  </div>
 </div>
 {{if .Notice}}<p class="error" role="alert">{{.Notice}}</p>{{end}}
-{{if and .CanWrite .Jobs}}
-<form method="post" action="/{{.Repo.OwnerName}}/{{.Repo.Name}}/builds" class="setform">
-  <label for="job">Run a job now</label>
-  <select id="job" name="job">
-    {{range .Jobs}}<option value="{{.Name}}">{{.Name}}{{if .Schedule}} (schedule {{.Schedule}}){{else if .Tags}} (tags {{.Tags}}){{end}}</option>{{end}}
-  </select>
-  <button type="submit" class="btn">Run</button>
-</form>
-{{end}}
 <details class="editbox"><summary>Status badge</summary>
 <p class="meta">Paste into a README; it shows the newest build's state. Markdown:</p>
-<pre class="code" tabindex="0">[![build](https://{{.Host}}/{{.Repo.OwnerName}}/{{.Repo.Name}}/badge/build.svg)](https://{{.Host}}/{{.Repo.OwnerName}}/{{.Repo.Name}}/builds)</pre>
+<pre class="code copyable" tabindex="0">[![build](https://{{.Host}}/{{.Repo.OwnerName}}/{{.Repo.Name}}/badge/build.svg)](https://{{.Host}}/{{.Repo.OwnerName}}/{{.Repo.Name}}/builds)</pre>
 <p class="meta">Org:</p>
-<pre class="code" tabindex="0">[[https://{{.Host}}/{{.Repo.OwnerName}}/{{.Repo.Name}}/builds][https://{{.Host}}/{{.Repo.OwnerName}}/{{.Repo.Name}}/badge/build.svg]]</pre>
+<pre class="code copyable" tabindex="0">[[https://{{.Host}}/{{.Repo.OwnerName}}/{{.Repo.Name}}/builds][https://{{.Host}}/{{.Repo.OwnerName}}/{{.Repo.Name}}/badge/build.svg]]</pre>
 <p class="meta">Add <code>?job=name</code> for one job.</p>
 </details>
 <p class="meta">{{len .Builds}} build{{if ne (len .Builds) 1}}s{{end}} in {{len .Runs}} run{{if ne (len .Runs) 1}}s{{end}}{{if .Older}} on this page{{end}}{{if or .Filter.Ref .Filter.Status .Filter.Job}}, <a href="?">clear filters</a>{{end}}</p>

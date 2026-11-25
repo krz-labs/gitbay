@@ -1,7 +1,7 @@
 {{define "width"}}wide{{end}}
 {{define "title"}}merge requests · {{.Repo.OwnerName}}/{{.Repo.Name}}{{end}}
 {{define "content"}}
-<div class="withcol">
+<div class="withcol" id="mrs-root">
 {{template "sidecol" .Facets}}
 <div class="colmain">
 <div class="listhead">
@@ -12,11 +12,12 @@
     <input type="hidden" name="state" value="{{.State}}">
   </form>
   {{range .Filters}}<p class="meta">{{.Key}}: {{if eq .Key "label"}}<span class="chip label" style="{{index $.LabelColors .Value}}">{{.Value}}</span>{{else}}<b>{{.Value}}</b>{{end}} <a href="{{.Clear}}">clear</a></p>{{end}}
+  <span class="spacer"></span>
+  {{if .CanOpenMR}}<a class="button" href="/{{.Repo.OwnerName}}/{{.Repo.Name}}/mrs/new">New merge request</a>
+  {{else if .Viewer}}<a class="button btn" href="/{{.Repo.OwnerName}}/{{.Repo.Name}}/fork">Fork this repository to propose a change</a>
+  {{else}}<a class="button btn" href="/login">Sign in to propose a change</a>{{end}}
 </div>
-{{if .CanOpenMR}}<p class="meta"><a href="/{{.Repo.OwnerName}}/{{.Repo.Name}}/mrs/new">New merge request</a></p>
-{{else if .Viewer}}<p class="meta"><a href="/{{.Repo.OwnerName}}/{{.Repo.Name}}/fork">Fork this repository to propose a change</a></p>
-{{else}}<p class="meta"><a href="/login">Sign in to propose a change</a></p>{{end}}
-{{if .Facets}}<nav class="statebar" aria-label="State">{{range (index .Facets 0).Items}}<a{{if .Active}} aria-current="page"{{end}} href="{{.Href}}">{{.Label}}</a>{{end}}</nav>{{end}}
+{{if .Facets}}<nav class="statebar" aria-label="State" data-tab-swap="mrs-root">{{range (index .Facets 0).Items}}<a{{if .Active}} aria-current="page"{{end}} href="{{.Href}}">{{.Label}}</a>{{end}}</nav>{{end}}
 <ul class="issuelist rows">
 {{range .MRs}}{{$n := .Number}}<li>
   <div class="issuemain">
