@@ -1,15 +1,35 @@
 {{define "width"}}wide{{end}}
 {{define "title"}}admin · {{.Site}}{{end}}
 {{define "content"}}
-<h1>Admin</h1>
-<p class="meta">Server build {{.Commit}}. Every background worker's backlog. This is the same read as <code>gitbay dashboard --json</code> for an admin.</p>
-<p class="meta"><a href="/admin/users">Accounts</a>: view every instance user account.</p>
+<div class="adminhead">
+  <div>
+    <h1>Admin</h1>
+    <p class="meta">Server build <code>{{.Commit}}</code> · background worker queues</p>
+  </div>
+  <span class="grow"></span>
+  <button type="button" class="btn" data-refresh="/admin">Refresh</button>
+</div>
+
+<nav class="tabs admintabs" aria-label="Admin">
+  <a aria-current="page" href="/admin">Queues</a>
+  <a href="/admin/users">Accounts</a>
+</nav>
+
+<div id="admin-queues">
+<div class="tiles">
+  {{with .Queues.Webhooks}}<a class="tile{{if or .Pending .Failed}} wants{{end}}" href="#webhooks"><b>{{.Pending}}</b><span>webhooks pending{{if .Failed}} · {{.Failed}} failed{{end}}</span></a>{{end}}
+  {{with .Queues.Mail}}<a class="tile{{if or .Pending .Failed}} wants{{end}}" href="#mail"><b>{{.Pending}}</b><span>mail pending{{if .Failed}} · {{.Failed}} failed{{end}}</span></a>{{end}}
+  {{with .Queues.Push}}<a class="tile{{if or .Pending .Failed}} wants{{end}}" href="#push"><b>{{.Pending}}</b><span>push pending{{if .Failed}} · {{.Failed}} failed{{end}}</span></a>{{end}}
+  {{with .Queues.Mirrors}}<a class="tile{{if .Errors}} wants{{end}}" href="#mirrors"><b>{{.Errors}}</b><span>mirror errors · {{.Dirty}} dirty</span></a>{{end}}
+  {{with .Queues.Builds}}<a class="tile{{if or .Pending .Running}} wants{{end}}" href="#builds"><b>{{.Running}}</b><span>builds running · {{.Pending}} queued</span></a>{{end}}
+  {{with .Queues.Deps}}<a class="tile{{if .Errors}} wants{{end}}" href="#deps"><b>{{.Errors}}</b><span>dependency check errors</span></a>{{end}}
+</div>
 
 <div class="withcol narrow">
-<nav class="sidecol" aria-label="Sections">
+<nav class="sidecol sticky" aria-label="Sections" data-scrollspy="1">
 <details class="sidedrop">
 <summary><span class="sideword">Sections</span></summary>
-  <div class="grp"><h2 class="colhead">Sections</h2>
+  <div class="grp"><h2 class="colhead">Queues</h2>
   <ul>
     <li><a href="#webhooks">Webhook deliveries</a></li>
     <li><a href="#mail">Mail</a></li>
@@ -23,7 +43,7 @@
 <div class="colmain">
 
 {{with .Queues.Webhooks}}
-<section id="webhooks">
+<section id="webhooks" class="setcard">
 <h2>Webhook deliveries <span class="count">{{.Pending}}</span></h2>
 <p class="meta">{{.Pending}} pending · {{.Retrying}} retrying · {{.Failed}} dead-lettered{{if .OldestPending}} · oldest pending {{when .OldestPending}}{{end}}</p>
 {{if .Items}}<div class="tablewrap"><table class="keys"><thead><tr class="cols"><th>Repository</th><th>URL</th><th>Attempts</th><th>State</th><th>Last error</th></tr></thead><tbody>
@@ -33,7 +53,7 @@
 {{end}}
 
 {{with .Queues.Mail}}
-<section id="mail">
+<section id="mail" class="setcard">
 <h2>Mail <span class="count">{{.Pending}}</span></h2>
 <p class="meta">{{.Pending}} pending · {{.Retrying}} retrying · {{.Failed}} failed{{if .OldestPending}} · oldest pending {{when .OldestPending}}{{end}}</p>
 {{if .Items}}<div class="tablewrap"><table class="keys"><thead><tr class="cols"><th>Mail</th><th>Recipient</th><th>Subject</th><th>Attempts</th><th>State</th><th>Last error</th></tr></thead><tbody>
@@ -42,9 +62,8 @@
 </section>
 {{end}}
 
-{{/* A push row names the device id, never the token, as dashboard does. */}}
 {{with .Queues.Push}}
-<section id="push">
+<section id="push" class="setcard">
 <h2>Push <span class="count">{{.Pending}}</span></h2>
 <p class="meta">{{.Pending}} pending · {{.Retrying}} retrying · {{.Failed}} failed{{if .OldestPending}} · oldest pending {{when .OldestPending}}{{end}}</p>
 {{if .Items}}<div class="tablewrap"><table class="keys"><thead><tr class="cols"><th>Push</th><th>Device</th><th>Title</th><th>Attempts</th><th>State</th><th>Last error</th></tr></thead><tbody>
@@ -54,7 +73,7 @@
 {{end}}
 
 {{with .Queues.Mirrors}}
-<section id="mirrors">
+<section id="mirrors" class="setcard">
 <h2>Mirrors <span class="count">{{.Errors}}</span></h2>
 <p class="meta">{{.Dirty}} waiting for a sync · {{.Errors}} with a failed last sync</p>
 {{if .Items}}<div class="tablewrap"><table class="keys"><thead><tr class="cols"><th>Repository</th><th>Direction</th><th>URL</th><th>Last sync</th><th>Error</th></tr></thead><tbody>
@@ -64,7 +83,7 @@
 {{end}}
 
 {{with .Queues.Builds}}
-<section id="builds">
+<section id="builds" class="setcard">
 <h2>Builds <span class="count">{{.Pending}}</span></h2>
 <p class="meta">{{.Pending}} pending · {{.Running}} running{{if .OldestPending}} · oldest pending {{when .OldestPending}}{{end}}</p>
 {{if .Items}}<div class="tablewrap"><table class="keys"><thead><tr class="cols"><th>Repository</th><th>Build</th><th>Job</th><th>Status</th><th>Since</th></tr></thead><tbody>
@@ -74,13 +93,14 @@
 {{end}}
 
 {{with .Queues.Deps}}
-<section id="deps">
+<section id="deps" class="setcard">
 <h2>Dependency checks <span class="count">{{.Errors}}</span></h2>
 {{if .Items}}<div class="tablewrap"><table class="keys"><thead><tr class="cols"><th>Repository</th><th>Last check</th><th>Error</th></tr></thead><tbody>
 {{range .Items}}<tr><td><a href="/{{.Repo}}">{{.Repo}}</a></td><td>{{if .LastCheck}}{{when .LastCheck}}{{else}}never{{end}}</td><td>{{.LastError}}</td></tr>
 {{end}}</tbody></table></div>{{else}}<p class="none">No check has failed</p>{{end}}
 </section>
 {{end}}
+</div>
 </div>
 </div>
 {{end}}

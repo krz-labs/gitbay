@@ -1,24 +1,35 @@
-{{/* wide, because the Actions cell carries up to two forms, each an
-     11rem confirm field and a button: about 1100px of row, which 48rem
-     clipped. What it clipped was the second form's button, leaving its
-     confirm field looking like it belonged to the button before it. */}}
 {{define "width"}}wide{{end}}
 {{define "title"}}accounts · admin · {{.Site}}{{end}}
 {{define "content"}}
-<h1>Accounts</h1>
-<p class="meta"><a href="/admin">Admin</a> · the same read as <code>gitbay admin user list</code>.</p>
-{{if .Notice}}<p class="notice" role="status">{{.Notice}}{{if .Reauth}} <a href="/login">Sign in again</a>{{end}}</p>{{end}}
+<div class="adminhead">
+  <div>
+    <h1>Admin</h1>
+    <p class="meta">Manage instance user accounts · matches <code>gitbay admin user list</code></p>
+  </div>
+</div>
 
-<nav class="filters">
-  <a {{if eq .State "all"}}class="active" aria-current="page" {{end}}href="?state=all">all</a>
-  <a {{if eq .State "active"}}class="active" aria-current="page" {{end}}href="?state=active">active</a>
-  <a {{if eq .State "pending"}}class="active" aria-current="page" {{end}}href="?state=pending">pending</a>
-  <a {{if eq .State "disabled"}}class="active" aria-current="page" {{end}}href="?state=disabled">disabled</a>
-  <a {{if eq .State "admin"}}class="active" aria-current="page" {{end}}href="?state=admin">admins</a>
+<nav class="tabs admintabs" aria-label="Admin">
+  <a href="/admin">Queues</a>
+  <a aria-current="page" href="/admin/users">Accounts</a>
 </nav>
 
-{{if .Users}}<div class="tablewrap"><table class="keys accounts nowrap">
-<thead><tr class="cols"><th>Account</th><th>State</th><th>Created</th><th>Last seen</th><th>Actions</th></tr></thead>
+{{if .Notice}}<p class="notice" role="status">{{.Notice}}{{if .Reauth}} <a href="/login">Sign in again</a>{{end}}</p>{{end}}
+
+<div class="listhead">
+  <nav class="filters" aria-label="Account state">
+    <a {{if eq .State "all"}}class="active" aria-current="page" {{end}}href="?state=all">all</a>
+    <a {{if eq .State "active"}}class="active" aria-current="page" {{end}}href="?state=active">active</a>
+    <a {{if eq .State "pending"}}class="active" aria-current="page" {{end}}href="?state=pending">pending</a>
+    <a {{if eq .State "disabled"}}class="active" aria-current="page" {{end}}href="?state=disabled">disabled</a>
+    <a {{if eq .State "admin"}}class="active" aria-current="page" {{end}}href="?state=admin">admins</a>
+  </nav>
+  <span class="spacer"></span>
+  <input type="search" class="tablefilter" aria-label="Filter accounts" placeholder="Filter by username…" data-filter-table="accounts-table">
+</div>
+
+<section class="setcard">
+{{if .Users}}<div class="tablewrap"><table id="accounts-table" class="keys accounts nowrap">
+<thead><tr class="cols"><th>Account</th><th>State</th><th>Created</th><th>Last seen</th><th class="act">Actions</th></tr></thead>
 <tbody>
 {{range .Users}}<tr>
   <td><a href="/{{.Username}}">{{.Username}}</a>{{if .Admin}} <span class="chip">admin</span>{{end}}</td>
@@ -27,54 +38,53 @@
   <td>{{if .LastSeen}}{{when .LastSeen}}{{else}}never{{end}}</td>
   <td class="acts">
     {{if .Admin}}
-    <form method="post" action="/admin/users" class="actions">
-      <input type="hidden" name="field" value="demote">
-      <input type="hidden" name="user" value="{{.Username}}">
-      <input type="hidden" name="state" value="{{$.State}}">
-      {{template "confirmfield" .Username}} <button type="submit" class="btn">Demote</button>
-    </form>
+    <details class="popover"><summary class="popbtn">Demote</summary><div class="popmenu">
+      <form method="post" action="/admin/users" class="popform">
+        <input type="hidden" name="field" value="demote">
+        <input type="hidden" name="user" value="{{.Username}}">
+        <input type="hidden" name="state" value="{{$.State}}">
+        {{template "confirmfield" .Username}}<button type="submit" class="btn">Demote</button>
+      </form>
+    </div></details>
     {{else if eq .State "active"}}
-    <form method="post" action="/admin/users" class="actions">
-      <input type="hidden" name="field" value="promote">
-      <input type="hidden" name="user" value="{{.Username}}">
-      <input type="hidden" name="state" value="{{$.State}}">
-      {{template "confirmfield" .Username}} <button type="submit" class="btn">Promote</button>
-    </form>
-    {{else}}
-    {{/* An account that is not active cannot be promoted, but the row
-         still draws the button so the cell keeps its shape. It carries
-         no confirm field: nothing is confirmed, and a second field with
-         the same placeholder as the disable form's reads as a duplicate
-         of it. Disabled, so the form never posts. */}}
-    <form method="post" action="/admin/users" class="actions" title="Only an active account can be promoted">
-      <button type="submit" class="btn" disabled>Promote</button>
-    </form>
+    <details class="popover"><summary class="popbtn">Promote</summary><div class="popmenu">
+      <form method="post" action="/admin/users" class="popform">
+        <input type="hidden" name="field" value="promote">
+        <input type="hidden" name="user" value="{{.Username}}">
+        <input type="hidden" name="state" value="{{$.State}}">
+        {{template "confirmfield" .Username}}<button type="submit" class="btn">Promote</button>
+      </form>
+    </div></details>
     {{end}}
     {{if eq .State "disabled"}}
-    <form method="post" action="/admin/users" class="actions">
+    <form method="post" action="/admin/users" class="inline">
       <input type="hidden" name="field" value="enable">
       <input type="hidden" name="user" value="{{.Username}}">
       <input type="hidden" name="state" value="{{$.State}}">
       <button type="submit" class="btn">Enable</button>
     </form>
     {{else}}
-    <form method="post" action="/admin/users" class="actions">
-      <input type="hidden" name="field" value="disable">
-      <input type="hidden" name="user" value="{{.Username}}">
-      <input type="hidden" name="state" value="{{$.State}}">
-      {{template "confirmfield" .Username}} <button type="submit" class="btn">Disable</button>
-    </form>
+    <details class="popover"><summary class="popbtn popbtn-danger">Disable</summary><div class="popmenu">
+      <form method="post" action="/admin/users" class="popform">
+        <input type="hidden" name="field" value="disable">
+        <input type="hidden" name="user" value="{{.Username}}">
+        <input type="hidden" name="state" value="{{$.State}}">
+        {{template "confirmfield" .Username}}<button type="submit" class="danger">Disable</button>
+      </form>
+    </div></details>
     {{end}}
   </td>
 </tr>
 {{end}}
 </tbody></table></div>{{else}}<p class="none">No account matches</p>{{end}}
 {{if .Next}}<p class="pager"><a href="{{.Next}}">more →</a></p>{{end}}
+</section>
 
-<p class="meta">Creating and deleting an account, issuing an invite and
-asserting an address stay on the command line: each takes a key, mints
-a credential, or cannot be undone.</p>
-<pre tabindex="0"><code>gitbay admin user create &lt;name&gt; --key - &lt; key.pub
+<section class="setcard">
+<h2>CLI administration</h2>
+<p class="meta">Creating and deleting accounts, issuing invites, and asserting addresses stay on the command line:</p>
+<pre class="copyable" tabindex="0"><code>gitbay admin user create &lt;name&gt; --key - &lt; key.pub
 gitbay admin user delete &lt;name&gt; --yes
 gitbay admin invite --email &lt;address&gt;</code></pre>
+</section>
 {{end}}

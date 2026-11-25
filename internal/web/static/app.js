@@ -3,6 +3,24 @@
 // keyboard shortcuts. Every action degrades cleanly without JS.
 (() => {
   'use strict';
+  document.documentElement.classList.add('js');
+
+  let toastTimer = 0;
+  function showToast(msg, isErr = false) {
+    let el = document.getElementById('gb-toast');
+    if (!el) {
+      el = document.createElement('div');
+      el.id = 'gb-toast';
+      el.className = 'toast';
+      el.setAttribute('role', 'status');
+      document.body.appendChild(el);
+    }
+    el.textContent = msg;
+    el.classList.toggle('toast-err', isErr);
+    el.classList.add('toast-show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => el.classList.remove('toast-show'), 2200);
+  }
 
   const isTyping = (el) => {
     if (!el) return false;
@@ -29,13 +47,12 @@
     }
   });
 
-  // ---- 2. Copy buttons on clone blocks ----
+  // ---- 2. Copy buttons on clone & copyable blocks ----
   function initCopyButtons(root = document) {
-    for (const pre of root.querySelectorAll('.clone pre')) {
+    for (const pre of root.querySelectorAll('.clone pre, pre.copyable')) {
       if (pre.dataset.copyWired) continue;
       pre.dataset.copyWired = '1';
-      const code = pre.querySelector('code');
-      if (!code) continue;
+      const code = pre.querySelector('code') || pre;
       const wrap = document.createElement('div');
       wrap.className = 'copywrap';
       pre.parentNode.insertBefore(wrap, pre);
@@ -325,9 +342,95 @@
     }
   });
 
+  // ---- 7. Auto-save checkboxes & selects on /settings ----
+  document.addEventListener('change', async (e) => {
+    const form = e.target.closest('form[data-autosave]');
+    if (!(form instanceof HTMLFormElement)) return;
+    if (e.target.matches('[data-live-theme]')) {
+      const val = e.target.value;
+      if (val === 'system') delete document.documentElement.dataset.theme;
+      else document.documentElement.dataset.theme = val;
+    }
+    const body = new URLSearchParams(new FormData(form));
+    try {
+      const res = await fetch(form.action, {
+        method: 'POST',
+        body,
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        credentials: 'same-origin',
+      });
+      if (!res.ok) { showToast('Save failed', true); return; }
+      showToast('Saved');
+    } catch {
+      showToast('Save failed', true);
+    }
+  });
+
+  // ---- 8. Live client-side table filter (/admin/users) ----
+  document.addEventListener('input', (e) => {
+    const inp = e.target.closest('input[data-filter-table]');
+    if (!inp) return;
+    const table = document.getElementById(inp.dataset.filterTable);
+    if (!table) return;
+    const q = inp.value.trim().toLowerCase();
+    for (const row of table.querySelectorAll('tbody tr')) {
+      row.hidden = q !== '' && !row.textContent.toLowerCase().includes(q);
+    }
+  });
+
+  // ---- 9. In-place Refresh (/admin) ----
+  document.addEventListener('click', async (e) => {
+    const btn = e.target.closest('button[data-refresh]');
+    if (!btn) return;
+    const url = btn.dataset.refresh;
+    btn.disabled = true;
+    try {
+      const res = await fetch(url, { credentials: 'same-origin' });
+      if (!res.ok) { showToast('Refresh failed', true); return; }
+      const html = await res.text();
+      const doc = new DOMParser().parseFromString(html, 'text/html');
+      const next = doc.getElementById('admin-queues');
+      const cur = document.getElementById('admin-queues');
+      if (next && cur) {
+        cur.replaceWith(next);
+        initScrollSpy();
+        showToast('Refreshed');
+      }
+    } catch {
+      showToast('Refresh failed', true);
+    } finally {
+      btn.disabled = false;
+    }
+  });
+
+  // ---- 10. Scroll-spy on sticky section navs ----
+  function initScrollSpy() {
+    const nav = document.querySelector('nav[data-scrollspy]');
+    if (!nav || !('IntersectionObserver' in window)) return;
+    const links = Array.from(nav.querySelectorAll('a[href^="#"]'));
+    const byId = new Map();
+    for (const a of links) {
+      const id = a.getAttribute('href').slice(1);
+      if (id) byId.set(id, a);
+    }
+    const io = new IntersectionObserver((entries) => {
+      for (const ent of entries) {
+        if (!ent.isIntersecting) continue;
+        for (const a of links) a.removeAttribute('aria-current');
+        const hit = byId.get(ent.target.id);
+        if (hit) hit.setAttribute('aria-current', 'location');
+      }
+    }, { rootMargin: '-15% 0px -70% 0px' });
+    for (const id of byId.keys()) {
+      const sec = document.getElementById(id);
+      if (sec) io.observe(sec);
+    }
+  }
+
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => initCopyButtons());
+    document.addEventListener('DOMContentLoaded', () => { initCopyButtons(); initScrollSpy(); });
   } else {
     initCopyButtons();
+    initScrollSpy();
   }
 })();

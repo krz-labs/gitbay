@@ -1,12 +1,16 @@
 {{define "width"}}wide{{end}}
 {{define "title"}}account settings{{end}}
 {{define "content"}}
-<h1>Account settings</h1>
+<div class="pagehead">
+  <h1>Account settings</h1>
+  <span class="grow"></span>
+  <a class="button btn" href="/{{.Viewer}}">View profile</a>
+</div>
 {{if .Notice}}<p class="error" role="alert">{{.Notice}}{{if .Reauth}} <a href="/login">Sign in again</a>{{end}}</p>{{end}}
 {{if .Message}}<p class="notice" role="status">{{.Message}}</p>{{end}}
 
 <div class="withcol narrow">
-<nav class="sidecol" aria-label="Sections">
+<nav class="sidecol sticky" aria-label="Sections" data-scrollspy="1">
 <details class="sidedrop">
 <summary><span class="sideword">Sections</span></summary>
   <div class="grp"><h2 class="colhead">Sections</h2>
@@ -17,15 +21,15 @@
     <li><a href="#pgp">OpenPGP keys</a></li>
     <li><a href="#notifications">Notifications</a></li>
     <li><a href="#appearance">Appearance</a></li>
-    <li><a href="#export">Export</a></li>
     <li><a href="#tokens">API tokens</a></li>
+    <li><a href="#export">Export</a></li>
     <li><a href="#cli">On the command line</a></li>
     <li><a href="#delete">Delete account</a></li>
   </ul></div>
 </details>
 </nav>
 <div class="colmain">
-<section id="profile"><h2>Profile</h2>
+<section id="profile" class="setcard"><h2>Profile</h2>
 <p class="meta">Shown on your profile page, <a href="/{{.Viewer}}">/{{.Viewer}}</a>.</p>
 <form method="post" action="/settings" class="setform stack">
   <input type="hidden" name="field" value="profile">
@@ -35,20 +39,20 @@
   <input type="text" id="p-website" name="website" value="{{.Profile.Website}}" placeholder="https://example.org">
   <label for="p-links">Links</label>
   <textarea id="p-links" name="links" rows="3" placeholder="one per line: label|https://… or a bare https://… (at most 5)">{{.LinksText}}</textarea>
-  <span class="btngroup"><button type="submit" class="btn">Save profile</button></span>
+  <span class="btngroup"><button type="submit">Save profile</button></span>
 </form>
 <h3>About</h3>
 <p class="meta">The longer text below your repositories is a file:
 <code>profile/README.md</code> in <a href="/{{.AboutRepo}}">{{.AboutRepo}}</a>.
 Write it with a push, or edit it here.</p>
-{{if .AboutEdit}}<p><a class="btn" href="{{.AboutEdit}}">Edit {{.Profile.AboutPath}}</a></p>
-{{else}}<form method="post" action="/settings" class="setform">
+{{if .AboutEdit}}<p><a class="button btn" href="{{.AboutEdit}}">Edit {{.Profile.AboutPath}}</a></p>
+{{else}}<form method="post" action="/settings" class="actions">
   <input type="hidden" name="field" value="profile-repo">
   <button type="submit" class="btn">Create {{.AboutRepo}}</button>
 </form>{{end}}
 </section>
 
-<section id="keys"><h2>SSH keys</h2>
+<section id="keys" class="setcard"><h2>SSH keys</h2>
 <p class="meta">Your keys are your identity here. A <code>full</code> key can run
 commands and push; a <code>git</code> key can only move git data (e.g., CI).</p>
 {{if .Keys}}<div class="tablewrap"><table class="keys nowrap">
@@ -57,8 +61,10 @@ commands and push; a <code>git</code> key can only move git data (e.g., CI).</p>
   <td>{{.Label}}</td>
   <td class="mono">{{.Fingerprint}}</td>
   <td>{{.Algo}}</td>
-  <td>{{.Scope}}</td>
-  <td class="act"><form method="post" action="/settings"><input type="hidden" name="field" value="key-remove"><input type="hidden" name="fingerprint" value="{{.Fingerprint}}">{{template "confirmfield" .Confirm}} <button type="submit" class="danger">Remove</button></form></td>
+  <td><span class="chip">{{.Scope}}</span></td>
+  <td class="act"><details class="popover"><summary class="popbtn popbtn-danger">Remove</summary><div class="popmenu">
+    <form method="post" action="/settings" class="popform"><input type="hidden" name="field" value="key-remove"><input type="hidden" name="fingerprint" value="{{.Fingerprint}}">{{template "confirmfield" .Confirm}}<button type="submit" class="danger">Remove</button></form>
+  </div></details></td>
 </tr>
 {{end}}</table></div>
 {{else}}<p class="none">No SSH keys? Which cannot be right, since you signed in.</p>{{end}}
@@ -75,24 +81,26 @@ commands and push; a <code>git</code> key can only move git data (e.g., CI).</p>
       <option value="full">full: commands and git</option>
       <option value="git">git: git transport only</option>
     </select>
-    <button type="submit" class="btn">Add key</button>
+    <span class="btngroup"><button type="submit">Add key</button></span>
   </form>
 </details>
 </section>
 
-<section id="emails"><h2>Email addresses</h2>
+<section id="emails" class="setcard"><h2>Email addresses</h2>
 <p class="meta">A verified address ties signed commits to this
 account and where notifications go.</p>
 {{if .Emails}}<ul class="plain">
-{{range .Emails}}<li>{{.Address}}
+{{range .Emails}}<li><span>{{.Address}}</span>
   {{if .Primary}}<span class="chip">primary</span>{{end}}
   {{if .Verified}}<span class="badge badge-verified">verified{{with .VerifiedBy}} · {{.}}{{end}}</span>
   {{else}}<span class="badge badge-unsigned">unverified</span>{{end}}
   {{if not .Primary}}{{if .Verified}}<form method="post" action="/settings" class="inline"><input type="hidden" name="field" value="email-primary"><input type="hidden" name="address" value="{{.Address}}"><button type="submit" class="linklike">Make primary</button></form>{{end}}
-  <form method="post" action="/settings" class="inline"><input type="hidden" name="field" value="email-remove"><input type="hidden" name="address" value="{{.Address}}">{{template "confirmfield" .Address}} <button type="submit" class="danger">Remove</button></form>{{end}}</li>
+  <details class="popover"><summary class="popbtn popbtn-danger">Remove</summary><div class="popmenu">
+    <form method="post" action="/settings" class="popform"><input type="hidden" name="field" value="email-remove"><input type="hidden" name="address" value="{{.Address}}">{{template "confirmfield" .Address}}<button type="submit" class="danger">Remove</button></form>
+  </div></details>{{end}}</li>
 {{end}}</ul>{{end}}
 <details class="editbox">
-  <summary>Add an address</summary>
+  <summary>Add or verify an address</summary>
   <form method="post" action="/settings" class="setform">
     <input type="hidden" name="field" value="email-add">
     <label for="address">Address</label>
@@ -108,7 +116,7 @@ account and where notifications go.</p>
 </details>
 </section>
 
-<section id="pgp"><h2>OpenPGP keys</h2>
+<section id="pgp" class="setcard"><h2>OpenPGP keys</h2>
 <p class="meta">Only needed if you sign commits with GPG. SSH signing
 (<code>gpg.format = ssh</code>) uses the keys above.</p>
 {{if .PGP}}<div class="tablewrap"><table class="keys">
@@ -116,7 +124,9 @@ account and where notifications go.</p>
 {{range .PGP}}<tr>
   <td class="mono">{{.Fingerprint}}</td>
   <td>{{range .UIDs}}{{.}}<br>{{end}}{{if .Revoked}}<span class="badge badge-bad_signature">revoked</span>{{else if .Expired}}<span class="badge badge-signed_key_expired">expired</span>{{end}}</td>
-  <td class="act"><form method="post" action="/settings"><input type="hidden" name="field" value="pgp-remove"><input type="hidden" name="fingerprint" value="{{.Fingerprint}}">{{template "confirmfield" .Confirm}} <button type="submit" class="danger">Remove</button></form></td>
+  <td class="act"><details class="popover"><summary class="popbtn popbtn-danger">Remove</summary><div class="popmenu">
+    <form method="post" action="/settings" class="popform"><input type="hidden" name="field" value="pgp-remove"><input type="hidden" name="fingerprint" value="{{.Fingerprint}}">{{template "confirmfield" .Confirm}}<button type="submit" class="danger">Remove</button></form>
+  </div></details></td>
 </tr>
 {{end}}</table></div>
 {{else}}<p class="none">No OpenPGP keys.</p>{{end}}
@@ -126,40 +136,36 @@ account and where notifications go.</p>
     <input type="hidden" name="field" value="pgp-add">
     <label for="pgpkey">Armored public key</label>
     <textarea id="pgpkey" name="key" rows="6" required placeholder="-----BEGIN PGP PUBLIC KEY BLOCK-----"></textarea>
-    <button type="submit" class="btn">Add key</button>
+    <span class="btngroup"><button type="submit">Add key</button></span>
   </form>
 </details>
 </section>
 
-<section id="notifications"><h2>Notifications</h2>
-<form method="post" action="/settings" class="setform">
+<section id="notifications" class="setcard"><h2>Notifications</h2>
+<form method="post" action="/settings" class="setform" data-autosave="1">
   <input type="hidden" name="field" value="notify-mail">
-  <label for="notify-mail">Activity by mail</label>
+  <div><label for="notify-mail">Activity by mail</label><p class="hint">Receive activity alerts by email. Login links arrive regardless.</p></div>
   <div class="check"><input type="checkbox" id="notify-mail" name="mail" value="on"{{if .MailOn}} checked{{end}}></div>
   <button type="submit" class="btn">Save</button>
 </form>
-<p class="meta">Enable to receive activity alerts by email. Login links will arrive regardless of this setting.</p>
-{{if .ReplyOffered}}<form method="post" action="/settings" class="setform">
+{{if .ReplyOffered}}<form method="post" action="/settings" class="setform" data-autosave="1">
   <input type="hidden" name="field" value="notify-reply">
-  <label for="notify-reply">Reply to mail to comment</label>
+  <div><label for="notify-reply">Reply to mail to comment</label><p class="hint">Issue and MR mail gets a reply address; replies from verified addresses post as comments.</p></div>
   <div class="check"><input type="checkbox" id="notify-reply" name="reply" value="on"{{if .ReplyOn}} checked{{end}}></div>
   <button type="submit" class="btn">Save</button>
-</form>
-<p class="meta">Issue and merge request mail gets a reply address. A reply posts a comment as you when it comes from one of your verified addresses; quoted text and signatures are removed.</p>
-{{end}}<form method="post" action="/settings" class="setform">
+</form>{{end}}
+<form method="post" action="/settings" class="setform" data-autosave="1">
   <input type="hidden" name="field" value="notify-watch">
-  <label for="notify-watch">Watch repositories you can write to</label>
+  <div><label for="notify-watch">Watch repositories you can write to</label><p class="hint">Alerts for every issue and MR on writable repos unless overridden per repo.</p></div>
   <div class="check"><input type="checkbox" id="notify-watch" name="watch" value="on"{{if .WatchOn}} checked{{end}}></div>
   <button type="submit" class="btn">Save</button>
 </form>
-<p class="meta">Alerts for every issue and merge request on those repositories. A watch or mute on a repository has priority over this setting.</p>
-<form method="post" action="/settings" class="setform">
+<form method="post" action="/settings" class="setform" data-autosave="1">
   <input type="hidden" name="field" value="notify-push">
-  <label for="notify-push">Activity on your registered devices</label>
+  <div><label for="notify-push">Activity on your registered devices</label><p class="hint">Sends notification text to Apple devices registered in the iOS app.</p></div>
   <div class="check"><input type="checkbox" id="notify-push" name="push" value="on"{{if .PushOn}} checked{{end}}></div>
   <button type="submit" class="btn">Save</button>
 </form>
-<p class="meta">Notification text is sent in full, including for private repositories, so a repository name and item number reach Apple and appear on a lock screen.</p>
 <h3>Devices</h3>
 {{if .Devices}}<div class="tablewrap"><table class="keys nowrap">
 <tr class="cols"><th scope="col">id</th><th scope="col">label</th><th scope="col">token</th><th scope="col">last seen</th><th scope="col"><span class="vh">actions</span></th></tr>
@@ -168,52 +174,41 @@ account and where notifications go.</p>
   <td>{{.Label}}</td>
   <td class="mono">{{.Token}}</td>
   <td>{{if .LastSeenAt}}{{when .LastSeenAt}}{{else}}never{{end}}</td>
-  <td class="act"><form method="post" action="/settings"><input type="hidden" name="field" value="device-remove"><input type="hidden" name="id" value="{{.ID}}">{{template "confirmfield" .Confirm}} <button type="submit" class="danger">Remove</button></form></td>
+  <td class="act"><details class="popover"><summary class="popbtn popbtn-danger">Remove</summary><div class="popmenu">
+    <form method="post" action="/settings" class="popform"><input type="hidden" name="field" value="device-remove"><input type="hidden" name="id" value="{{.ID}}">{{template "confirmfield" .Confirm}}<button type="submit" class="danger">Remove</button></form>
+  </div></details></td>
 </tr>
 {{end}}</table></div>
 {{else}}<p class="none">No registered devices.</p>{{end}}
-<p class="meta">Devices register themselves from the iOS app; there is no
-form here to add one, since a browser cannot produce an APNs token.</p>
+<p class="meta">Devices register themselves from the iOS app; a browser cannot produce an APNs token.</p>
 </section>
 
-<section id="appearance"><h2>Appearance</h2>
-<form method="post" action="/settings" class="setform">
+<section id="appearance" class="setcard"><h2>Appearance</h2>
+<form method="post" action="/settings" class="setform" data-autosave="1">
   <input type="hidden" name="field" value="theme">
-  <label for="theme">Colour scheme</label>
-  <select id="theme" name="theme">
-    <option value="system"{{if eq .ThemeSetting "system"}} selected{{end}}>follow the browser</option>
-    <option value="light"{{if eq .ThemeSetting "light"}} selected{{end}}>light</option>
-    <option value="dark"{{if eq .ThemeSetting "dark"}} selected{{end}}>dark</option>
+  <div><label for="theme">Colour scheme</label><p class="hint">Matches <code>gitbay web theme set</code>.</p></div>
+  <select id="theme" name="theme" data-live-theme="1">
+    <option value="system"{{if eq .ThemeSetting "system"}} selected{{end}}>Follow the browser</option>
+    <option value="light"{{if eq .ThemeSetting "light"}} selected{{end}}>Light</option>
+    <option value="dark"{{if eq .ThemeSetting "dark"}} selected{{end}}>Dark</option>
   </select>
   <button type="submit" class="btn">Save</button>
 </form>
-<p class="meta">The same setting as <code>gitbay web theme set</code>. Following the browser takes its light or dark preference.</p>
-<form method="post" action="/settings" class="setform">
+<form method="post" action="/settings" class="setform" data-autosave="1">
   <input type="hidden" name="field" value="diff-layout">
-  <label for="layout">Diff layout</label>
+  <div><label for="layout">Diff layout</label><p class="hint">Matches <code>gitbay web diff set</code>. Narrow windows stay unified.</p></div>
   <select id="layout" name="layout">
-    <option value="unified"{{if ne .DiffSetting "split"}} selected{{end}}>unified</option>
-    <option value="split"{{if eq .DiffSetting "split"}} selected{{end}}>side by side</option>
+    <option value="unified"{{if ne .DiffSetting "split"}} selected{{end}}>Unified</option>
+    <option value="split"{{if eq .DiffSetting "split"}} selected{{end}}>Side by side</option>
   </select>
   <button type="submit" class="btn">Save</button>
 </form>
-<p class="meta">The same setting as <code>gitbay web diff set</code>. A <code>?layout=split</code> or <code>?layout=unified</code> on a diff page overrides it for that request. Narrow windows always show a unified diff.</p>
 </section>
 
-<section id="export"><h2>Export</h2>
-<p class="meta">Your profile, repositories, issues and merge requests as one
-JSON bundle, the same one <code>gitbay auth export</code> writes. Keys are
-never included; a replayed bundle's emails arrive unverified.</p>
-<p><a href="/settings/export">Download bundle</a></p>
-</section>
-
-<section id="tokens"><h2>API tokens</h2>
-<p class="meta">A token signs in the iOS app, or a script, without your
-password. A phone app needs full scope to comment and merge; full scope
-on an admin account can administer the instance, so give a token the
-narrowest scope and shortest lifetime the job needs.</p>
+<section id="tokens" class="setcard"><h2>API tokens</h2>
+<p class="meta">A token signs in the iOS app or a script. Give each token the narrowest scope and shortest lifetime the job needs.</p>
 {{if .TokenShown}}<p class="notice" role="status">Token created. It is shown once; store it now.</p>
-<pre class="message" tabindex="0">{{.TokenShown}}</pre>{{end}}
+<pre class="message copyable" tabindex="0"><code>{{.TokenShown}}</code></pre>{{end}}
 {{if .Tokens}}<div class="tablewrap"><table class="keys nowrap">
 <tr class="cols"><th scope="col">name</th><th scope="col">scope</th><th scope="col">created</th><th scope="col">expires</th><th scope="col">last used</th><th scope="col"><span class="vh">actions</span></th></tr>
 {{range .Tokens}}<tr>
@@ -222,7 +217,9 @@ narrowest scope and shortest lifetime the job needs.</p>
   <td>{{when .Created}}</td>
   <td>{{.Expires}}</td>
   <td>{{.LastUsed}}</td>
-  <td class="act"><form method="post" action="/settings"><input type="hidden" name="field" value="token-revoke"><input type="hidden" name="name" value="{{.Name}}">{{template "confirmfield" .Name}} <button type="submit" class="danger">Revoke</button></form></td>
+  <td class="act"><details class="popover"><summary class="popbtn popbtn-danger">Revoke</summary><div class="popmenu">
+    <form method="post" action="/settings" class="popform"><input type="hidden" name="field" value="token-revoke"><input type="hidden" name="name" value="{{.Name}}">{{template "confirmfield" .Name}}<button type="submit" class="danger">Revoke</button></form>
+  </div></details></td>
 </tr>
 {{end}}</table></div>
 {{else}}<p class="none">No API tokens.</p>{{end}}
@@ -239,28 +236,27 @@ narrowest scope and shortest lifetime the job needs.</p>
     </select>
     <label for="token-ttl">Expires after</label>
     <input id="token-ttl" name="ttl" autocomplete="off" placeholder="e.g. 30d or 720h; empty never expires">
-    <button type="submit" class="btn">Create token</button>
+    <span class="btngroup"><button type="submit">Create token</button></span>
   </form>
 </details>
 </section>
 
-<section id="cli"><h2>On the command line</h2>
-<p class="meta">No page here yet, and nothing refusing one.</p>
-<pre class="message" tabindex="0">gitbay web sessions list               # browser sessions
-gitbay admin ...                       # instance administration</pre>
-<p class="meta">All of it works from stock OpenSSH too, with the CLI's
-grouping words dropped: <code>ssh git@{{.Host}} whoami</code>,
-<code>ssh git@{{.Host}} web sessions list</code>.</p>
+<section id="export" class="setcard"><h2>Export</h2>
+<p class="meta">Your profile, repositories, issues and merge requests as one JSON bundle, matching <code>gitbay auth export</code>. Keys are excluded.</p>
+<p><a class="button btn" href="/settings/export">Download bundle</a></p>
 </section>
 
-<section id="delete"><h2>Delete account</h2>
-<p class="meta">Deletes your repositories, snippets, keys and addresses.
-Issues, merge requests and comments you wrote on other people's
-repositories stay, under the name <code>ghost</code>. A link is mailed to
-your primary address; once it is opened the account is disabled, and it
-is deleted seven days later. Signing in during those days cancels.
-<a href="#export">Export</a> first to keep a copy.</p>
-<form method="post" action="/settings" class="setform"><input type="hidden" name="field" value="account-delete">{{template "confirmfield" .Viewer}} <button type="submit" class="danger">Mail the deletion link</button></form>
+<section id="cli" class="setcard"><h2>On the command line</h2>
+<p class="meta">Browser sessions and instance administration also run from the CLI or stock OpenSSH:</p>
+<pre class="message copyable" tabindex="0"><code>gitbay web sessions list
+ssh git@{{.Host}} whoami</code></pre>
+</section>
+
+<section id="delete" class="setcard setcard-danger"><h2>Delete account</h2>
+<p class="meta">Deletes your repositories, snippets, keys and addresses. Issues, merge requests and comments on other people's repositories stay under <code>ghost</code>. A confirmation link is mailed to your primary address; opening it disables the account and purges it seven days later. <a href="#export">Export</a> first to keep a copy.</p>
+<details class="popover"><summary class="button danger">Delete account…</summary><div class="popmenu">
+  <form method="post" action="/settings" class="popform"><input type="hidden" name="field" value="account-delete">{{template "confirmfield" .Viewer}}<button type="submit" class="danger">Mail link</button></form>
+</div></details>
 </section>
 </div>
 </div>

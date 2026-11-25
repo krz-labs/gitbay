@@ -2205,3 +2205,64 @@ dialog.cmdk::backdrop { background: rgb(0 0 0 / 0.45); }
 @media (max-width: 34rem) {
   .cmdk-trigger { display: none; }
 }
+
+/* ---- account & admin redesign ---- */
+.setcard {
+  background: var(--canvas);
+  border: 1px solid var(--faint);
+  border-radius: var(--r-card);
+  padding: var(--sp-5);
+  margin: 0 0 var(--sp-5);
+}
+.setcard > h2:first-child { margin-top: 0; }
+.setcard > h2 { display: flex; align-items: center; gap: var(--sp-2); }
+.setcard-danger { border-color: color-mix(in srgb, var(--bad) 40%, var(--faint)); }
+.setcard .tablewrap { overflow: visible; }
+@media (max-width: 52rem) {
+  .setcard .tablewrap { overflow-x: auto; }
+}
+.adminhead {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  flex-wrap: wrap;
+  margin-bottom: var(--sp-3);
+}
+.adminhead h1 { margin: 0 0 var(--sp-1); }
+.adminhead p.meta { margin: 0; }
+nav.admintabs {
+  border-bottom: 1px solid var(--faint);
+  margin-top: 0;
+  margin-bottom: var(--sp-5);
+}
+.sidecol.sticky {
+  position: sticky;
+  top: var(--sp-4);
+  align-self: start;
+}
+.popbtn-danger { color: var(--bad); }
+.popbtn-danger:hover, .popover[open] > .popbtn-danger {
+  background: color-mix(in srgb, var(--bad) 10%, transparent);
+  color: var(--bad);
+}
+.tablefilter { min-width: 14rem; }
+pre.copyable { margin: var(--sp-2) 0 0; }
+html.js form[data-autosave] button[type="submit"] { display: none; }
+.toast {
+  position: fixed;
+  right: var(--sp-5);
+  bottom: var(--sp-5);
+  z-index: 60;
+  padding: var(--sp-2) var(--sp-4);
+  border-radius: var(--r-ctl);
+  background: var(--shell-bg);
+  color: var(--shell-fg);
+  font-size: var(--fs-2);
+  box-shadow: var(--shadow);
+  opacity: 0;
+  transform: translateY(6px);
+  pointer-events: none;
+  transition: opacity 0.16s ease, transform 0.16s ease;
+}
+.toast-show { opacity: 1; transform: translateY(0); }
+.toast-err { background: var(--bad); color: var(--canvas); }

@@ -104,3 +104,71 @@ func TestWebUXPickersStatebarAndRailPins(t *testing.T) {
 		t.Fatalf("labels after picker click: %+v err=%v", iss.Labels, err)
 	}
 }
+
+func TestAccountAndAdminUX(t *testing.T) {
+	st, err := store.Open(":memory:")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer st.Close()
+	if err := st.MigrateUp(); err != nil {
+		t.Fatal(err)
+	}
+	uid, err := st.CreateUser("admin", true)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := st.CreateUser("bob", false); err != nil {
+		t.Fatal(err)
+	}
+
+	var cfg config.Config
+	cfg.Server.Root = t.TempDir()
+	cfg.Server.SiteURL = "https://forge.test"
+	cfg.Web.Mode = "accounts"
+	srv := New(cfg, st, nil)
+	cookie := sessionCookieFor(t, srv, st, uid)
+	h := srv.Handler()
+
+	// /settings renders setcard sections, autosave forms, and popover confirmations.
+	req := httptest.NewRequest("GET", "/settings", nil)
+	req.AddCookie(cookie)
+	rec := httptest.NewRecorder()
+	h.ServeHTTP(rec, req)
+	if rec.Code != http.StatusOK {
+		t.Fatalf("GET /settings: %d", rec.Code)
+	}
+	for _, want := range []string{`class="setcard"`, `data-autosave="1"`, `data-live-theme="1"`, `data-scrollspy="1"`, `class="popover"`} {
+		if !strings.Contains(rec.Body.String(), want) {
+			t.Errorf("/settings missing %s", want)
+		}
+	}
+
+	// /admin renders unified tabs, overview tiles, and in-place refresh trigger.
+	req = httptest.NewRequest("GET", "/admin", nil)
+	req.AddCookie(cookie)
+	rec = httptest.NewRecorder()
+	h.ServeHTTP(rec, req)
+	if rec.Code != http.StatusOK {
+		t.Fatalf("GET /admin: %d", rec.Code)
+	}
+	for _, want := range []string{`admintabs`, `data-refresh="/admin"`, `id="admin-queues"`, `class="tiles"`} {
+		if !strings.Contains(rec.Body.String(), want) {
+			t.Errorf("/admin missing %s", want)
+		}
+	}
+
+	// /admin/users renders live filter input and popover confirm controls.
+	req = httptest.NewRequest("GET", "/admin/users", nil)
+	req.AddCookie(cookie)
+	rec = httptest.NewRecorder()
+	h.ServeHTTP(rec, req)
+	if rec.Code != http.StatusOK {
+		t.Fatalf("GET /admin/users: %d", rec.Code)
+	}
+	for _, want := range []string{`admintabs`, `data-filter-table="accounts-table"`, `class="popover"`, `bob`} {
+		if !strings.Contains(rec.Body.String(), want) {
+			t.Errorf("/admin/users missing %s", want)
+		}
+	}
+}
