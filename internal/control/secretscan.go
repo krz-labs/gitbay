@@ -9,10 +9,10 @@ import (
 	"strings"
 	"time"
 
-	"gitbay.org/gitbay/internal/leaks"
-	"gitbay.org/gitbay/internal/policy"
-	"gitbay.org/gitbay/internal/protocol"
-	"gitbay.org/gitbay/internal/store"
+	"github.com/krz-labs/gitbay/internal/leaks"
+	"github.com/krz-labs/gitbay/internal/policy"
+	"github.com/krz-labs/gitbay/internal/protocol"
+	"github.com/krz-labs/gitbay/internal/store"
 )
 
 func init() {

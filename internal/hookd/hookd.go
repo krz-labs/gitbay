@@ -24,13 +24,13 @@ import (
 	"strings"
 	"sync"
 
-	"gitbay.org/gitbay/internal/config"
-	"gitbay.org/gitbay/internal/control"
-	"gitbay.org/gitbay/internal/gitutil"
-	"gitbay.org/gitbay/internal/leaks"
-	"gitbay.org/gitbay/internal/policy"
-	"gitbay.org/gitbay/internal/sig"
-	"gitbay.org/gitbay/internal/store"
+	"github.com/krz-labs/gitbay/internal/config"
+	"github.com/krz-labs/gitbay/internal/control"
+	"github.com/krz-labs/gitbay/internal/gitutil"
+	"github.com/krz-labs/gitbay/internal/leaks"
+	"github.com/krz-labs/gitbay/internal/policy"
+	"github.com/krz-labs/gitbay/internal/sig"
+	"github.com/krz-labs/gitbay/internal/store"
 )
 
 // Env variable names passed to git transport subprocesses and inherited by

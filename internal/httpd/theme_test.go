@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"gitbay.org/gitbay/internal/web"
+	"github.com/krz-labs/gitbay/internal/web"
 )
 
 // The served stylesheet guards the dark media block against an explicit

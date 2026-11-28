@@ -5,7 +5,7 @@ import (
 	"reflect"
 	"testing"
 
-	"gitbay.org/gitbay/internal/store"
+	"github.com/krz-labs/gitbay/internal/store"
 )
 
 func TestParseItemQuery(t *testing.T) {

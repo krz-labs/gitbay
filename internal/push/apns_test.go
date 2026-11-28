@@ -11,7 +11,7 @@ import (
 	"time"
 	"unicode/utf8"
 
-	"gitbay.org/gitbay/internal/config"
+	"github.com/krz-labs/gitbay/internal/config"
 )
 
 // fakeAPNs stands in for Apple. It speaks HTTP/1.1; the real transport is

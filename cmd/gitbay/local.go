@@ -12,10 +12,10 @@ import (
 	"github.com/spf13/cobra"
 	"golang.org/x/term"
 
-	"gitbay.org/gitbay/internal/cliconfig"
-	"gitbay.org/gitbay/internal/protocol"
-	"gitbay.org/gitbay/internal/suggest"
-	"gitbay.org/gitbay/internal/toolpath"
+	"github.com/krz-labs/gitbay/internal/cliconfig"
+	"github.com/krz-labs/gitbay/internal/protocol"
+	"github.com/krz-labs/gitbay/internal/suggest"
+	"github.com/krz-labs/gitbay/internal/toolpath"
 )
 
 // hasBodyFlag reports whether args already carry body/message input.

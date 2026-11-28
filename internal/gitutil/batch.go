@@ -8,7 +8,7 @@ import (
 	"strconv"
 	"strings"
 
-	"gitbay.org/gitbay/internal/toolpath"
+	"github.com/krz-labs/gitbay/internal/toolpath"
 )
 
 // BlobBatch reads blobs by object id through one `git cat-file --batch`

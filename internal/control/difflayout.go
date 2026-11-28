@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"io"
 
-	"gitbay.org/gitbay/internal/protocol"
+	"github.com/krz-labs/gitbay/internal/protocol"
 )
 
 func init() {

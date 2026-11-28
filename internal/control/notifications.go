@@ -8,11 +8,11 @@ import (
 	"strings"
 	"time"
 
-	"gitbay.org/gitbay/internal/autolink"
-	"gitbay.org/gitbay/internal/mailreply"
-	"gitbay.org/gitbay/internal/policy"
-	"gitbay.org/gitbay/internal/protocol"
-	"gitbay.org/gitbay/internal/store"
+	"github.com/krz-labs/gitbay/internal/autolink"
+	"github.com/krz-labs/gitbay/internal/mailreply"
+	"github.com/krz-labs/gitbay/internal/policy"
+	"github.com/krz-labs/gitbay/internal/protocol"
+	"github.com/krz-labs/gitbay/internal/store"
 )
 
 func init() {

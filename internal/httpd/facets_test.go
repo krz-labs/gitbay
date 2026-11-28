@@ -4,7 +4,7 @@ import (
 	"net/url"
 	"testing"
 
-	"gitbay.org/gitbay/internal/store"
+	"github.com/krz-labs/gitbay/internal/store"
 )
 
 // A facet link keeps every other active filter, sets its own, and clears

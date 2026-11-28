@@ -10,9 +10,9 @@ import (
 	"strconv"
 	"strings"
 
-	"gitbay.org/gitbay/internal/control"
-	"gitbay.org/gitbay/internal/store"
-	"gitbay.org/gitbay/internal/symbols"
+	"github.com/krz-labs/gitbay/internal/control"
+	"github.com/krz-labs/gitbay/internal/store"
+	"github.com/krz-labs/gitbay/internal/symbols"
 )
 
 // nameSpan is a name token as chroma writes it with classes: n, nx, nf,

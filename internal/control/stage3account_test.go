@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"gitbay.org/gitbay/internal/store"
+	"github.com/krz-labs/gitbay/internal/store"
 )
 
 // accountFixture is a user with something in every account list task 4

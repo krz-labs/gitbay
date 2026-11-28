@@ -9,9 +9,9 @@ import (
 	"testing"
 	"time"
 
-	"gitbay.org/gitbay/internal/config"
-	"gitbay.org/gitbay/internal/seal"
-	"gitbay.org/gitbay/internal/store"
+	"github.com/krz-labs/gitbay/internal/config"
+	"github.com/krz-labs/gitbay/internal/seal"
+	"github.com/krz-labs/gitbay/internal/store"
 )
 
 func TestOpenStoreRefusesWithoutKeyFile(t *testing.T) {

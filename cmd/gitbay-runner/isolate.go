@@ -10,7 +10,7 @@ import (
 	"strings"
 	"time"
 
-	"gitbay.org/gitbay/internal/toolpath"
+	"github.com/krz-labs/gitbay/internal/toolpath"
 )
 
 // Isolation modes. podman runs a job's steps in a container; none runs

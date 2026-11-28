@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"gitbay.org/gitbay/internal/protocol"
+	"github.com/krz-labs/gitbay/internal/protocol"
 )
 
 // mirror add refuses a host sync would refuse as numeric, on an

@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"gitbay.org/gitbay/internal/store"
+	"github.com/krz-labs/gitbay/internal/store"
 )
 
 // testStoreWithQueuedPush opens an in-memory store, creates a user with

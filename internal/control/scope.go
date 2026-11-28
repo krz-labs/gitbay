@@ -3,8 +3,8 @@ package control
 import (
 	"fmt"
 
-	"gitbay.org/gitbay/internal/policy"
-	"gitbay.org/gitbay/internal/store"
+	"github.com/krz-labs/gitbay/internal/policy"
+	"github.com/krz-labs/gitbay/internal/store"
 )
 
 // ReadableOrgRepoIDs is the org's repositories user may read. Counts on

@@ -5,8 +5,8 @@ import (
 	"encoding/json"
 	"testing"
 
-	"gitbay.org/gitbay/internal/protocol"
-	"gitbay.org/gitbay/internal/store"
+	"github.com/krz-labs/gitbay/internal/protocol"
+	"github.com/krz-labs/gitbay/internal/store"
 )
 
 // A line the server posted (a label change, a retarget) says so in

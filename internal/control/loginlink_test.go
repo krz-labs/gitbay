@@ -6,7 +6,7 @@ import (
 
 	// Aliased: this package already has a top-level function named notify
 	// (notifications.go), which the default import name would collide with.
-	mailqueue "gitbay.org/gitbay/internal/notify"
+	mailqueue "github.com/krz-labs/gitbay/internal/notify"
 )
 
 // Nothing ties notify's retry parameters to loginLinkTTL: someone tuning

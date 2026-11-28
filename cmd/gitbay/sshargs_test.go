@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"gitbay.org/gitbay/internal/cliconfig"
+	"github.com/krz-labs/gitbay/internal/cliconfig"
 )
 
 // Every ssh the CLI spawns shares one connection per instance, so a

@@ -5,8 +5,8 @@ import (
 	"log/slog"
 	"time"
 
-	"gitbay.org/gitbay/internal/config"
-	"gitbay.org/gitbay/internal/store"
+	"github.com/krz-labs/gitbay/internal/config"
+	"github.com/krz-labs/gitbay/internal/store"
 )
 
 // DefaultMaxAttempts matches the mailer's: a flaky APNs delays a

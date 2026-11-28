@@ -6,9 +6,9 @@ import (
 	"strings"
 	"testing"
 
-	"gitbay.org/gitbay/internal/control"
-	"gitbay.org/gitbay/internal/gitutil"
-	"gitbay.org/gitbay/internal/store"
+	"github.com/krz-labs/gitbay/internal/control"
+	"github.com/krz-labs/gitbay/internal/gitutil"
+	"github.com/krz-labs/gitbay/internal/store"
 )
 
 // repo download turned away by a full pack limit is 503 with

@@ -6,8 +6,8 @@ import (
 	"path/filepath"
 	"testing"
 
-	"gitbay.org/gitbay/internal/protocol"
-	"gitbay.org/gitbay/internal/store"
+	"github.com/krz-labs/gitbay/internal/protocol"
+	"github.com/krz-labs/gitbay/internal/store"
 )
 
 func TestRepoReadmePicksTheRichestFormat(t *testing.T) {

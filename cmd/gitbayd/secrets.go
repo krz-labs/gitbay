@@ -12,8 +12,8 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"gitbay.org/gitbay/internal/config"
-	"gitbay.org/gitbay/internal/seal"
+	"github.com/krz-labs/gitbay/internal/config"
+	"github.com/krz-labs/gitbay/internal/seal"
 )
 
 // secretsCmd manages the key file that seals CI secrets, webhook

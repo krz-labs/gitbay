@@ -8,8 +8,8 @@ import (
 	"fmt"
 	"strings"
 
-	"gitbay.org/gitbay/internal/config"
-	"gitbay.org/gitbay/internal/store"
+	"github.com/krz-labs/gitbay/internal/config"
+	"github.com/krz-labs/gitbay/internal/store"
 )
 
 // Tracked is one issue and the set it reports.

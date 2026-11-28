@@ -5,8 +5,8 @@ import (
 	"strings"
 	"testing"
 
-	"gitbay.org/gitbay/internal/store"
-	"gitbay.org/gitbay/internal/web"
+	"github.com/krz-labs/gitbay/internal/store"
+	"github.com/krz-labs/gitbay/internal/web"
 )
 
 // issue close/reopen and mr close/draft allow the author as well as

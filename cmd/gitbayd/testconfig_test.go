@@ -4,8 +4,8 @@ import (
 	"path/filepath"
 	"testing"
 
-	"gitbay.org/gitbay/internal/config"
-	"gitbay.org/gitbay/internal/seal"
+	"github.com/krz-labs/gitbay/internal/config"
+	"github.com/krz-labs/gitbay/internal/seal"
 )
 
 // testConfig is a config with a fresh root and a key file outside it,

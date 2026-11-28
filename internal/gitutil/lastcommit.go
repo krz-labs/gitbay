@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"gitbay.org/gitbay/internal/toolpath"
+	"github.com/krz-labs/gitbay/internal/toolpath"
 )
 
 // EntryCommit is the newest commit touching one entry of a tree listing.

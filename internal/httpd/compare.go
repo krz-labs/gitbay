@@ -5,7 +5,7 @@ import (
 	"strings"
 	"time"
 
-	"gitbay.org/gitbay/internal/gitutil"
+	"github.com/krz-labs/gitbay/internal/gitutil"
 )
 
 // compare renders what head adds on top of base: the commits in

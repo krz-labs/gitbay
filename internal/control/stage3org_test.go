@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"gitbay.org/gitbay/internal/store"
+	"github.com/krz-labs/gitbay/internal/store"
 )
 
 // orgScreensFixture is alice with a repository carrying a label and a

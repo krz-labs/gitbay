@@ -13,11 +13,11 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"gitbay.org/gitbay/internal/gitutil"
-	"gitbay.org/gitbay/internal/hookd"
-	"gitbay.org/gitbay/internal/leaks"
-	"gitbay.org/gitbay/internal/policy"
-	"gitbay.org/gitbay/internal/toolpath"
+	"github.com/krz-labs/gitbay/internal/gitutil"
+	"github.com/krz-labs/gitbay/internal/hookd"
+	"github.com/krz-labs/gitbay/internal/leaks"
+	"github.com/krz-labs/gitbay/internal/policy"
+	"github.com/krz-labs/gitbay/internal/toolpath"
 )
 
 // incomingSHAs lists the commits this push introduces, in order, without

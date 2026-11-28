@@ -4,9 +4,9 @@ import (
 	"strings"
 	"testing"
 
-	"gitbay.org/gitbay/internal/control"
-	"gitbay.org/gitbay/internal/store"
-	"gitbay.org/gitbay/internal/web"
+	"github.com/krz-labs/gitbay/internal/control"
+	"github.com/krz-labs/gitbay/internal/store"
+	"github.com/krz-labs/gitbay/internal/web"
 )
 
 // The dashboard is three columns: pinned repositories with counts, the

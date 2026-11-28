@@ -5,7 +5,7 @@ import (
 	"net/url"
 	"strings"
 
-	"gitbay.org/gitbay/internal/control"
+	"github.com/krz-labs/gitbay/internal/control"
 )
 
 // A form action that fails redirects back to the page it came from with

@@ -7,8 +7,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"gitbay.org/gitbay/internal/policy"
-	"gitbay.org/gitbay/internal/store"
+	"github.com/krz-labs/gitbay/internal/policy"
+	"github.com/krz-labs/gitbay/internal/store"
 )
 
 // Milestone, org label and release asset forms. Each dispatches the

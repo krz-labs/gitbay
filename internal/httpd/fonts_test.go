@@ -8,8 +8,8 @@ import (
 	"strings"
 	"testing"
 
-	"gitbay.org/gitbay/internal/config"
-	"gitbay.org/gitbay/internal/web"
+	"github.com/krz-labs/gitbay/internal/config"
+	"github.com/krz-labs/gitbay/internal/web"
 )
 
 // TestStylesheetFontsAreServed: every font URL the embedded stylesheet asks

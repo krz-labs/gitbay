@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"gitbay.org/gitbay/internal/web"
+	"github.com/krz-labs/gitbay/internal/web"
 )
 
 // The scope sentence is a permanent caption, not a first-visit-only

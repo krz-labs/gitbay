@@ -8,9 +8,9 @@ import (
 	"path"
 	"strings"
 
-	"gitbay.org/gitbay/internal/control"
-	"gitbay.org/gitbay/internal/gitutil"
-	"gitbay.org/gitbay/internal/store"
+	"github.com/krz-labs/gitbay/internal/control"
+	"github.com/krz-labs/gitbay/internal/gitutil"
+	"github.com/krz-labs/gitbay/internal/store"
 )
 
 // PagesBranch is the branch a repo publishes as its static site.

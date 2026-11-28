@@ -7,8 +7,8 @@ import (
 	"testing"
 	"time"
 
-	"gitbay.org/gitbay/internal/protocol"
-	"gitbay.org/gitbay/internal/store"
+	"github.com/krz-labs/gitbay/internal/protocol"
+	"github.com/krz-labs/gitbay/internal/store"
 )
 
 // The minting commands, pinned: adding one to the list, or dropping

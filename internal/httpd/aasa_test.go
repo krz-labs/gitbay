@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"gitbay.org/gitbay/internal/config"
+	"github.com/krz-labs/gitbay/internal/config"
 )
 
 // aasaGlob matches one applinks pattern: * is any run of characters,

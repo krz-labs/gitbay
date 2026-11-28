@@ -9,11 +9,11 @@ import (
 	"testing"
 	"time"
 
-	"gitbay.org/gitbay/internal/ci"
-	"gitbay.org/gitbay/internal/codescan"
-	"gitbay.org/gitbay/internal/config"
-	"gitbay.org/gitbay/internal/protocol"
-	"gitbay.org/gitbay/internal/store"
+	"github.com/krz-labs/gitbay/internal/ci"
+	"github.com/krz-labs/gitbay/internal/codescan"
+	"github.com/krz-labs/gitbay/internal/config"
+	"github.com/krz-labs/gitbay/internal/protocol"
+	"github.com/krz-labs/gitbay/internal/store"
 )
 
 const testSARIF = `{"version":"2.1.0","runs":[{"tool":{"driver":{"name":"opengrep"}},"results":[

@@ -3,7 +3,7 @@ package httpd
 import (
 	"net/http"
 
-	"gitbay.org/gitbay/internal/store"
+	"github.com/krz-labs/gitbay/internal/store"
 )
 
 // railPin is one pinned repository in the rail's quick switcher.

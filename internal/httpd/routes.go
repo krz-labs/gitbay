@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"strings"
 
-	"gitbay.org/gitbay/internal/web"
+	"github.com/krz-labs/gitbay/internal/web"
 )
 
 // Route is one entry in the explicit route table. The view-only guarantee is

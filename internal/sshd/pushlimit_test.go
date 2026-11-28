@@ -16,11 +16,11 @@ import (
 
 	"golang.org/x/crypto/ssh"
 
-	"gitbay.org/gitbay/internal/config"
-	"gitbay.org/gitbay/internal/control"
-	"gitbay.org/gitbay/internal/gitutil"
-	"gitbay.org/gitbay/internal/packlimit"
-	"gitbay.org/gitbay/internal/store"
+	"github.com/krz-labs/gitbay/internal/config"
+	"github.com/krz-labs/gitbay/internal/control"
+	"github.com/krz-labs/gitbay/internal/gitutil"
+	"github.com/krz-labs/gitbay/internal/packlimit"
+	"github.com/krz-labs/gitbay/internal/store"
 )
 
 // A client that connects and sends nothing is cut at

@@ -5,8 +5,8 @@ import (
 	"io"
 	"strings"
 
-	"gitbay.org/gitbay/internal/store"
-	"gitbay.org/gitbay/internal/termtext"
+	"github.com/krz-labs/gitbay/internal/store"
+	"github.com/krz-labs/gitbay/internal/termtext"
 )
 
 // when is a stored timestamp in a view: the web's format at a

@@ -3,8 +3,8 @@ package httpd
 import (
 	"net/http"
 
-	"gitbay.org/gitbay/internal/control"
-	"gitbay.org/gitbay/internal/store"
+	"github.com/krz-labs/gitbay/internal/control"
+	"github.com/krz-labs/gitbay/internal/store"
 )
 
 // adminPage is the operator's view: the running build and every worker

@@ -10,10 +10,10 @@ import (
 	"sync"
 	"time"
 
-	"gitbay.org/gitbay/internal/botissue"
-	"gitbay.org/gitbay/internal/config"
-	"gitbay.org/gitbay/internal/gitutil"
-	"gitbay.org/gitbay/internal/store"
+	"github.com/krz-labs/gitbay/internal/botissue"
+	"github.com/krz-labs/gitbay/internal/config"
+	"github.com/krz-labs/gitbay/internal/gitutil"
+	"github.com/krz-labs/gitbay/internal/store"
 )
 
 // manifestLimit bounds one manifest read out of the object store.

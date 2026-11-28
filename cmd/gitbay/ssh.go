@@ -14,9 +14,9 @@ import (
 	"strings"
 	"syscall"
 
-	"gitbay.org/gitbay/internal/cliconfig"
-	"gitbay.org/gitbay/internal/protocol"
-	"gitbay.org/gitbay/internal/toolpath"
+	"github.com/krz-labs/gitbay/internal/cliconfig"
+	"github.com/krz-labs/gitbay/internal/protocol"
+	"github.com/krz-labs/gitbay/internal/toolpath"
 	"github.com/spf13/cobra"
 )
 

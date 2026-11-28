@@ -9,7 +9,7 @@ import (
 	"strings"
 	"testing"
 
-	"gitbay.org/gitbay/internal/config"
+	"github.com/krz-labs/gitbay/internal/config"
 )
 
 func plainServer() *Server {

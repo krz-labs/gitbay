@@ -7,8 +7,8 @@ import (
 	"slices"
 	"strings"
 
-	"gitbay.org/gitbay/internal/ci"
-	"gitbay.org/gitbay/internal/store"
+	"github.com/krz-labs/gitbay/internal/ci"
+	"github.com/krz-labs/gitbay/internal/store"
 )
 
 // Scope is what a repository sets aside from what its scan reports.

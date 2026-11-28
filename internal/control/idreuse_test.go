@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"gitbay.org/gitbay/internal/policy"
+	"github.com/krz-labs/gitbay/internal/policy"
 )
 
 // A deploy key names its repository by id in its scope. Deleting the

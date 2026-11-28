@@ -5,8 +5,8 @@ import (
 	"strings"
 	"time"
 
-	"gitbay.org/gitbay/internal/config"
-	"gitbay.org/gitbay/internal/store"
+	"github.com/krz-labs/gitbay/internal/config"
+	"github.com/krz-labs/gitbay/internal/store"
 )
 
 // maxLoginLinksPerHour bounds what one account's address can be made to

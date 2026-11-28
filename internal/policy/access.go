@@ -5,7 +5,7 @@ import (
 	"strconv"
 	"strings"
 
-	"gitbay.org/gitbay/internal/store"
+	"github.com/krz-labs/gitbay/internal/store"
 )
 
 // CanRead reports whether user may read repo over an authenticated channel.

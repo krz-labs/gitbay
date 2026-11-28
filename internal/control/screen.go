@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"strings"
 
-	"gitbay.org/gitbay/internal/termtext"
+	"github.com/krz-labs/gitbay/internal/termtext"
 )
 
 // screen is a show or a list as a terminal draws it: a header block of

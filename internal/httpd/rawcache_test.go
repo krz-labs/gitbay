@@ -3,8 +3,8 @@ package httpd
 import (
 	"testing"
 
-	"gitbay.org/gitbay/internal/control"
-	"gitbay.org/gitbay/internal/gitutil"
+	"github.com/krz-labs/gitbay/internal/control"
+	"github.com/krz-labs/gitbay/internal/gitutil"
 )
 
 // Raw content carries its blob id as an ETag: a branch is revalidated and

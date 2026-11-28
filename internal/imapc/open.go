@@ -3,7 +3,7 @@ package imapc
 import (
 	"time"
 
-	"gitbay.org/gitbay/internal/config"
+	"github.com/krz-labs/gitbay/internal/config"
 )
 
 // Open connects to the configured mailbox, logs in with the password

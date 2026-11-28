@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"gitbay.org/gitbay/internal/buildinfo"
+	"github.com/krz-labs/gitbay/internal/buildinfo"
 )
 
 // healthz answers from inside the process: whether the database answers,

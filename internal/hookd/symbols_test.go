@@ -6,10 +6,10 @@ import (
 	"path/filepath"
 	"testing"
 
-	"gitbay.org/gitbay/internal/control"
-	"gitbay.org/gitbay/internal/policy"
-	"gitbay.org/gitbay/internal/store"
-	"gitbay.org/gitbay/internal/symbols"
+	"github.com/krz-labs/gitbay/internal/control"
+	"github.com/krz-labs/gitbay/internal/policy"
+	"github.com/krz-labs/gitbay/internal/store"
+	"github.com/krz-labs/gitbay/internal/symbols"
 )
 
 // A push to the default branch asks for a symbol index and builds none

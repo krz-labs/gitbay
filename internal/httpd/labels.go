@@ -5,8 +5,8 @@ import (
 	"net/http"
 	"strings"
 
-	"gitbay.org/gitbay/internal/control"
-	"gitbay.org/gitbay/internal/store"
+	"github.com/krz-labs/gitbay/internal/control"
+	"github.com/krz-labs/gitbay/internal/store"
 )
 
 // labels lists a repository's label set with its colour and how many

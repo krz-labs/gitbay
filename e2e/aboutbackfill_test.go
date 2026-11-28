@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"gitbay.org/gitbay/internal/store"
+	"github.com/krz-labs/gitbay/internal/store"
 )
 
 // The about text parked by migration 0058 becomes a file in the owner's

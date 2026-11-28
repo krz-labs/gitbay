@@ -7,8 +7,8 @@ import (
 	"strings"
 	"testing"
 
-	"gitbay.org/gitbay/internal/hookd"
-	"gitbay.org/gitbay/internal/policy"
+	"github.com/krz-labs/gitbay/internal/hookd"
+	"github.com/krz-labs/gitbay/internal/policy"
 )
 
 // fastImportRepo builds a repository with n commits on main in one

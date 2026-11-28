@@ -18,7 +18,7 @@ import (
 
 	"github.com/emersion/go-msgauth/dkim"
 
-	"gitbay.org/gitbay/internal/mailreply"
+	"github.com/krz-labs/gitbay/internal/mailreply"
 )
 
 // Fixed test keys: RSA 2048 and Ed25519.

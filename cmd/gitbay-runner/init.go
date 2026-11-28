@@ -9,7 +9,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"gitbay.org/gitbay/internal/toolpath"
+	"github.com/krz-labs/gitbay/internal/toolpath"
 )
 
 // initOut is where init prints; tests capture it.

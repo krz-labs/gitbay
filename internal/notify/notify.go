@@ -9,9 +9,9 @@ import (
 	"regexp"
 	"time"
 
-	"gitbay.org/gitbay/internal/config"
-	"gitbay.org/gitbay/internal/mail"
-	"gitbay.org/gitbay/internal/store"
+	"github.com/krz-labs/gitbay/internal/config"
+	"github.com/krz-labs/gitbay/internal/mail"
+	"github.com/krz-labs/gitbay/internal/store"
 )
 
 // DefaultMaxAttempts and DefaultRetryBase are the retry parameters gitbayd

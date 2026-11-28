@@ -10,7 +10,7 @@ import (
 
 	"github.com/emersion/go-msgauth/dkim"
 
-	"gitbay.org/gitbay/internal/mailreply"
+	"github.com/krz-labs/gitbay/internal/mailreply"
 )
 
 // FuzzReply runs what an inbound message goes through before any

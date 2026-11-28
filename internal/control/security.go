@@ -12,15 +12,15 @@ import (
 	"strings"
 	"time"
 
-	"gitbay.org/gitbay/internal/botissue"
-	"gitbay.org/gitbay/internal/ci"
-	"gitbay.org/gitbay/internal/codescan"
-	"gitbay.org/gitbay/internal/config"
-	"gitbay.org/gitbay/internal/deps"
-	"gitbay.org/gitbay/internal/gitutil"
-	"gitbay.org/gitbay/internal/policy"
-	"gitbay.org/gitbay/internal/protocol"
-	"gitbay.org/gitbay/internal/store"
+	"github.com/krz-labs/gitbay/internal/botissue"
+	"github.com/krz-labs/gitbay/internal/ci"
+	"github.com/krz-labs/gitbay/internal/codescan"
+	"github.com/krz-labs/gitbay/internal/config"
+	"github.com/krz-labs/gitbay/internal/deps"
+	"github.com/krz-labs/gitbay/internal/gitutil"
+	"github.com/krz-labs/gitbay/internal/policy"
+	"github.com/krz-labs/gitbay/internal/protocol"
+	"github.com/krz-labs/gitbay/internal/store"
 )
 
 func init() {

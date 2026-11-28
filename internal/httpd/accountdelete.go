@@ -4,8 +4,8 @@ import (
 	"net/http"
 	"time"
 
-	"gitbay.org/gitbay/internal/control"
-	"gitbay.org/gitbay/internal/store"
+	"github.com/krz-labs/gitbay/internal/control"
+	"github.com/krz-labs/gitbay/internal/store"
 )
 
 // accountDeletePage is where the mailed deletion link lands. The token

@@ -12,7 +12,7 @@ import (
 
 	"golang.org/x/crypto/ssh"
 
-	"gitbay.org/gitbay/internal/sig"
+	"github.com/krz-labs/gitbay/internal/sig"
 )
 
 func (i *instance) get(t *testing.T, path string) (int, string) {

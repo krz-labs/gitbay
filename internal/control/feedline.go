@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"gitbay.org/gitbay/internal/store"
+	"github.com/krz-labs/gitbay/internal/store"
 )
 
 // FeedLine is one activity entry, already phrased and linked.

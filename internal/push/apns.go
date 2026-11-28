@@ -15,7 +15,7 @@ import (
 	"strings"
 	"time"
 
-	"gitbay.org/gitbay/internal/config"
+	"github.com/krz-labs/gitbay/internal/config"
 )
 
 // result is what one send means for the queue row.

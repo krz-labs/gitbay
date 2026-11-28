@@ -19,9 +19,9 @@ import (
 
 	"filippo.io/age"
 
-	"gitbay.org/gitbay/internal/backuplock"
-	"gitbay.org/gitbay/internal/config"
-	"gitbay.org/gitbay/internal/gitutil"
+	"github.com/krz-labs/gitbay/internal/backuplock"
+	"github.com/krz-labs/gitbay/internal/config"
+	"github.com/krz-labs/gitbay/internal/gitutil"
 )
 
 // members lists the archive's entries by name.

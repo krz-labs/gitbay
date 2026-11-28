@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"gitbay.org/gitbay/internal/protocol"
+	"github.com/krz-labs/gitbay/internal/protocol"
 )
 
 // A transfer into an org folds the repository's same-named labels into

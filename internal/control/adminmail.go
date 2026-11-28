@@ -5,8 +5,8 @@ import (
 	"io"
 	"time"
 
-	"gitbay.org/gitbay/internal/imapc"
-	"gitbay.org/gitbay/internal/protocol"
+	"github.com/krz-labs/gitbay/internal/imapc"
+	"github.com/krz-labs/gitbay/internal/protocol"
 )
 
 func init() {

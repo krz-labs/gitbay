@@ -4,8 +4,8 @@ import (
 	"strings"
 	"testing"
 
-	"gitbay.org/gitbay/internal/backuplock"
-	"gitbay.org/gitbay/internal/protocol"
+	"github.com/krz-labs/gitbay/internal/backuplock"
+	"github.com/krz-labs/gitbay/internal/protocol"
 )
 
 func TestRepoDeleteAndRenameRefusedDuringBackup(t *testing.T) {

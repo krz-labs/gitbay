@@ -4,7 +4,7 @@ import (
 	"slices"
 	"strings"
 
-	"gitbay.org/gitbay/internal/protocol"
+	"github.com/krz-labs/gitbay/internal/protocol"
 )
 
 // EventKinds is every event this forge records, and so every value a

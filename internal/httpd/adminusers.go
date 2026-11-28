@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"strings"
 
-	"gitbay.org/gitbay/internal/store"
+	"github.com/krz-labs/gitbay/internal/store"
 )
 
 // adminUserRow is one account as admin user list returns it. The

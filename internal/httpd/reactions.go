@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"strings"
 
-	"gitbay.org/gitbay/internal/store"
+	"github.com/krz-labs/gitbay/internal/store"
 )
 
 // reactionView is one reaction button (or count) under an item.

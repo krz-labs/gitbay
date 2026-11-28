@@ -8,7 +8,7 @@ import (
 	"golang.org/x/net/html"
 	"golang.org/x/net/html/atom"
 
-	"gitbay.org/gitbay/internal/gitutil"
+	"github.com/krz-labs/gitbay/internal/gitutil"
 )
 
 // rewriteRelativeLinks makes relative hrefs and srcs in rendered repo

@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"gitbay.org/gitbay/internal/protocol"
+	"github.com/krz-labs/gitbay/internal/protocol"
 )
 
 // exitErr fabricates the error ssh returns for a given exit status.

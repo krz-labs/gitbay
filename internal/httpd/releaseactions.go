@@ -5,8 +5,8 @@ import (
 	"net/http"
 	"strings"
 
-	"gitbay.org/gitbay/internal/protocol"
-	"gitbay.org/gitbay/internal/store"
+	"github.com/krz-labs/gitbay/internal/protocol"
+	"github.com/krz-labs/gitbay/internal/store"
 )
 
 // Release and build actions. As elsewhere, the browser chooses arguments

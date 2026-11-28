@@ -5,7 +5,7 @@ import (
 	"slices"
 	"strings"
 
-	"gitbay.org/gitbay/internal/store"
+	"github.com/krz-labs/gitbay/internal/store"
 )
 
 // checksMark sums a commit's statuses for a list row at a terminal:

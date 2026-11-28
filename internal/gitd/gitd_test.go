@@ -8,9 +8,9 @@ import (
 	"testing"
 	"time"
 
-	"gitbay.org/gitbay/internal/config"
-	"gitbay.org/gitbay/internal/packlimit"
-	"gitbay.org/gitbay/internal/store"
+	"github.com/krz-labs/gitbay/internal/config"
+	"github.com/krz-labs/gitbay/internal/packlimit"
+	"github.com/krz-labs/gitbay/internal/store"
 )
 
 func TestBusyAnswersERR(t *testing.T) {

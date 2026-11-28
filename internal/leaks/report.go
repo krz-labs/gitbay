@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"gitbay.org/gitbay/internal/ci"
+	"github.com/krz-labs/gitbay/internal/ci"
 )
 
 // Modes a repository's secret scan runs in. The empty setting is

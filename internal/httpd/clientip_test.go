@@ -4,7 +4,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"gitbay.org/gitbay/internal/config"
+	"github.com/krz-labs/gitbay/internal/config"
 )
 
 // With no trusted proxies the peer is the client and X-Forwarded-For is

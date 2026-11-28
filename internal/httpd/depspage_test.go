@@ -4,9 +4,9 @@ import (
 	"strings"
 	"testing"
 
-	"gitbay.org/gitbay/internal/codescan"
-	"gitbay.org/gitbay/internal/control"
-	"gitbay.org/gitbay/internal/web"
+	"github.com/krz-labs/gitbay/internal/codescan"
+	"github.com/krz-labs/gitbay/internal/control"
+	"github.com/krz-labs/gitbay/internal/web"
 )
 
 // The settings page renders what `repo deps status` reports, not just the

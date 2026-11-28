@@ -8,8 +8,8 @@ import (
 	"net/http"
 	"strings"
 
-	"gitbay.org/gitbay/internal/control"
-	"gitbay.org/gitbay/internal/protocol"
+	"github.com/krz-labs/gitbay/internal/control"
+	"github.com/krz-labs/gitbay/internal/protocol"
 )
 
 // apiRead is the conditional-request half of the API: the same commands as

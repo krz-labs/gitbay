@@ -7,7 +7,7 @@ startup and on every admin command.
 * Install
 
 Build from source (=go build ./cmd/gitbayd=), install via the vanity
-module path (=go install gitbay.org/gitbay/cmd/gitbayd@latest=), or use
+module path (=go install github.com/krz-labs/gitbay/cmd/gitbayd@latest=), or use
 a release build: =deploy/release.sh <tag>= cross-compiles reproducible
 linux/amd64, linux/arm64, and darwin/arm64 binaries, each gzipped, with
 a SHA256SUMS manifest over the =.gz= files (CGO off, trimpath, stripped —

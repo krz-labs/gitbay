@@ -4,7 +4,7 @@ import (
 	"sync"
 	"time"
 
-	"gitbay.org/gitbay/internal/store"
+	"github.com/krz-labs/gitbay/internal/store"
 )
 
 // refusalsPerMinute bounds audit rows for refused writes per actor. A

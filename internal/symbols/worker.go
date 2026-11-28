@@ -8,8 +8,8 @@ import (
 	"os"
 	"time"
 
-	"gitbay.org/gitbay/internal/gitutil"
-	"gitbay.org/gitbay/internal/store"
+	"github.com/krz-labs/gitbay/internal/gitutil"
+	"github.com/krz-labs/gitbay/internal/store"
 )
 
 // Bounds on one index run, and how it writes.

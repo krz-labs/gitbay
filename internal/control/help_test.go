@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"gitbay.org/gitbay/internal/protocol"
+	"github.com/krz-labs/gitbay/internal/protocol"
 )
 
 func helpOut(t *testing.T, term Term, prefix ...string) string {

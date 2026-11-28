@@ -17,7 +17,7 @@ CROSS   := CGO_ENABLED=0 GOOS=linux GOARCH=amd64
 # came from. The -dirty suffix only appears under ALLOW_DIRTY=1, since
 # preflight otherwise refuses to build an uncommitted tree.
 COMMIT  := $(shell git rev-parse --short=12 HEAD 2>/dev/null || echo unknown)$(shell [ -n "$$(git status --porcelain 2>/dev/null)" ] && echo -dirty)
-LDFLAGS := -s -w -X gitbay.org/gitbay/internal/buildinfo.Commit=$(COMMIT)
+LDFLAGS := -s -w -X github.com/krz-labs/gitbay/internal/buildinfo.Commit=$(COMMIT)
 SERVER_BIN := dist/gitbayd-linux-amd64
 RUNNER_BIN := dist/gitbay-runner-linux-amd64
 

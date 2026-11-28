@@ -17,7 +17,7 @@ import (
 	"net/url"
 	"time"
 
-	"gitbay.org/gitbay/internal/store"
+	"github.com/krz-labs/gitbay/internal/store"
 )
 
 // ValidateURL rejects URLs the server must not connect to (SSRF): non-HTTP

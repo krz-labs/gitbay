@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"gitbay.org/gitbay/internal/store"
+	"github.com/krz-labs/gitbay/internal/store"
 )
 
 var diskBytes = regexp.MustCompile(`\t\d{4,}\t|\d+\.\d KiB`)

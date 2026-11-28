@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	"gitbay.org/gitbay/internal/web"
+	"github.com/krz-labs/gitbay/internal/web"
 )
 
 // relLum is WCAG relative luminance of a #rrggbb colour.
