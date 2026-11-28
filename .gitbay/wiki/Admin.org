@@ -941,8 +941,7 @@ offsite restic repository (repositories, LFS, the staged database,
 repository once runbook D creates it; until then the operator's
 hand-made copy), and the operator's password manager (=offsite.env=,
 the keys repository's password and token once it exists,
-=backup-identity.txt=). The full steps are runbook C of the
-data-at-rest plan (=docs/plans/2026-09-27-data-at-rest-and-backup.md=).
+=backup-identity.txt=).
 
 =gitbayd admin restore-drill= does the archive half. It extracts a
 full archive into an empty or absent directory, runs every =--verify=
