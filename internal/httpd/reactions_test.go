@@ -7,8 +7,8 @@ import (
 	"strings"
 	"testing"
 
-	"gitbay.org/gitbay/internal/config"
-	"gitbay.org/gitbay/internal/store"
+	"github.com/krz-labs/gitbay/internal/config"
+	"github.com/krz-labs/gitbay/internal/store"
 )
 
 func reactServer(t *testing.T) (*Server, *store.Store, store.User, store.User) {

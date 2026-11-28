@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"gitbay.org/gitbay/internal/web"
+	"github.com/krz-labs/gitbay/internal/web"
 )
 
 // mrsPageData mirrors the anonymous struct the mrs handler renders with.

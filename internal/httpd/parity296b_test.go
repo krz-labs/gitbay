@@ -10,7 +10,7 @@ import (
 	"strings"
 	"testing"
 
-	"gitbay.org/gitbay/internal/store"
+	"github.com/krz-labs/gitbay/internal/store"
 )
 
 type p296b struct {

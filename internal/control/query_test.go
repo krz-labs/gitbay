@@ -7,9 +7,9 @@ import (
 	"strings"
 	"testing"
 
-	"gitbay.org/gitbay/internal/config"
-	"gitbay.org/gitbay/internal/protocol"
-	"gitbay.org/gitbay/internal/store"
+	"github.com/krz-labs/gitbay/internal/config"
+	"github.com/krz-labs/gitbay/internal/protocol"
+	"github.com/krz-labs/gitbay/internal/store"
 )
 
 type queryEnv struct {

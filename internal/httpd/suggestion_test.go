@@ -5,9 +5,9 @@ import (
 	"strings"
 	"testing"
 
-	"gitbay.org/gitbay/internal/control"
-	"gitbay.org/gitbay/internal/store"
-	"gitbay.org/gitbay/internal/web"
+	"github.com/krz-labs/gitbay/internal/control"
+	"github.com/krz-labs/gitbay/internal/store"
+	"github.com/krz-labs/gitbay/internal/web"
 )
 
 func renderSuggestion(t *testing.T, sg *control.SuggestionOut, canApply bool) string {

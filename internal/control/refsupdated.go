@@ -10,11 +10,11 @@ import (
 	"strings"
 	"time"
 
-	"gitbay.org/gitbay/internal/ci"
-	"gitbay.org/gitbay/internal/config"
-	"gitbay.org/gitbay/internal/gitutil"
-	"gitbay.org/gitbay/internal/policy"
-	"gitbay.org/gitbay/internal/store"
+	"github.com/krz-labs/gitbay/internal/ci"
+	"github.com/krz-labs/gitbay/internal/config"
+	"github.com/krz-labs/gitbay/internal/gitutil"
+	"github.com/krz-labs/gitbay/internal/policy"
+	"github.com/krz-labs/gitbay/internal/store"
 )
 
 // RefsUpdated is the work that follows a ref update in repoID by userID,

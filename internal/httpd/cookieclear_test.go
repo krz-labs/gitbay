@@ -3,7 +3,7 @@ package httpd
 import (
 	"testing"
 
-	"gitbay.org/gitbay/internal/config"
+	"github.com/krz-labs/gitbay/internal/config"
 )
 
 // A cookie that clears a session should carry the attributes the one that

@@ -16,7 +16,7 @@ import (
 	"github.com/ProtonMail/go-crypto/openpgp/packet"
 	"golang.org/x/crypto/ssh"
 
-	"gitbay.org/gitbay/internal/sig"
+	"github.com/krz-labs/gitbay/internal/sig"
 )
 
 // --- fixture key helpers -------------------------------------------------

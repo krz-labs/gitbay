@@ -6,9 +6,9 @@ import (
 	"testing"
 	"time"
 
-	"gitbay.org/gitbay/internal/packlimit"
-	"gitbay.org/gitbay/internal/protocol"
-	"gitbay.org/gitbay/internal/store"
+	"github.com/krz-labs/gitbay/internal/packlimit"
+	"github.com/krz-labs/gitbay/internal/protocol"
+	"github.com/krz-labs/gitbay/internal/store"
 )
 
 // repo download takes a pack slot: busy while the limiter is full, and

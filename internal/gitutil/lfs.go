@@ -8,7 +8,7 @@ import (
 	"strconv"
 	"strings"
 
-	"gitbay.org/gitbay/internal/toolpath"
+	"github.com/krz-labs/gitbay/internal/toolpath"
 )
 
 // lfsPointerMax bounds a pointer file; real ones are around 130 bytes.

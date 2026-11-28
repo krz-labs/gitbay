@@ -14,7 +14,7 @@ import (
 	"strings"
 	"time"
 
-	"gitbay.org/gitbay/internal/config"
+	"github.com/krz-labs/gitbay/internal/config"
 )
 
 // rootCAs verifies the relay's certificate; nil is the system pool.

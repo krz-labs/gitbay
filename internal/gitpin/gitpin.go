@@ -14,8 +14,8 @@ import (
 	"strings"
 	"time"
 
-	"gitbay.org/gitbay/internal/toolpath"
-	"gitbay.org/gitbay/internal/webhook"
+	"github.com/krz-labs/gitbay/internal/toolpath"
+	"github.com/krz-labs/gitbay/internal/webhook"
 )
 
 // Lookup resolves a host to its addresses.

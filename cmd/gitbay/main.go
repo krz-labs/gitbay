@@ -15,7 +15,7 @@ import (
 	"github.com/spf13/cobra/doc"
 	"golang.org/x/term"
 
-	"gitbay.org/gitbay/internal/protocol"
+	"github.com/krz-labs/gitbay/internal/protocol"
 )
 
 func main() {

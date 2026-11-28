@@ -8,9 +8,9 @@ import (
 	"strings"
 	"time"
 
-	"gitbay.org/gitbay/internal/lfs"
-	"gitbay.org/gitbay/internal/policy"
-	"gitbay.org/gitbay/internal/store"
+	"github.com/krz-labs/gitbay/internal/lfs"
+	"github.com/krz-labs/gitbay/internal/policy"
+	"github.com/krz-labs/gitbay/internal/store"
 )
 
 // Git LFS server: the batch API plus basic-transfer endpoints. SSH clients

@@ -15,11 +15,11 @@ import (
 	"path/filepath"
 	"time"
 
-	"gitbay.org/gitbay/internal/config"
-	"gitbay.org/gitbay/internal/control"
-	"gitbay.org/gitbay/internal/gitpin"
-	"gitbay.org/gitbay/internal/store"
-	"gitbay.org/gitbay/internal/toolpath"
+	"github.com/krz-labs/gitbay/internal/config"
+	"github.com/krz-labs/gitbay/internal/control"
+	"github.com/krz-labs/gitbay/internal/gitpin"
+	"github.com/krz-labs/gitbay/internal/store"
+	"github.com/krz-labs/gitbay/internal/toolpath"
 )
 
 const askpassScript = `#!/bin/sh

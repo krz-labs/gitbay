@@ -7,7 +7,7 @@ import (
 	"os/exec"
 	"strings"
 
-	"gitbay.org/gitbay/internal/toolpath"
+	"github.com/krz-labs/gitbay/internal/toolpath"
 )
 
 // FetchInto copies srcRef from srcDir into dstDir as dstRef, forcing the

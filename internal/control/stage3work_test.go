@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"gitbay.org/gitbay/internal/store"
+	"github.com/krz-labs/gitbay/internal/store"
 )
 
 // workFixture is a repository on disk with a CI job and an issue

@@ -3,7 +3,7 @@ package control
 import (
 	"strings"
 
-	"gitbay.org/gitbay/internal/gitutil"
+	"github.com/krz-labs/gitbay/internal/gitutil"
 )
 
 // licenseNames maps content markers to display names, checked in order.

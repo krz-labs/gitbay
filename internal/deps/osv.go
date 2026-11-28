@@ -12,7 +12,7 @@ import (
 	"strings"
 	"sync"
 
-	"gitbay.org/gitbay/internal/store"
+	"github.com/krz-labs/gitbay/internal/store"
 )
 
 // osvAPI is OSV's public API, a fixed host like the registries. What it is

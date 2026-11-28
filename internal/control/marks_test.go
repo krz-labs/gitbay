@@ -3,7 +3,7 @@ package control
 import (
 	"testing"
 
-	"gitbay.org/gitbay/internal/store"
+	"github.com/krz-labs/gitbay/internal/store"
 )
 
 func TestChecksMark(t *testing.T) {

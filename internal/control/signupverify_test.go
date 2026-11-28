@@ -4,8 +4,8 @@ import (
 	"testing"
 	"time"
 
-	"gitbay.org/gitbay/internal/config"
-	"gitbay.org/gitbay/internal/store"
+	"github.com/krz-labs/gitbay/internal/config"
+	"github.com/krz-labs/gitbay/internal/store"
 )
 
 // A code minted by `email add` on an active account does not sign in

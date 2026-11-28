@@ -5,7 +5,7 @@ import (
 	"reflect"
 	"testing"
 
-	"gitbay.org/gitbay/internal/control"
+	"github.com/krz-labs/gitbay/internal/control"
 )
 
 // groupRuns folds consecutive same-commit builds (the list is newest

@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"gitbay.org/gitbay/internal/store"
+	"github.com/krz-labs/gitbay/internal/store"
 )
 
 // gatesForHead builds a repository with require_checks on, a bare dir

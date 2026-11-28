@@ -7,10 +7,10 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"gitbay.org/gitbay/internal/buildinfo"
-	"gitbay.org/gitbay/internal/config"
-	"gitbay.org/gitbay/internal/control"
-	"gitbay.org/gitbay/internal/gitutil"
+	"github.com/krz-labs/gitbay/internal/buildinfo"
+	"github.com/krz-labs/gitbay/internal/config"
+	"github.com/krz-labs/gitbay/internal/control"
+	"github.com/krz-labs/gitbay/internal/gitutil"
 )
 
 func versionCmd() *cobra.Command {

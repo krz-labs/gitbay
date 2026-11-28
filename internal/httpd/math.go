@@ -19,7 +19,7 @@ import (
 	"github.com/yuin/goldmark/text"
 	"github.com/yuin/goldmark/util"
 
-	"gitbay.org/gitbay/internal/texmath"
+	"github.com/krz-labs/gitbay/internal/texmath"
 )
 
 // TeX math renders server-side as MathML, which browsers display natively,

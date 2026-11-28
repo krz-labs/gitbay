@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"gitbay.org/gitbay/internal/control"
+	"github.com/krz-labs/gitbay/internal/control"
 )
 
 // The per-commit diff is read-only (no comment links: review comments

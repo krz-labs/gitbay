@@ -1,0 +1,83 @@
+# build, test and quality run on pull requests and pushes to main; wiki-only
+# changes skip them. vuln runs nightly, because its trigger is the advisory
+# database, not the code; run it by hand before a release.
+name: ci
+
+on:
+  push:
+    branches: [main]
+    paths-ignore: [".gitbay/wiki/**"]
+  pull_request:
+    paths-ignore: [".gitbay/wiki/**"]
+  schedule:
+    - cron: "0 3 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  QLTY_URL: https://qlty-releases.s3.amazonaws.com/qlty/v0.661.0/qlty-x86_64-unknown-linux-gnu.tar.xz
+  QLTY_SHA256: fa07eb51fbb32a0854113e81ce2d957b73f1c027c58b478d32c233b6aba7a977
+  QLTY_TELEMETRY: "off"
+
+jobs:
+  build:
+    if: github.event_name != 'schedule'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/setup-go@d8cbb8045d7f43706b9177cceb36c1f91a6644d5 # v7.1.0
+        with:
+          go-version-file: go.mod
+      - run: go build ./...
+      - run: go vet ./...
+
+  # The suite drives real git, ssh, sshd and gpg, and some tests skip when a
+  # tool is absent, so the prerequisites are asserted before it runs.
+  test:
+    if: github.event_name != 'schedule'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/setup-go@d8cbb8045d7f43706b9177cceb36c1f91a6644d5 # v7.1.0
+        with:
+          go-version-file: go.mod
+      - run: sudo apt-get update -q && sudo apt-get install -y -q --no-install-recommends git-lfs gnupg openssh-server
+      - run: |
+          missing=""
+          for t in git git-lfs gpg; do command -v "$t" >/dev/null || missing="$missing $t"; done
+          test -x /usr/sbin/sshd || missing="$missing sshd"
+          test -z "$missing" || { echo "runner is missing:$missing"; exit 1; }
+      - run: go test ./... -count=1 -timeout 20m
+
+  # Secrets and gofmt fail the build; the full Qlty report is printed without
+  # failing it.
+  quality:
+    if: github.event_name != 'schedule'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - run: |
+          curl -fsSL -o /tmp/qlty.tar.xz "$QLTY_URL"
+          echo "$QLTY_SHA256  /tmp/qlty.tar.xz" | sha256sum -c -
+          tar -xJf /tmp/qlty.tar.xz -C /tmp
+      - run: /tmp/qlty-x86_64-unknown-linux-gnu/qlty check --all --no-progress --filter trufflehog,gofmt
+      - run: /tmp/qlty-x86_64-unknown-linux-gnu/qlty check --all --no-progress --no-fail
+
+  vuln:
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/setup-go@d8cbb8045d7f43706b9177cceb36c1f91a6644d5 # v7.1.0
+        with:
+          go-version-file: go.mod
+      - run: go run golang.org/x/vuln/cmd/govulncheck@latest ./...
+      # osv-scanner also reports advisories in dependencies the code does not
+      # call, which govulncheck skips.
+      - run: |
+          curl -fsSL -o /tmp/qlty.tar.xz "$QLTY_URL"
+          echo "$QLTY_SHA256  /tmp/qlty.tar.xz" | sha256sum -c -
+          tar -xJf /tmp/qlty.tar.xz -C /tmp
+      - run: /tmp/qlty-x86_64-unknown-linux-gnu/qlty check --all --no-progress --filter osv-scanner

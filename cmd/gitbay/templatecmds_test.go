@@ -8,8 +8,8 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"gitbay.org/gitbay/internal/control"
-	"gitbay.org/gitbay/internal/web"
+	"github.com/krz-labs/gitbay/internal/control"
+	"github.com/krz-labs/gitbay/internal/web"
 )
 
 // quotedRe finds the shapes a command appears in on a page: inline in

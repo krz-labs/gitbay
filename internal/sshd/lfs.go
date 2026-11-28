@@ -6,11 +6,11 @@ import (
 	"io"
 	"time"
 
-	"gitbay.org/gitbay/internal/config"
-	"gitbay.org/gitbay/internal/lfs"
-	"gitbay.org/gitbay/internal/policy"
-	"gitbay.org/gitbay/internal/protocol"
-	"gitbay.org/gitbay/internal/store"
+	"github.com/krz-labs/gitbay/internal/config"
+	"github.com/krz-labs/gitbay/internal/lfs"
+	"github.com/krz-labs/gitbay/internal/policy"
+	"github.com/krz-labs/gitbay/internal/protocol"
+	"github.com/krz-labs/gitbay/internal/store"
 )
 
 // runLFSAuthenticate answers the git-lfs client's SSH probe:

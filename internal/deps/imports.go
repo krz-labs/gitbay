@@ -7,8 +7,8 @@ import (
 	"strconv"
 	"strings"
 
-	"gitbay.org/gitbay/internal/gitutil"
-	"gitbay.org/gitbay/internal/store"
+	"github.com/krz-labs/gitbay/internal/gitutil"
+	"github.com/krz-labs/gitbay/internal/store"
 )
 
 // maxGoFiles bounds the Go files read for their imports. A repository with

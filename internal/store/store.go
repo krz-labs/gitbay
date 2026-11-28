@@ -15,7 +15,7 @@ import (
 	"strings"
 	"sync"
 
-	"gitbay.org/gitbay/internal/seal"
+	"github.com/krz-labs/gitbay/internal/seal"
 	"modernc.org/sqlite"
 )
 

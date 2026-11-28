@@ -4,8 +4,8 @@ import (
 	"strings"
 	"testing"
 
-	"gitbay.org/gitbay/internal/config"
-	"gitbay.org/gitbay/internal/policy"
+	"github.com/krz-labs/gitbay/internal/config"
+	"github.com/krz-labs/gitbay/internal/policy"
 )
 
 // A push that puts a merge request's head on its target records the

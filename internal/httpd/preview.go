@@ -7,7 +7,7 @@ import (
 	"path"
 	"strings"
 
-	"gitbay.org/gitbay/internal/store"
+	"github.com/krz-labs/gitbay/internal/store"
 )
 
 // A markup form's Preview button posts to the form's own action with

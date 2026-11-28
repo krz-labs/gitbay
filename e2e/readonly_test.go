@@ -15,7 +15,7 @@ import (
 	"golang.org/x/text/width"
 	_ "modernc.org/sqlite"
 
-	"gitbay.org/gitbay/internal/control"
+	"github.com/krz-labs/gitbay/internal/control"
 )
 
 // ReadOnly is one flag with four consequences: a read-scoped token may run

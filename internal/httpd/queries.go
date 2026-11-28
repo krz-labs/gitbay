@@ -6,9 +6,9 @@ import (
 	"strconv"
 	"strings"
 
-	"gitbay.org/gitbay/internal/control"
-	"gitbay.org/gitbay/internal/protocol"
-	"gitbay.org/gitbay/internal/store"
+	"github.com/krz-labs/gitbay/internal/control"
+	"github.com/krz-labs/gitbay/internal/protocol"
+	"github.com/krz-labs/gitbay/internal/store"
 )
 
 // queryPerPage is how many rows a saved query's page shows before

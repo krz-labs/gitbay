@@ -7,8 +7,8 @@ import (
 	"testing"
 	"time"
 
-	"gitbay.org/gitbay/internal/lfs"
-	"gitbay.org/gitbay/internal/store"
+	"github.com/krz-labs/gitbay/internal/lfs"
+	"github.com/krz-labs/gitbay/internal/store"
 )
 
 func lfsRequest(tok string) *http.Request {

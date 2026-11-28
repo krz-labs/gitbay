@@ -8,10 +8,10 @@ import (
 	"github.com/spf13/cobra"
 	"golang.org/x/crypto/ssh"
 
-	"gitbay.org/gitbay/internal/config"
-	"gitbay.org/gitbay/internal/control"
-	"gitbay.org/gitbay/internal/protocol"
-	"gitbay.org/gitbay/internal/sshd"
+	"github.com/krz-labs/gitbay/internal/config"
+	"github.com/krz-labs/gitbay/internal/control"
+	"github.com/krz-labs/gitbay/internal/protocol"
+	"github.com/krz-labs/gitbay/internal/sshd"
 )
 
 // authorizedKeysCmd backs sshd's AuthorizedKeysCommand in system mode:

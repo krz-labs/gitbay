@@ -17,9 +17,9 @@ import (
 // binaries outlive any single test, so t.TempDir is the wrong home for
 // them — it is removed when the test that asked for it ends.
 var (
-	gitbaydBin = &builtBin{name: "gitbayd", pkg: "gitbay.org/gitbay/cmd/gitbayd"}
-	gitbayBin  = &builtBin{name: "gitbay", pkg: "gitbay.org/gitbay/cmd/gitbay"}
-	runnerBin  = &builtBin{name: "gitbay-runner", pkg: "gitbay.org/gitbay/cmd/gitbay-runner"}
+	gitbaydBin = &builtBin{name: "gitbayd", pkg: "github.com/krz-labs/gitbay/cmd/gitbayd"}
+	gitbayBin  = &builtBin{name: "gitbay", pkg: "github.com/krz-labs/gitbay/cmd/gitbay"}
+	runnerBin  = &builtBin{name: "gitbay-runner", pkg: "github.com/krz-labs/gitbay/cmd/gitbay-runner"}
 )
 
 // binDir is where the built binaries live, set by TestMain.

@@ -5,8 +5,8 @@ import (
 	"strings"
 	"testing"
 
-	"gitbay.org/gitbay/internal/store"
-	"gitbay.org/gitbay/internal/web"
+	"github.com/krz-labs/gitbay/internal/store"
+	"github.com/krz-labs/gitbay/internal/web"
 )
 
 // A signed-in viewer with zero issues gets a link to open one; a

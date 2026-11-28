@@ -8,13 +8,13 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"gitbay.org/gitbay/internal/backuplock"
-	"gitbay.org/gitbay/internal/config"
-	"gitbay.org/gitbay/internal/control"
-	"gitbay.org/gitbay/internal/gitutil"
-	"gitbay.org/gitbay/internal/lfs"
-	"gitbay.org/gitbay/internal/store"
-	"gitbay.org/gitbay/internal/toolpath"
+	"github.com/krz-labs/gitbay/internal/backuplock"
+	"github.com/krz-labs/gitbay/internal/config"
+	"github.com/krz-labs/gitbay/internal/control"
+	"github.com/krz-labs/gitbay/internal/gitutil"
+	"github.com/krz-labs/gitbay/internal/lfs"
+	"github.com/krz-labs/gitbay/internal/store"
+	"github.com/krz-labs/gitbay/internal/toolpath"
 )
 
 func gcCmd() *cobra.Command {

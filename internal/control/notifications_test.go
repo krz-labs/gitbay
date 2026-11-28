@@ -7,11 +7,11 @@ import (
 	"testing"
 	"time"
 
-	"gitbay.org/gitbay/internal/config"
-	"gitbay.org/gitbay/internal/mailreply"
-	"gitbay.org/gitbay/internal/protocol"
-	"gitbay.org/gitbay/internal/seal"
-	"gitbay.org/gitbay/internal/store"
+	"github.com/krz-labs/gitbay/internal/config"
+	"github.com/krz-labs/gitbay/internal/mailreply"
+	"github.com/krz-labs/gitbay/internal/protocol"
+	"github.com/krz-labs/gitbay/internal/seal"
+	"github.com/krz-labs/gitbay/internal/store"
 )
 
 // notifTestCtx opens an in-memory store, migrates it, and creates one user

@@ -7,7 +7,7 @@ import (
 	"errors"
 	"fmt"
 
-	"gitbay.org/gitbay/internal/seal"
+	"github.com/krz-labs/gitbay/internal/seal"
 )
 
 // The additional data of a sealed value is "<table>.<column>:<row key>",

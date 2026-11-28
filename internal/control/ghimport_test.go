@@ -13,8 +13,8 @@ import (
 	"strings"
 	"testing"
 
-	"gitbay.org/gitbay/internal/gitutil"
-	"gitbay.org/gitbay/internal/protocol"
+	"github.com/krz-labs/gitbay/internal/gitutil"
+	"github.com/krz-labs/gitbay/internal/protocol"
 )
 
 // pullUpstream serves a bare repository whose refs/pull/1/head is one

@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"gitbay.org/gitbay/internal/store"
+	"github.com/krz-labs/gitbay/internal/store"
 )
 
 // D04: build events on the same commit fold into one feed line, a "run",

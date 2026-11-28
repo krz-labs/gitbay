@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	"gitbay.org/gitbay/internal/store"
+	"github.com/krz-labs/gitbay/internal/store"
 )
 
 // A restart that moves the schema says so. Migrations used to run in silence,

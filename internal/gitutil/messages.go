@@ -5,7 +5,7 @@ import (
 	"os/exec"
 	"strings"
 
-	"gitbay.org/gitbay/internal/toolpath"
+	"github.com/krz-labs/gitbay/internal/toolpath"
 )
 
 const zeroSHA = "0000000000000000000000000000000000000000"

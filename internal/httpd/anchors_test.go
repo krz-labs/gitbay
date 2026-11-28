@@ -6,10 +6,10 @@ import (
 	"strings"
 	"testing"
 
-	"gitbay.org/gitbay/internal/config"
-	"gitbay.org/gitbay/internal/control"
-	"gitbay.org/gitbay/internal/store"
-	"gitbay.org/gitbay/internal/web"
+	"github.com/krz-labs/gitbay/internal/config"
+	"github.com/krz-labs/gitbay/internal/control"
+	"github.com/krz-labs/gitbay/internal/store"
+	"github.com/krz-labs/gitbay/internal/web"
 )
 
 // Markdown headings carry ids, so a README section can be deep-linked

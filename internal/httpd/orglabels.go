@@ -4,8 +4,8 @@ import (
 	"html/template"
 	"net/http"
 
-	"gitbay.org/gitbay/internal/control"
-	"gitbay.org/gitbay/internal/store"
+	"github.com/krz-labs/gitbay/internal/control"
+	"github.com/krz-labs/gitbay/internal/store"
 )
 
 // orgScope resolves the org for its labels or milestones page. Members

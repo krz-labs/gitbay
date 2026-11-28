@@ -12,7 +12,7 @@ import (
 	"sync"
 	"testing"
 
-	"gitbay.org/gitbay/internal/config"
+	"github.com/krz-labs/gitbay/internal/config"
 )
 
 // fakeRelay is an SMTP server that never offers STARTTLS. Given a TLS

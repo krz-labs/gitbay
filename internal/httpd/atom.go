@@ -8,9 +8,9 @@ import (
 	"strings"
 	"time"
 
-	"gitbay.org/gitbay/internal/gitutil"
-	"gitbay.org/gitbay/internal/sig"
-	"gitbay.org/gitbay/internal/store"
+	"github.com/krz-labs/gitbay/internal/gitutil"
+	"github.com/krz-labs/gitbay/internal/sig"
+	"github.com/krz-labs/gitbay/internal/store"
 )
 
 // Atom feeds (#192): a repository's releases and commits, and an owner's

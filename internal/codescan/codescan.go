@@ -15,7 +15,7 @@ import (
 	"strconv"
 	"strings"
 
-	"gitbay.org/gitbay/internal/store"
+	"github.com/krz-labs/gitbay/internal/store"
 )
 
 // IssueTitle is fixed so the issue is recognizable across scans.

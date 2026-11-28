@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"strings"
 
-	"gitbay.org/gitbay/internal/toolpath"
+	"github.com/krz-labs/gitbay/internal/toolpath"
 )
 
 // CountCommits returns the number of commits reachable from ref, or 0 when

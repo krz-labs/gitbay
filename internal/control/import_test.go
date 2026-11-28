@@ -13,8 +13,8 @@ import (
 	"strings"
 	"testing"
 
-	"gitbay.org/gitbay/internal/protocol"
-	"gitbay.org/gitbay/internal/store"
+	"github.com/krz-labs/gitbay/internal/protocol"
+	"github.com/krz-labs/gitbay/internal/store"
 )
 
 func importCtx(t *testing.T, allowLocal bool) (*Ctx, *bytes.Buffer, *store.Store, string) {

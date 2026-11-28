@@ -12,7 +12,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"gitbay.org/gitbay/internal/toolpath"
+	"github.com/krz-labs/gitbay/internal/toolpath"
 )
 
 // InitBare creates a bare repository with the shared hooks directory wired

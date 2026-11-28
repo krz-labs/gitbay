@@ -1,7 +1,7 @@
 package codescan
 
 import (
-	"gitbay.org/gitbay/internal/store"
+	"github.com/krz-labs/gitbay/internal/store"
 	"strconv"
 	"strings"
 	"testing"

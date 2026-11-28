@@ -5,7 +5,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"gitbay.org/gitbay/internal/config"
+	"github.com/krz-labs/gitbay/internal/config"
 )
 
 // auditVerifyCmd recomputes the audit log's hash chain. A break names

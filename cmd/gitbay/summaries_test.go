@@ -9,7 +9,7 @@ import (
 	"strings"
 	"testing"
 
-	"gitbay.org/gitbay/internal/control"
+	"github.com/krz-labs/gitbay/internal/control"
 )
 
 var updateSummaries = flag.Bool("update", false, "rewrite summaries_gen.go")

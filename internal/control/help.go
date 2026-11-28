@@ -6,8 +6,8 @@ import (
 	"slices"
 	"strings"
 
-	"gitbay.org/gitbay/internal/protocol"
-	"gitbay.org/gitbay/internal/termtext"
+	"github.com/krz-labs/gitbay/internal/protocol"
+	"github.com/krz-labs/gitbay/internal/termtext"
 )
 
 func init() {

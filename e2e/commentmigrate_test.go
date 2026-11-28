@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"gitbay.org/gitbay/internal/store"
+	"github.com/krz-labs/gitbay/internal/store"
 )
 
 func TestMigrateCommitRefComments(t *testing.T) {

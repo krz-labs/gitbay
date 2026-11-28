@@ -4,8 +4,8 @@ import (
 	"strings"
 	"testing"
 
-	"gitbay.org/gitbay/internal/protocol"
-	"gitbay.org/gitbay/internal/store"
+	"github.com/krz-labs/gitbay/internal/protocol"
+	"github.com/krz-labs/gitbay/internal/store"
 )
 
 // ci/<job> statuses are the build subsystem's. A writer who could post

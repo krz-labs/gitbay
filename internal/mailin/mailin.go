@@ -23,12 +23,12 @@ import (
 	"strings"
 	"time"
 
-	"gitbay.org/gitbay/internal/config"
-	"gitbay.org/gitbay/internal/control"
-	"gitbay.org/gitbay/internal/imapc"
-	"gitbay.org/gitbay/internal/mailreply"
-	"gitbay.org/gitbay/internal/protocol"
-	"gitbay.org/gitbay/internal/store"
+	"github.com/krz-labs/gitbay/internal/config"
+	"github.com/krz-labs/gitbay/internal/control"
+	"github.com/krz-labs/gitbay/internal/imapc"
+	"github.com/krz-labs/gitbay/internal/mailreply"
+	"github.com/krz-labs/gitbay/internal/protocol"
+	"github.com/krz-labs/gitbay/internal/store"
 )
 
 // Mailbox is what the processor needs of an IMAP session; imapc.Client

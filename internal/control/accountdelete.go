@@ -7,10 +7,10 @@ import (
 	"strings"
 	"time"
 
-	"gitbay.org/gitbay/internal/backuplock"
-	"gitbay.org/gitbay/internal/config"
-	"gitbay.org/gitbay/internal/protocol"
-	"gitbay.org/gitbay/internal/store"
+	"github.com/krz-labs/gitbay/internal/backuplock"
+	"github.com/krz-labs/gitbay/internal/config"
+	"github.com/krz-labs/gitbay/internal/protocol"
+	"github.com/krz-labs/gitbay/internal/store"
 )
 
 // DeletionGrace is how long a confirmed deletion waits before the purge.

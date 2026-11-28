@@ -3,7 +3,7 @@ package httpd
 import (
 	"net/url"
 
-	"gitbay.org/gitbay/internal/store"
+	"github.com/krz-labs/gitbay/internal/store"
 )
 
 // facetItem is one link in a list page's side column: a value the list

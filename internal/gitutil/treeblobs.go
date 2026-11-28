@@ -11,7 +11,7 @@ import (
 	"strconv"
 	"strings"
 
-	"gitbay.org/gitbay/internal/toolpath"
+	"github.com/krz-labs/gitbay/internal/toolpath"
 )
 
 // ListBlobs lists every blob in a tree, recursively, with its size. Name

@@ -9,8 +9,8 @@ import (
 	"testing"
 	"time"
 
-	"gitbay.org/gitbay/internal/protocol"
-	"gitbay.org/gitbay/internal/store"
+	"github.com/krz-labs/gitbay/internal/protocol"
+	"github.com/krz-labs/gitbay/internal/store"
 )
 
 const testZeroSHA = "0000000000000000000000000000000000000000"

@@ -11,7 +11,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"gitbay.org/gitbay/internal/store"
+	"github.com/krz-labs/gitbay/internal/store"
 )
 
 // restoreDrillCmd rehearses the archive half of a restore: extract a

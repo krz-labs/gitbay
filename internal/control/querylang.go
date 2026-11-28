@@ -5,8 +5,8 @@ import (
 	"regexp"
 	"strings"
 
-	"gitbay.org/gitbay/internal/policy"
-	"gitbay.org/gitbay/internal/store"
+	"github.com/krz-labs/gitbay/internal/policy"
+	"github.com/krz-labs/gitbay/internal/store"
 )
 
 // ItemQuery is a parsed issue and merge request query (#292): terms

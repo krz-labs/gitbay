@@ -4,8 +4,8 @@ import (
 	"strings"
 	"testing"
 
-	"gitbay.org/gitbay/internal/control"
-	"gitbay.org/gitbay/internal/web"
+	"github.com/krz-labs/gitbay/internal/control"
+	"github.com/krz-labs/gitbay/internal/web"
 )
 
 // The repository header is two rows: identity with the description and

@@ -28,8 +28,8 @@ import (
 	"syscall"
 	"time"
 
-	"gitbay.org/gitbay/internal/buildinfo"
-	"gitbay.org/gitbay/internal/toolpath"
+	"github.com/krz-labs/gitbay/internal/buildinfo"
+	"github.com/krz-labs/gitbay/internal/toolpath"
 )
 
 type job struct {

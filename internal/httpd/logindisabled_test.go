@@ -6,8 +6,8 @@ import (
 	"testing"
 	"time"
 
-	"gitbay.org/gitbay/internal/config"
-	"gitbay.org/gitbay/internal/store"
+	"github.com/krz-labs/gitbay/internal/config"
+	"github.com/krz-labs/gitbay/internal/store"
 )
 
 // login() re-reads the user after ConsumeLoginToken and refuses a disabled

@@ -1,12 +1,12 @@
 package httpd
 
 import (
-	"gitbay.org/gitbay/internal/control"
+	"github.com/krz-labs/gitbay/internal/control"
 	"strings"
 	"testing"
 
-	"gitbay.org/gitbay/internal/store"
-	"gitbay.org/gitbay/internal/web"
+	"github.com/krz-labs/gitbay/internal/store"
+	"github.com/krz-labs/gitbay/internal/web"
 )
 
 func testRepoPage() repoPage {

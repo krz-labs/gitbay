@@ -5,7 +5,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"gitbay.org/gitbay/internal/config"
+	"github.com/krz-labs/gitbay/internal/config"
 )
 
 // TestMutatingRoutesRequireCheckOrigin pins the invariant checkOrigin's doc

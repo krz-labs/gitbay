@@ -1,6 +1,6 @@
 package policy
 
-import "gitbay.org/gitbay/internal/store"
+import "github.com/krz-labs/gitbay/internal/store"
 
 // CanReadSnippet: anyone for public and unlisted, the owner and admins
 // for private. Anonymous readers have user.ID 0.

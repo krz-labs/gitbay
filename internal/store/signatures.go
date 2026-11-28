@@ -5,7 +5,7 @@ import (
 	"errors"
 	"time"
 
-	"gitbay.org/gitbay/internal/sig"
+	"github.com/krz-labs/gitbay/internal/sig"
 )
 
 // AddPGPKey registers an OpenPGP key and bumps the key epoch.

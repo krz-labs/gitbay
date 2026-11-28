@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"gitbay.org/gitbay/internal/seal"
+	"github.com/krz-labs/gitbay/internal/seal"
 )
 
 // keyedStore is a migrated store with a key file of one key.

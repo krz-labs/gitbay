@@ -4,7 +4,7 @@ import (
 	"path"
 	"sort"
 
-	"gitbay.org/gitbay/internal/gitutil"
+	"github.com/krz-labs/gitbay/internal/gitutil"
 )
 
 // fileNav is the column beside a file: its directory's entries, the file

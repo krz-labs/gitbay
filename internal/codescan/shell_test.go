@@ -4,7 +4,7 @@ import (
 	"errors"
 	"testing"
 
-	"gitbay.org/gitbay/internal/store"
+	"github.com/krz-labs/gitbay/internal/store"
 )
 
 func TestSplitLines(t *testing.T) {

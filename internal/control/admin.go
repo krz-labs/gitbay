@@ -9,9 +9,9 @@ import (
 	"strings"
 	"time"
 
-	"gitbay.org/gitbay/internal/gitutil"
-	"gitbay.org/gitbay/internal/protocol"
-	"gitbay.org/gitbay/internal/store"
+	"github.com/krz-labs/gitbay/internal/gitutil"
+	"github.com/krz-labs/gitbay/internal/protocol"
+	"github.com/krz-labs/gitbay/internal/store"
 )
 
 func init() {

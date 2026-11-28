@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"strings"
 
-	"gitbay.org/gitbay/internal/toolpath"
+	"github.com/krz-labs/gitbay/internal/toolpath"
 )
 
 // NumStat is one file's line counts between two commits. A binary file

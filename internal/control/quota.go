@@ -6,10 +6,10 @@ import (
 	"strconv"
 	"sync"
 
-	"gitbay.org/gitbay/internal/config"
-	"gitbay.org/gitbay/internal/gitutil"
-	"gitbay.org/gitbay/internal/protocol"
-	"gitbay.org/gitbay/internal/store"
+	"github.com/krz-labs/gitbay/internal/config"
+	"github.com/krz-labs/gitbay/internal/gitutil"
+	"github.com/krz-labs/gitbay/internal/protocol"
+	"github.com/krz-labs/gitbay/internal/store"
 )
 
 // Quotas cap what a user or an org owns directly, and how many orgs an

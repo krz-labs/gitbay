@@ -6,6 +6,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
+	"syscall"
 	"testing"
 )
 
@@ -39,7 +40,29 @@ func havePodman(t *testing.T) bool {
 		t.Logf("SKIPPING ISOLATION TEST: podman does not work here: %v\n%s", err, out)
 		return false
 	}
+	// These tests use a loopback -remote, for which the runner requires build
+	// cgroups and refuses to start without them. Hosted CI runners do not
+	// delegate their cgroup.
+	if dir, ok := ownCgroupDir(); ok && syscall.Access(dir, 2) != nil {
+		t.Logf("SKIPPING ISOLATION TEST: %s is not writable, so the runner cannot create build cgroups. "+
+			"The container path is NOT covered by this run.", dir)
+		return false
+	}
 	return true
+}
+
+// ownCgroupDir returns this process's cgroup v2 directory, if it has one.
+func ownCgroupDir() (string, bool) {
+	raw, err := os.ReadFile("/proc/self/cgroup")
+	if err != nil {
+		return "", false
+	}
+	for _, line := range strings.Split(string(raw), "\n") {
+		if path, ok := strings.CutPrefix(line, "0::"); ok {
+			return filepath.Join("/sys/fs/cgroup", path), true
+		}
+	}
+	return "", false
 }
 
 // The fallback that must not exist: with -isolation podman and no podman,

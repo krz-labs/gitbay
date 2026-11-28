@@ -11,7 +11,7 @@ import (
 	"strconv"
 	"strings"
 
-	"gitbay.org/gitbay/internal/toolpath"
+	"github.com/krz-labs/gitbay/internal/toolpath"
 )
 
 // Bounds on one scan. A push or a history bigger than these is scanned in

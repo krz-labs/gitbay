@@ -8,7 +8,7 @@ import (
 	"strconv"
 	"strings"
 
-	"gitbay.org/gitbay/internal/toolpath"
+	"github.com/krz-labs/gitbay/internal/toolpath"
 )
 
 // BlameHunk is a run of consecutive lines attributed to one commit.

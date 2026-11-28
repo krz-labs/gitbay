@@ -3,7 +3,7 @@ package httpd
 import (
 	"testing"
 
-	"gitbay.org/gitbay/internal/gitutil"
+	"github.com/krz-labs/gitbay/internal/gitutil"
 )
 
 // The navigator lists the file's directory, directories first, links each

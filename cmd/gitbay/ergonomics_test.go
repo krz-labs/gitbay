@@ -6,7 +6,7 @@ import (
 	"slices"
 	"testing"
 
-	"gitbay.org/gitbay/internal/cliconfig"
+	"github.com/krz-labs/gitbay/internal/cliconfig"
 )
 
 func TestParseNumberArg(t *testing.T) {

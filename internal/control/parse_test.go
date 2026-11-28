@@ -5,8 +5,8 @@ import (
 	"strings"
 	"testing"
 
-	"gitbay.org/gitbay/internal/protocol"
-	"gitbay.org/gitbay/internal/store"
+	"github.com/krz-labs/gitbay/internal/protocol"
+	"github.com/krz-labs/gitbay/internal/store"
 )
 
 // TestCommandParseFailures runs argv that every command must refuse

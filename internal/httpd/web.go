@@ -14,8 +14,8 @@ import (
 	"os"
 	"path/filepath"
 
-	"gitbay.org/gitbay/internal/policy"
-	"gitbay.org/gitbay/internal/protocol"
+	"github.com/krz-labs/gitbay/internal/policy"
+	"github.com/krz-labs/gitbay/internal/protocol"
 	"html/template"
 	"net/http"
 	"net/url"
@@ -35,13 +35,13 @@ import (
 	"github.com/yuin/goldmark/extension"
 	"github.com/yuin/goldmark/parser"
 
-	"gitbay.org/gitbay/internal/autolink"
-	"gitbay.org/gitbay/internal/control"
-	"gitbay.org/gitbay/internal/gitutil"
-	"gitbay.org/gitbay/internal/sig"
-	"gitbay.org/gitbay/internal/store"
-	"gitbay.org/gitbay/internal/suggest"
-	"gitbay.org/gitbay/internal/web"
+	"github.com/krz-labs/gitbay/internal/autolink"
+	"github.com/krz-labs/gitbay/internal/control"
+	"github.com/krz-labs/gitbay/internal/gitutil"
+	"github.com/krz-labs/gitbay/internal/sig"
+	"github.com/krz-labs/gitbay/internal/store"
+	"github.com/krz-labs/gitbay/internal/suggest"
+	"github.com/krz-labs/gitbay/internal/web"
 )
 
 const maxRenderBytes = 1 << 20 // largest blob rendered inline

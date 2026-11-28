@@ -9,11 +9,11 @@ import (
 	"testing"
 	"time"
 
-	"gitbay.org/gitbay/internal/config"
-	"gitbay.org/gitbay/internal/imapc"
-	"gitbay.org/gitbay/internal/mailreply"
-	"gitbay.org/gitbay/internal/seal"
-	"gitbay.org/gitbay/internal/store"
+	"github.com/krz-labs/gitbay/internal/config"
+	"github.com/krz-labs/gitbay/internal/imapc"
+	"github.com/krz-labs/gitbay/internal/mailreply"
+	"github.com/krz-labs/gitbay/internal/seal"
+	"github.com/krz-labs/gitbay/internal/store"
 )
 
 const replyBase = "reply@gitbay.example"

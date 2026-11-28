@@ -1,8 +1,8 @@
 package httpd
 
 import (
-	"gitbay.org/gitbay/internal/policy"
-	"gitbay.org/gitbay/internal/store"
+	"github.com/krz-labs/gitbay/internal/policy"
+	"github.com/krz-labs/gitbay/internal/store"
 )
 
 // pinnedRow is one pinned repository on the dashboard with the counts

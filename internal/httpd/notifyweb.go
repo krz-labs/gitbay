@@ -4,8 +4,8 @@ import (
 	"net/http"
 	"strconv"
 
-	"gitbay.org/gitbay/internal/policy"
-	"gitbay.org/gitbay/internal/store"
+	"github.com/krz-labs/gitbay/internal/policy"
+	"github.com/krz-labs/gitbay/internal/store"
 )
 
 // noticeView is one inbox row with the pieces the template needs: the

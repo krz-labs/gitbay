@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"gitbay.org/gitbay/internal/protocol"
+	"github.com/krz-labs/gitbay/internal/protocol"
 )
 
 func TestOrgLabelSetListRemove(t *testing.T) {

@@ -4,7 +4,7 @@ import (
 	"regexp"
 	"strings"
 
-	"gitbay.org/gitbay/internal/web"
+	"github.com/krz-labs/gitbay/internal/web"
 )
 
 // themedCSS derives the served stylesheet from style.css. The source keeps

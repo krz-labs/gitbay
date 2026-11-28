@@ -7,8 +7,8 @@ import (
 	"strings"
 	"testing"
 
-	"gitbay.org/gitbay/internal/protocol"
-	"gitbay.org/gitbay/internal/store"
+	"github.com/krz-labs/gitbay/internal/protocol"
+	"github.com/krz-labs/gitbay/internal/store"
 )
 
 // notifyFixture is a user with an unread and a read notification, a push

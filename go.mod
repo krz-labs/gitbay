@@ -1,4 +1,4 @@
-module gitbay.org/gitbay
+module github.com/krz-labs/gitbay
 
 go 1.27.4
 

@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"strings"
 
-	"gitbay.org/gitbay/internal/store"
+	"github.com/krz-labs/gitbay/internal/store"
 )
 
 // teamView is a team with the two things an admin needs to see about it:

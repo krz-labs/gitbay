@@ -10,7 +10,7 @@ import (
 
 // Commit is stamped at link time by the Makefile:
 //
-//	-X gitbay.org/gitbay/internal/buildinfo.Commit=<sha>
+//	-X github.com/krz-labs/gitbay/internal/buildinfo.Commit=<sha>
 //
 // It carries a -dirty suffix when the tree was not clean, which only happens
 // under ALLOW_DIRTY=1 since preflight otherwise refuses to build.

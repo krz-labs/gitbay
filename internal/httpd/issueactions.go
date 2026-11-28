@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"strings"
 
-	"gitbay.org/gitbay/internal/store"
+	"github.com/krz-labs/gitbay/internal/store"
 )
 
 // Issue actions. Like the merge request controls, each one runs the

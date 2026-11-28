@@ -3,7 +3,7 @@ package httpd
 import (
 	"testing"
 
-	"gitbay.org/gitbay/internal/store"
+	"github.com/krz-labs/gitbay/internal/store"
 )
 
 // TestCrumbsLinkDirectoriesToTree: on a blob or blame page the parent

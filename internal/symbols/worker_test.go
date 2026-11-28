@@ -10,7 +10,7 @@ import (
 	"testing"
 	"time"
 
-	"gitbay.org/gitbay/internal/store"
+	"github.com/krz-labs/gitbay/internal/store"
 )
 
 type fixture struct {
